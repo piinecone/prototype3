@@ -31,40 +31,21 @@ public class FishMovement : MonoBehaviour {
   private float timeleft = 0;
   private float currentBurstSpeed;
 
-  // Use this for initialization
   void Start () {
-    //if (isLeadFish){
-    //  setNextWaypoint(0);
-    //}
   }
   
-  // Update is called once per frame
   void Update () {
     if (needsNewWaypoint()){
       determineNextWaypoint();
     }
     moveTowardNextWaypoint();
-    //if (isLeadFish){
-    //}
-    //} else {
-    //  mimicLeadFish();
-    //}
   }
 
   private void mimicLeadFish(){
     if (leadFish != null){
-      //transform.rotation = leadFish.transform.rotation;
       Vector3 targetPosition = leadFish.transform.position - leadFishOffset;
       Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
       moveInDirection(targetPosition, direction);
-      //transform.position = Vector3.Lerp(transform.position, target, 0.5f);
-
-      // TODO randomized micromovents will only work if they're applied when the waypoint is
-      // determined, not throughout the regular movement updates
-      //Vector3 exactPosition = leadFish.transform.position - leadFishOffset;
-      //transform.position = new Vector3(exactPosition.x + Random.Range(-.1f, .1f),
-      //                                 exactPosition.y + Random.Range(-.1f, .1f),
-      //                                 exactPosition.z + Random.Range(-.1f, .1f));
     }
   }
 
@@ -72,13 +53,6 @@ public class FishMovement : MonoBehaviour {
     Vector3 targetPosition = nextWaypoint.position - leadFishOffset;
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
     moveInDirection(targetPosition, direction);
-
-    //transform.LookAt(direction);
-    //if (justPassedWaypoint()){
-    //  transform.position = LerpByDistance(transform.position, nextWaypoint.position, quickChangeOfDirectionDistance);
-    //} else {
-    //  transform.position = Vector3.MoveTowards(transform.position, nextWaypoint.position, speed * Time.deltaTime);
-    //}
   }
 
   private void moveInDirection(Vector3 targetPosition, Vector3 direction){
@@ -112,27 +86,18 @@ public class FishMovement : MonoBehaviour {
     Vector3 rightRay = transform.forward * distanceToTarget;
     rightRay.x += .5f;
 
-    // TODO if i can see my target that's where i'm looking (?)
-    //if (Physics.Raycast(transform.position, direction * distanceToTarget, out hit, distanceToTarget)){
-    //  if (hit.transform.position == targetPosition){
-    //    //Debug.DrawLine(transform.position, hit.point, Color.magenta);
-    //  }
-    //}
     if (Physics.Raycast(transform.position, forwardRay, out hit, sensoryDistance)){
       if (hit.transform != transform){
-        //Debug.DrawLine(forwardRay, hit.point, Color.red);
         direction += hit.normal * hitSensitivity;
       }
     }
     if (Physics.Raycast(transform.position, leftRay, out hit, sensoryDistance)){
       if (hit.transform != transform){
-        //Debug.DrawLine(leftRay, hit.point, Color.green);
         direction += hit.normal * hitSensitivity;
       }
     }
     if (Physics.Raycast(transform.position, rightRay, out hit, sensoryDistance)){
       if (hit.transform != transform){
-        //Debug.DrawLine(rightRay, hit.point, Color.blue);
         direction += hit.normal * hitSensitivity;
       }
     }

@@ -77,26 +77,41 @@ public class FishMovement : MonoBehaviour {
     RaycastHit hit;
     Vector3 direction = (targetPosition - transform.position).normalized;
     float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
-    float sensoryDistance = 10f;
-    float hitSensitivity = 50f;
+    float forwardSensoryDistance = 10f;
+    float angularSensoryDistance = 5f;
+    float hitSensitivity = 75f;
 
-    Vector3 forwardRay = transform.forward * distanceToTarget;
-    Vector3 leftRay = transform.forward * distanceToTarget;
-    leftRay.x -= .5f;
-    Vector3 rightRay = transform.forward * distanceToTarget;
-    rightRay.x += .5f;
+    Vector3 forwardRay = transform.forward * forwardSensoryDistance;
+    Vector3 leftRay = transform.forward * forwardSensoryDistance;
+    Vector3 rightRay = transform.forward * forwardSensoryDistance;
+    Vector3 topRay = transform.forward * angularSensoryDistance;
+    Vector3 bottomRay = transform.forward * angularSensoryDistance;
+    leftRay.x -= 2f;
+    rightRay.x += 1f;
+    topRay.y += 2f;
+    bottomRay.y -= 2f;
 
-    if (Physics.Raycast(transform.position, forwardRay, out hit, sensoryDistance)){
+    if (Physics.Raycast(transform.position, forwardRay, out hit, forwardSensoryDistance)){
       if (hit.transform != transform){
         direction += hit.normal * hitSensitivity;
       }
     }
-    if (Physics.Raycast(transform.position, leftRay, out hit, sensoryDistance)){
+    if (Physics.Raycast(transform.position, leftRay, out hit, forwardSensoryDistance)){
       if (hit.transform != transform){
         direction += hit.normal * hitSensitivity;
       }
     }
-    if (Physics.Raycast(transform.position, rightRay, out hit, sensoryDistance)){
+    if (Physics.Raycast(transform.position, rightRay, out hit, forwardSensoryDistance)){
+      if (hit.transform != transform){
+        direction += hit.normal * hitSensitivity;
+      }
+    }
+    if (Physics.Raycast(transform.position, topRay, out hit, angularSensoryDistance)){
+      if (hit.transform != transform){
+        direction += hit.normal * hitSensitivity;
+      }
+    }
+    if (Physics.Raycast(transform.position, bottomRay, out hit, angularSensoryDistance)){
       if (hit.transform != transform){
         direction += hit.normal * hitSensitivity;
       }
@@ -114,7 +129,7 @@ public class FishMovement : MonoBehaviour {
   }
 
   private bool needsNewWaypoint(){
-    if (Vector3.Distance(transform.position, nextWaypoint.position - leadFishOffset) < .5f){
+    if (Vector3.Distance(transform.position, nextWaypoint.position - leadFishOffset) < 4f){
       return true;
     } else {
       return false;

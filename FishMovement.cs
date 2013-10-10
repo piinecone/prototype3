@@ -16,6 +16,8 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private float obstacleAvoidanceRotationSpeed;
   [SerializeField]
+  private float followingRotationSpeed;
+  [SerializeField]
   private float quickChangeOfDirectionDistance;
   [SerializeField]
   public bool isLeadFish = false;
@@ -41,9 +43,10 @@ public class FishMovement : MonoBehaviour {
     player = GameObject.FindWithTag("Player").transform;
     forwardSpeed = 16f;
     burstSpeed = 25f;
-    followingSpeed = 16f;
+    followingSpeed = 16.1f;
     fastRotationSpeed = 75f;
     obstacleAvoidanceRotationSpeed = 1.5f;
+    followingRotationSpeed = 1.6f;
     quickChangeOfDirectionDistance = .75f;
   }
   
@@ -62,19 +65,30 @@ public class FishMovement : MonoBehaviour {
         Vector3 direction = player.forward.normalized;
         Quaternion rotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
-        randomizedPlayerOffset = new Vector3(Random.Range(-3f, 3f), Random.Range(-4f, 0f), Random.Range(0f, 3f));
+        randomizedPlayerOffset = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(-3f, 1f), Random.Range(0f, 0f));
       }
       currentlyFollowingPlayer = true;
     }
   }
 
   private void moveTowardPlayer(){
-    //Vector3 targetPosition = (player.position - new Vector3(Random.Range(5f, 10f), Random.Range(-3f, 3f), Random.Range(10f, 20f)));
-    Vector3 targetPosition = (player.position + randomizedPlayerOffset);
+    Vector3 targetPosition = (player.position - player.InverseTransformDirection(randomizedPlayerOffset));
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
     Quaternion rotation = Quaternion.LookRotation(direction);
-    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, obstacleAvoidanceRotationSpeed * Time.deltaTime);
-    float speed = (Vector3.Distance(transform.position, player.position) < 7f) ? 5f : followingSpeed;
+    //transform.rotation = Quaternion.Slerp(transform.rotation, rotation, obstacleAvoidanceRotationSpeed * Time.deltaTime);
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, followingRotationSpeed * Time.deltaTime);
+
+    // make speed proportional to distance
+    //float speed = (Vector3.Distance(transform.position, player.position) < 8f) ? 8f : followingSpeed;
+    //float distanceFromPlayer = Vector3.Distance(transform.position, player.position);
+    float speedMultiplier = 1;
+    //if (distanceFromPlayer >= 8f && distanceFromPlayer <= 16f){
+    //  speedMultiplier = distanceFromPlayer / 8f;
+    //  if (speedMultiplier < .75f) speedMultiplier = .75f;
+    //} else if (distanceFromPlayer < 8f) {
+    //  speedMultiplier = .5f;
+    //}
+    float speed = followingSpeed * speedMultiplier;
     transform.position += transform.forward * speed * Time.deltaTime;
   }
 

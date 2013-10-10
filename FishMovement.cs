@@ -6,15 +6,17 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private List<GameObject> waypoints;
   [SerializeField]
-  private float forwardSpeed = 25f;
+  private float forwardSpeed;
   [SerializeField]
-  private float burstSpeed = 40f;
+  private float burstSpeed;
   [SerializeField]
-  private float fastRotationSpeed = .75f;
+  private float followingSpeed;
   [SerializeField]
-  private float obstacleAvoidanceRotationSpeed = 1f;
+  private float fastRotationSpeed;
   [SerializeField]
-  private float quickChangeOfDirectionDistance = 2f;
+  private float obstacleAvoidanceRotationSpeed;
+  [SerializeField]
+  private float quickChangeOfDirectionDistance;
   [SerializeField]
   public bool isLeadFish = false;
   [SerializeField]
@@ -32,6 +34,13 @@ public class FishMovement : MonoBehaviour {
   private float currentBurstSpeed;
 
   void Start () {
+    player = GameObject.FindWithTag("Player").transform;
+    forwardSpeed = 16f;
+    burstSpeed = 25f;
+    followingSpeed = 16f;
+    fastRotationSpeed = 75f;
+    obstacleAvoidanceRotationSpeed = 1.5f;
+    quickChangeOfDirectionDistance = .75f;
   }
   
   void Update () {

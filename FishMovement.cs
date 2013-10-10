@@ -21,10 +21,13 @@ public class FishMovement : MonoBehaviour {
   public bool isLeadFish = false;
   [SerializeField]
   private SchoolOfFishMovement schoolOfFish;
+  [SerializeField]
+  private Transform player;
 
   private Transform nextWaypoint;
   private Transform lastWaypoint;
   private int nextWaypointIndex;
+  private Vector3 randomizedPlayerOffset;
   private GameObject leadFish;
   private Vector3 leadFishOffset;
   private float leadFishDistance;
@@ -32,6 +35,7 @@ public class FishMovement : MonoBehaviour {
   private float burstTimer = 1.5f;
   private float timeleft = 0;
   private float currentBurstSpeed;
+  private bool currentlyFollowingPlayer = false;
 
   void Start () {
     player = GameObject.FindWithTag("Player").transform;
@@ -44,18 +48,34 @@ public class FishMovement : MonoBehaviour {
   }
   
   void Update () {
-    if (needsNewWaypoint()){
-      determineNextWaypoint();
+    if (!currentlyFollowingPlayer){
+      if (needsNewWaypoint()) determineNextWaypoint();
+      moveTowardNextWaypoint();
+    } else {
+      moveTowardPlayer();
     }
-    moveTowardNextWaypoint();
   }
 
-  private void mimicLeadFish(){
-    if (leadFish != null){
-      Vector3 targetPosition = leadFish.transform.position - leadFishOffset;
-      Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
-      moveInDirection(targetPosition, direction);
+  void OnTriggerEnter(Collider collider){
+    if (collider.gameObject.tag == "PlayerInfluence" && playerIsInFront()){
+      if (!currentlyFollowingPlayer){ // then look at the player
+        Vector3 direction = player.forward.normalized;
+        Quaternion rotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
+        randomizedPlayerOffset = new Vector3(Random.Range(-3f, 3f), Random.Range(-4f, 0f), Random.Range(0f, 3f));
+      }
+      currentlyFollowingPlayer = true;
     }
+  }
+
+  private void moveTowardPlayer(){
+    //Vector3 targetPosition = (player.position - new Vector3(Random.Range(5f, 10f), Random.Range(-3f, 3f), Random.Range(10f, 20f)));
+    Vector3 targetPosition = (player.position + randomizedPlayerOffset);
+    Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
+    Quaternion rotation = Quaternion.LookRotation(direction);
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, obstacleAvoidanceRotationSpeed * Time.deltaTime);
+    float speed = (Vector3.Distance(transform.position, player.position) < 7f) ? 5f : followingSpeed;
+    transform.position += transform.forward * speed * Time.deltaTime;
   }
 
   private void moveTowardNextWaypoint(){
@@ -101,32 +121,40 @@ public class FishMovement : MonoBehaviour {
     bottomRay.y -= 2f;
 
     if (Physics.Raycast(transform.position, forwardRay, out hit, forwardSensoryDistance)){
-      if (hit.transform != transform){
+      if (transformShouldBeAvoided(hit.transform)){
         direction += hit.normal * hitSensitivity;
       }
     }
     if (Physics.Raycast(transform.position, leftRay, out hit, forwardSensoryDistance)){
-      if (hit.transform != transform){
+      if (transformShouldBeAvoided(hit.transform)){
         direction += hit.normal * hitSensitivity;
       }
     }
     if (Physics.Raycast(transform.position, rightRay, out hit, forwardSensoryDistance)){
-      if (hit.transform != transform){
+      if (transformShouldBeAvoided(hit.transform)){
         direction += hit.normal * hitSensitivity;
       }
     }
     if (Physics.Raycast(transform.position, topRay, out hit, angularSensoryDistance)){
-      if (hit.transform != transform){
+      if (transformShouldBeAvoided(hit.transform)){
         direction += hit.normal * hitSensitivity;
       }
     }
     if (Physics.Raycast(transform.position, bottomRay, out hit, angularSensoryDistance)){
-      if (hit.transform != transform){
+      if (transformShouldBeAvoided(hit.transform)){
         direction += hit.normal * hitSensitivity;
       }
     }
 
     return direction;
+  }
+
+  private bool transformShouldBeAvoided(Transform hitTransform){
+    if (hitTransform != transform && hitTransform != player){
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private bool justPassedWaypoint(){
@@ -171,6 +199,8 @@ public class FishMovement : MonoBehaviour {
   }
 
   public bool burstToNextWaypoint(bool start){
+    if (currentlyFollowingPlayer) return false;
+
     timeleft = start ? burstTimer : (timeleft -= Time.deltaTime);
     if (timeleft > 0f){
       currentBurstSpeed = (timeleft > (burstTimer * .8f)) ? burstSpeed : forwardSpeed;
@@ -178,5 +208,12 @@ public class FishMovement : MonoBehaviour {
     } else {
       return false;
     }
+  }
+
+  private bool playerIsInFront(){
+    Vector3 direction = (player.position - transform.position).normalized;
+    Vector3 forward = transform.forward;
+    float angle = Vector3.Angle(direction, forward);
+    return (angle < 45F) ? true : false;
   }
 }

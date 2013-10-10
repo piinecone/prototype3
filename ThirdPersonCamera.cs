@@ -41,13 +41,15 @@ public class ThirdPersonCamera : MonoBehaviour {
    }
 
    void LateUpdate() {
-     if (turtleState.isUnderwater()){
-       distanceAway = 15;
-       distanceUp = 2;
-     } else {
-       distanceAway = 10;
-       distanceUp = 4;
-     }
+     distanceAway = 15;
+     distanceUp = 2;
+     //if (turtleState.isUnderwater()){
+     //  distanceAway = 15;
+     //  distanceUp = 2;
+     //} else {
+     //  distanceAway = 10;
+     //  distanceUp = 4;
+     //}
 
      Vector3 characterOffset = follow.position + new Vector3(0f, distanceUp, 0f);
 

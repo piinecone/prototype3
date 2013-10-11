@@ -54,10 +54,12 @@ public class FishMovement : MonoBehaviour {
 
   // barriers
   private Vector3 randomizedBarrierOffset;
+  private Vector3 finishRushTargetPosition;
   private bool currentlyRushingABarrier = false;
+  private bool currentlyFinishingRush = false;
   private GameObject targetedBarrier = null;
   private float rushRotationSpeed;
-
+  private float scatterDistance = 12f;
 
   void Start () {
     player = GameObject.FindWithTag("Player");
@@ -74,8 +76,10 @@ public class FishMovement : MonoBehaviour {
   }
   
   void Update () {
-    if (currentlyRushingABarrier && shouldContinueRushingBarrier()){
+    if (currentlyRushingABarrier){
       rushTowardBarrier();
+    } else if (currentlyFinishingRush) {
+      finishRushBehavior();
     } else if (currentlyFollowingPlayer){
       if (boredByPlayer()){
         currentlyFollowingPlayer = false;
@@ -112,20 +116,55 @@ public class FishMovement : MonoBehaviour {
   }
 
   private void rushTowardBarrier(){
-    Vector3 targetPosition = (targetedBarrier.transform.position - randomizedBarrierOffset);
-    Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
-    Quaternion rotation = Quaternion.LookRotation(direction);
-    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, rushRotationSpeed * Time.deltaTime);
-    transform.position += transform.forward * rushingSpeed * Time.deltaTime;
-    Debug.DrawRay(transform.position, targetPosition, Color.blue);
+    if (shouldContinueRushingBarrier()){
+      Vector3 targetPosition = (targetedBarrier.transform.position - randomizedBarrierOffset);
+      Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
+      Quaternion rotation = Quaternion.LookRotation(direction);
+      transform.rotation = Quaternion.Slerp(transform.rotation, rotation, rushRotationSpeed * Time.deltaTime);
+      transform.position += transform.forward * rushingSpeed * Time.deltaTime;
+      //Debug.DrawRay(transform.position, targetPosition, Color.blue);
+    } else {
+      currentlyRushingABarrier = false;
+      targetedBarrier = null;
+      if (!currentlyFinishingRush) beginFinishingBarrierRush();
+    }
+  }
+
+  private void beginFinishingBarrierRush(){
+    finishRushTargetPosition = (transform.position + transform.up * scatterDistance);
+    float xComponent = finishRushTargetPosition.x;
+    finishRushTargetPosition.x = Random.Range(xComponent - 30f, xComponent + 30f);
+    quicklyLookAt(finishRushTargetPosition);
+    currentlyFinishingRush = true;
+  }
+
+  private void finishRushBehavior(){
+    if (shouldFinishRushBehavior()){
+      // NOTE assuming "scatter" behavior by default for now;
+      // eventually this will be determined by the barrier itself
+      Debug.Log(finishRushTargetPosition);
+      Vector3 direction = directionAfterAvoidingObstacles(finishRushTargetPosition);
+      Quaternion rotation = Quaternion.LookRotation(direction);
+      transform.rotation = Quaternion.Slerp(transform.rotation, rotation, rushRotationSpeed * Time.deltaTime);
+      transform.position += transform.forward * rushingSpeed * Time.deltaTime;
+      //Debug.DrawRay(transform.position, finishRushTargetPosition, Color.blue);
+    } else {
+      currentlyFinishingRush = false;
+    }
   }
 
   private bool shouldContinueRushingBarrier(){
     if (Vector3.Distance(transform.position, targetedBarrier.transform.position) > 15f){
       return true;
     } else {
-      currentlyRushingABarrier = false;
-      targetedBarrier = null;
+      return false;
+    }
+  }
+
+  private bool shouldFinishRushBehavior(){
+    if (Vector3.Distance(transform.position, finishRushTargetPosition) > 5f){
+      return true;
+    } else {
       return false;
     }
   }
@@ -171,6 +210,12 @@ public class FishMovement : MonoBehaviour {
   private void smoothlyLookAtNextWaypoint(){
     Vector3 targetPosition = nextWaypoint.position - leadFishOffset;
     Vector3 direction = (targetPosition - transform.position).normalized;
+    Quaternion rotation = Quaternion.LookRotation(direction);
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
+  }
+
+  private void quicklyLookAt(Vector3 position){
+    Vector3 direction = (position - transform.position).normalized;
     Quaternion rotation = Quaternion.LookRotation(direction);
     transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
   }
@@ -291,7 +336,7 @@ public class FishMovement : MonoBehaviour {
   }
 
   public void rushBarrier(GameObject barrier){
-    if (!currentlyRushingABarrier){
+    if (!currentlyRushingABarrier && !currentlyFinishingRush){
       Vector3 direction = barrier.transform.position;
       Quaternion rotation = Quaternion.LookRotation(direction);
       transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);

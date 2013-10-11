@@ -4,10 +4,12 @@ using System.Collections;
 [RequireComponent(typeof (Animator))]
 [RequireComponent(typeof (CapsuleCollider))]
 [RequireComponent(typeof (Rigidbody))]
+[RequireComponent(typeof (FollowingFish))]
 public class TurtleController : MonoBehaviour {
    public float animSpeed = 1.5f;
    public float speed = 4f;
    public float gravity = 20f;
+   public FollowingFish followingFish;
 
    private float speedInMedium = 8f;
    private float rotateSpeed = 3f;
@@ -22,6 +24,7 @@ public class TurtleController : MonoBehaviour {
       anim = GetComponent<Animator>();               
       col = GetComponent<CapsuleCollider>();          
       controller = GetComponent<CharacterController>();
+      followingFish = GetComponent<FollowingFish>();
    }
 
    void FixedUpdate ()
@@ -58,5 +61,14 @@ public class TurtleController : MonoBehaviour {
 
    public float velocity(){
      return (Vector3.Distance(transform.position, previousPosition)) / Time.deltaTime;
+   }
+
+   // FIXME this is just a wrapper for followingFish :/
+   public void addFish(FishMovement fish){
+     followingFish.addFish(fish);
+   }
+
+   public void removeFish(FishMovement fish){
+     followingFish.removeFish(fish);
    }
 }

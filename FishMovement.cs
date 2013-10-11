@@ -63,6 +63,7 @@ public class FishMovement : MonoBehaviour {
     } else {
       if (boredByPlayer()){
         currentlyFollowingPlayer = false;
+        turtleController.removeFish(this);
       } else {
         moveTowardPlayer();
       }
@@ -85,6 +86,7 @@ public class FishMovement : MonoBehaviour {
         Quaternion rotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
         randomizedPlayerOffset = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(-3f, 1f), Random.Range(0f, 0f));
+        turtleController.addFish(this);
       }
       currentlyFollowingPlayer = true;
     }

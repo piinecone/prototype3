@@ -15,6 +15,8 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private float fastRotationSpeed;
   [SerializeField]
+  private float rushingSpeed;
+  [SerializeField]
   private float obstacleAvoidanceRotationSpeed;
   [SerializeField]
   private float followingRotationSpeed;
@@ -29,44 +31,61 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private TurtleController turtleController;
 
+  // waypoints
   private Transform nextWaypoint;
   private Transform lastWaypoint;
   private int nextWaypointIndex;
-  private Vector3 randomizedPlayerOffset;
+
+  // lead fish
   private GameObject leadFish;
   private Vector3 leadFishOffset;
   private float leadFishDistance;
-  private Vector3 adjustedTarget;
+
+  // bursts
   private float burstTimer = 1.5f;
   private float timeleft = 0;
   private float currentBurstSpeed;
+
+  // player following
+  private Vector3 randomizedPlayerOffset;
   private bool currentlyFollowingPlayer = false;
   private float patienceSeed = 7f;
   private float patienceLeft;
+
+  // barriers
+  private Vector3 randomizedBarrierOffset;
+  private bool currentlyRushingABarrier = false;
+  private GameObject targetedBarrier = null;
+  private float rushRotationSpeed;
+
 
   void Start () {
     player = GameObject.FindWithTag("Player");
     forwardSpeed = 16f;
     burstSpeed = 25f;
     followingSpeed = 16.1f;
+    rushingSpeed = 35f;
     fastRotationSpeed = 75f;
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
+    rushRotationSpeed = 5f;
     quickChangeOfDirectionDistance = .75f;
     patienceLeft = patienceSeed;
   }
   
   void Update () {
-    if (!currentlyFollowingPlayer){
-      if (needsNewWaypoint()) determineNextWaypoint();
-      moveTowardNextWaypoint();
-    } else {
+    if (currentlyRushingABarrier && shouldContinueRushingBarrier()){
+      rushTowardBarrier();
+    } else if (currentlyFollowingPlayer){
       if (boredByPlayer()){
         currentlyFollowingPlayer = false;
         turtleController.removeFish(this);
       } else {
         moveTowardPlayer();
       }
+    } else {
+      if (needsNewWaypoint()) determineNextWaypoint();
+      moveTowardNextWaypoint();
     }
   }
 
@@ -89,6 +108,25 @@ public class FishMovement : MonoBehaviour {
         turtleController.addFish(this);
       }
       currentlyFollowingPlayer = true;
+    }
+  }
+
+  private void rushTowardBarrier(){
+    Vector3 targetPosition = (targetedBarrier.transform.position - randomizedBarrierOffset);
+    Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
+    Quaternion rotation = Quaternion.LookRotation(direction);
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, rushRotationSpeed * Time.deltaTime);
+    transform.position += transform.forward * rushingSpeed * Time.deltaTime;
+    Debug.DrawRay(transform.position, targetPosition, Color.blue);
+  }
+
+  private bool shouldContinueRushingBarrier(){
+    if (Vector3.Distance(transform.position, targetedBarrier.transform.position) > 15f){
+      return true;
+    } else {
+      currentlyRushingABarrier = false;
+      targetedBarrier = null;
+      return false;
     }
   }
 
@@ -185,7 +223,7 @@ public class FishMovement : MonoBehaviour {
   }
 
   private bool transformShouldBeAvoided(Transform hitTransform){
-    if (hitTransform != transform && hitTransform != player.transform){
+    if (hitTransform != transform && hitTransform != player.transform && hitTransform.gameObject != targetedBarrier){
       return true;
     } else {
       return false;
@@ -250,5 +288,16 @@ public class FishMovement : MonoBehaviour {
     Vector3 forward = transform.forward;
     float angle = Vector3.Angle(direction, forward);
     return (angle < 45F) ? true : false;
+  }
+
+  public void rushBarrier(GameObject barrier){
+    if (!currentlyRushingABarrier){
+      Vector3 direction = barrier.transform.position;
+      Quaternion rotation = Quaternion.LookRotation(direction);
+      transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
+      randomizedBarrierOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
+      currentlyRushingABarrier = true;
+      targetedBarrier = barrier;
+    }
   }
 }

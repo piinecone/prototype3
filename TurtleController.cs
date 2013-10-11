@@ -16,6 +16,7 @@ public class TurtleController : MonoBehaviour {
    private Animator anim;
    private CapsuleCollider col;
    private AnimatorStateInfo currentBaseState;
+   private Vector3 previousPosition;
 
    void Start () {
       anim = GetComponent<Animator>();               
@@ -34,6 +35,7 @@ public class TurtleController : MonoBehaviour {
    }
    
    void Update () {
+     previousPosition = transform.position;
      swim(); // we're always underwater for now
    }
 
@@ -52,5 +54,9 @@ public class TurtleController : MonoBehaviour {
      moveDirection.y -= gravity * Time.deltaTime;
 
      controller.Move(moveDirection * Time.deltaTime);
+   }
+
+   public float velocity(){
+     return (Vector3.Distance(transform.position, previousPosition)) / Time.deltaTime;
    }
 }

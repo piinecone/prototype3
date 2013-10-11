@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[RequireComponent(typeof (TurtleController))]
 public class FishMovement : MonoBehaviour {
   [SerializeField]
   private List<GameObject> waypoints;
@@ -24,7 +25,9 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private SchoolOfFishMovement schoolOfFish;
   [SerializeField]
-  private Transform player;
+  private GameObject player;
+  [SerializeField]
+  private TurtleController turtleController;
 
   private Transform nextWaypoint;
   private Transform lastWaypoint;
@@ -38,9 +41,11 @@ public class FishMovement : MonoBehaviour {
   private float timeleft = 0;
   private float currentBurstSpeed;
   private bool currentlyFollowingPlayer = false;
+  private float patienceSeed = 7f;
+  private float patienceLeft;
 
   void Start () {
-    player = GameObject.FindWithTag("Player").transform;
+    player = GameObject.FindWithTag("Player");
     forwardSpeed = 16f;
     burstSpeed = 25f;
     followingSpeed = 16.1f;
@@ -48,6 +53,7 @@ public class FishMovement : MonoBehaviour {
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
     quickChangeOfDirectionDistance = .75f;
+    patienceLeft = patienceSeed;
   }
   
   void Update () {
@@ -55,14 +61,27 @@ public class FishMovement : MonoBehaviour {
       if (needsNewWaypoint()) determineNextWaypoint();
       moveTowardNextWaypoint();
     } else {
-      moveTowardPlayer();
+      if (boredByPlayer()){
+        currentlyFollowingPlayer = false;
+      } else {
+        moveTowardPlayer();
+      }
     }
+  }
+
+  private bool boredByPlayer(){
+    if (turtleController.velocity() < 10f){
+      patienceLeft -= Time.deltaTime;
+    } else {
+      patienceLeft = Random.Range(.75f, 1.25f) * patienceSeed;
+    }
+    return (patienceLeft <= 0f) ? true : false;
   }
 
   void OnTriggerEnter(Collider collider){
     if (collider.gameObject.tag == "PlayerInfluence" && playerIsInFront()){
       if (!currentlyFollowingPlayer){ // then look at the player
-        Vector3 direction = player.forward.normalized;
+        Vector3 direction = player.transform.forward.normalized;
         Quaternion rotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
         randomizedPlayerOffset = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(-3f, 1f), Random.Range(0f, 0f));
@@ -72,7 +91,7 @@ public class FishMovement : MonoBehaviour {
   }
 
   private void moveTowardPlayer(){
-    Vector3 targetPosition = (player.position - player.InverseTransformDirection(randomizedPlayerOffset));
+    Vector3 targetPosition = (player.transform.position - player.transform.InverseTransformDirection(randomizedPlayerOffset));
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
     Quaternion rotation = Quaternion.LookRotation(direction);
     //transform.rotation = Quaternion.Slerp(transform.rotation, rotation, obstacleAvoidanceRotationSpeed * Time.deltaTime);
@@ -164,7 +183,7 @@ public class FishMovement : MonoBehaviour {
   }
 
   private bool transformShouldBeAvoided(Transform hitTransform){
-    if (hitTransform != transform && hitTransform != player){
+    if (hitTransform != transform && hitTransform != player.transform){
       return true;
     } else {
       return false;
@@ -225,7 +244,7 @@ public class FishMovement : MonoBehaviour {
   }
 
   private bool playerIsInFront(){
-    Vector3 direction = (player.position - transform.position).normalized;
+    Vector3 direction = (player.transform.position - transform.position).normalized;
     Vector3 forward = transform.forward;
     float angle = Vector3.Angle(direction, forward);
     return (angle < 45F) ? true : false;

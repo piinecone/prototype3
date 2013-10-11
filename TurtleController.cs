@@ -50,7 +50,7 @@ public class TurtleController : MonoBehaviour {
      moveDirection *= speedInMedium;
 
      Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-     Debug.DrawRay(new Vector3(transform.position.x, transform.position.y + 1f, transform.position.z), mouseRay.direction, Color.red);
+     //Debug.DrawRay(new Vector3(transform.position.x, transform.position.y + 1f, transform.position.z), mouseRay.direction, Color.red);
      Vector3 lookPos = mouseRay.direction;// - transform.position;
      Quaternion targetRotation = Quaternion.LookRotation(lookPos);
      transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * rotateSpeed * Time.deltaTime);

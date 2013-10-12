@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[RequireComponent(typeof (BarrierController))]
 public class FollowingFish : MonoBehaviour {
   [SerializeField]
   private float barrierTimeout;
@@ -10,17 +11,19 @@ public class FollowingFish : MonoBehaviour {
   [SerializeField]
   private float minimumDistance;
 
+  private BarrierController barrierController;
   private List<FishMovement> fishCurrentlyFollowingPlayer = new List<FishMovement>();
   private float barrierTimeleft;
   private GameObject targetedBarrier = null;
 
   void Start () {
     minimumDistance = 35f;
+    barrierController = GetComponent<BarrierController>();
   }
   
   void Update () {
     if (fishCurrentlyFollowingPlayer.Count > 0 && playerHasBeenLookingAtBarrierLongEnough()){
-      fireTheFishiesAtTargetedBarrier();
+        fireTheFishiesAtTargetedBarrier();
     }
   }
 
@@ -45,6 +48,7 @@ public class FollowingFish : MonoBehaviour {
   }
 
   private void fireTheFishiesAtTargetedBarrier(){
+    barrierController.attemptToMarkBarrierAsDestroyed(targetedBarrier, fishCurrentlyFollowingPlayer.Count);
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
       fish.rushBarrier(targetedBarrier);
     }

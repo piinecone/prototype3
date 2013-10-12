@@ -124,25 +124,25 @@ public class FishMovement : MonoBehaviour {
       transform.position += transform.forward * rushingSpeed * Time.deltaTime;
       //Debug.DrawRay(transform.position, targetPosition, Color.blue);
     } else {
+      if (!currentlyFinishingRush) beginFinishingBarrierRush(targetedBarrier);
       currentlyRushingABarrier = false;
       targetedBarrier = null;
-      if (!currentlyFinishingRush) beginFinishingBarrierRush();
     }
   }
 
-  private void beginFinishingBarrierRush(){
+  private void beginFinishingBarrierRush(GameObject barrier){
     finishRushTargetPosition = (transform.position + transform.up * scatterDistance);
     float xComponent = finishRushTargetPosition.x;
     finishRushTargetPosition.x = Random.Range(xComponent - 30f, xComponent + 30f);
     quicklyLookAt(finishRushTargetPosition);
     currentlyFinishingRush = true;
+    turtleController.applyForceVectorToBarrier(finishRushTargetPosition, barrier);
   }
 
   private void finishRushBehavior(){
     if (shouldFinishRushBehavior()){
       // NOTE assuming "scatter" behavior by default for now;
       // eventually this will be determined by the barrier itself
-      Debug.Log(finishRushTargetPosition);
       Vector3 direction = directionAfterAvoidingObstacles(finishRushTargetPosition);
       Quaternion rotation = Quaternion.LookRotation(direction);
       transform.rotation = Quaternion.Slerp(transform.rotation, rotation, rushRotationSpeed * Time.deltaTime);

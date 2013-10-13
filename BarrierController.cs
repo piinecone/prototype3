@@ -22,7 +22,16 @@ public class BarrierController : MonoBehaviour {
     barrier.willBeDestroyedByRushAttack(attackStrength);
   }
 
-  public Barrier getBarrierInstanceFromBarrierGameObject(GameObject theBarrier){
+  public List<GameObject> getAllBarriersFor(GameObject theBarrier){
+    Barrier barrier = getBarrierInstanceFromBarrierGameObject(theBarrier);
+    List<GameObject> allBarriers = new List<GameObject>();
+    allBarriers.Add(theBarrier);
+    if (barrier.sibling != null) allBarriers.Add(barrier.sibling);
+
+    return allBarriers;
+  }
+
+  private Barrier getBarrierInstanceFromBarrierGameObject(GameObject theBarrier){
     foreach(Barrier barrier in barriers){
       if (barrier.gameObject == theBarrier.transform.parent.gameObject){
         return barrier;
@@ -30,4 +39,5 @@ public class BarrierController : MonoBehaviour {
     }
     return null;
   }
+
 }

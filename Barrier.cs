@@ -9,6 +9,8 @@ public class Barrier : MonoBehaviour {
   private int strength;
   [SerializeField]
   private GameObject trigger;
+  [SerializeField]
+  public GameObject sibling;
 
   private List<Rigidbody> barrierComponents = new List<Rigidbody>();
   private Rigidbody[] barrierComponentsArray;

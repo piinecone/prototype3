@@ -48,9 +48,13 @@ public class FollowingFish : MonoBehaviour {
   }
 
   private void fireTheFishiesAtTargetedBarrier(){
-    barrierController.attemptToMarkBarrierAsDestroyed(targetedBarrier, fishCurrentlyFollowingPlayer.Count);
+    List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(targetedBarrier);
+    for (int i = 0; i < targetedBarriers.Count; i++){
+      barrierController.attemptToMarkBarrierAsDestroyed(targetedBarriers[i], fishCurrentlyFollowingPlayer.Count);
+    }
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
-      fish.rushBarrier(targetedBarrier);
+      int index = Random.Range(0,targetedBarriers.Count-1);
+      fish.rushBarrier(targetedBarriers[index]);
     }
   }
 

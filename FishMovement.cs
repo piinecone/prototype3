@@ -61,6 +61,9 @@ public class FishMovement : MonoBehaviour {
   private float rushRotationSpeed;
   private float scatterDistance = 12f;
 
+  // trapped
+  private bool isTrapped;
+
   void Start () {
     player = GameObject.FindWithTag("Player");
     forwardSpeed = 16f;
@@ -87,6 +90,8 @@ public class FishMovement : MonoBehaviour {
       } else {
         moveTowardPlayer();
       }
+    } else if (isTrapped) {
+      spinAroundLikeAnIdiot();
     } else {
       if (needsNewWaypoint()) determineNextWaypoint();
       moveTowardNextWaypoint();
@@ -207,6 +212,9 @@ public class FishMovement : MonoBehaviour {
     }
   }
 
+  private void spinAroundLikeAnIdiot(){
+  }
+
   private void smoothlyLookAtNextWaypoint(){
     Vector3 targetPosition = nextWaypoint.position - leadFishOffset;
     Vector3 direction = (targetPosition - transform.position).normalized;
@@ -310,8 +318,8 @@ public class FishMovement : MonoBehaviour {
     nextWaypoint = waypoints[nextWaypointIndex].transform;
   }
 
-  public void setLeadFish(GameObject fish){
-    leadFish = fish;
+  public void setLeadFish(FishMovement fish){
+    leadFish = fish.transform.gameObject;
     leadFishOffset = leadFish.transform.position - transform.position;
     leadFishDistance = Vector3.Distance(transform.position, leadFish.transform.position);
   }
@@ -344,5 +352,15 @@ public class FishMovement : MonoBehaviour {
       currentlyRushingABarrier = true;
       targetedBarrier = barrier;
     }
+  }
+
+  // should be for lead fish only
+  // TODO give leadfish their own behavior class
+  public void setWaypoints(List<GameObject> theWaypoints){
+    waypoints = theWaypoints;
+  }
+
+  public void setTrapped(bool trapped){
+    isTrapped = trapped;
   }
 }

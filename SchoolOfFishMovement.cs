@@ -4,13 +4,23 @@ using System.Collections.Generic;
 
 public class SchoolOfFishMovement : MonoBehaviour {
   [SerializeField]
-  private GameObject leadFish;
+  private FishMovement leadFish;
   [SerializeField]
   private List<FishMovement> fish;
+  [SerializeField]
+  private List<GameObject> waypoints = new List<GameObject>();
+  [SerializeField]
+  private bool trapped;
 
   void Start () {
+    collectFish();
+    if (waypoints.Count == 0){
+      // randomize waypoints
+    }
     foreach(FishMovement f in fish){
       f.setLeadFish(leadFish);
+      f.setWaypoints(waypoints);
+      f.setTrapped(trapped);
     }
     BroadcastNextWaypoint(0);
   }
@@ -23,5 +33,16 @@ public class SchoolOfFishMovement : MonoBehaviour {
       f.setNextWaypoint(waypointIndex);
       f.burstToNextWaypoint(true);
     }
+  }
+
+  void collectFish(){
+    FishMovement[] fishies = GetComponentsInChildren<FishMovement>();
+    for (int i = 0; i < fishies.Length; i++){
+      fish.Add(fishies[i]);
+    }
+  }
+
+  public void free(){
+    trapped = false;
   }
 }

@@ -30,14 +30,62 @@ public class FollowingFish : MonoBehaviour {
   private bool playerHasBeenLookingAtBarrierLongEnough(){
     RaycastHit hit;
     Vector3 forwardRay = transform.forward * targetingDistance;
+    Vector3 leftRay = transform.forward * targetingDistance;
+    Vector3 rightRay = transform.forward * targetingDistance;
+    Vector3 topRay = transform.forward * targetingDistance;
+    Vector3 bottomRay = transform.forward * targetingDistance;
+    leftRay.x -= 5f;
+    rightRay.x += 5f;
+    topRay.y += 5f;
+    bottomRay.y -= 5f;
     bool targetingBarrier = false;
     Debug.DrawRay(transform.position, forwardRay, Color.green);
+    Debug.DrawRay(transform.position, topRay, Color.blue);
+    Debug.DrawRay(transform.position, bottomRay, Color.red);
+    Debug.DrawRay(transform.position, leftRay, Color.magenta);
+    Debug.DrawRay(transform.position, rightRay, Color.black);
 
     if (Physics.Raycast(transform.position, forwardRay, out hit, targetingDistance)){
       if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
         targetingBarrier = true;
         targetedBarrier = hit.transform.gameObject;
         Debug.DrawRay(transform.position, forwardRay, Color.red);
+      } else {
+        targetedBarrier = null;
+      }
+    }
+    if (Physics.Raycast(transform.position, leftRay, out hit, targetingDistance)){
+      if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
+        targetingBarrier = true;
+        targetedBarrier = hit.transform.gameObject;
+        Debug.DrawRay(transform.position, leftRay, Color.red);
+      } else {
+        targetedBarrier = null;
+      }
+    }
+    if (Physics.Raycast(transform.position, rightRay, out hit, targetingDistance)){
+      if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
+        targetingBarrier = true;
+        targetedBarrier = hit.transform.gameObject;
+        Debug.DrawRay(transform.position, rightRay, Color.red);
+      } else {
+        targetedBarrier = null;
+      }
+    }
+    if (Physics.Raycast(transform.position, topRay, out hit, targetingDistance)){
+      if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
+        targetingBarrier = true;
+        targetedBarrier = hit.transform.gameObject;
+        Debug.DrawRay(transform.position, topRay, Color.red);
+      } else {
+        targetedBarrier = null;
+      }
+    }
+    if (Physics.Raycast(transform.position, bottomRay, out hit, targetingDistance)){
+      if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
+        targetingBarrier = true;
+        targetedBarrier = hit.transform.gameObject;
+        Debug.DrawRay(transform.position, bottomRay, Color.red);
       } else {
         targetedBarrier = null;
       }

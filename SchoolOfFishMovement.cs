@@ -9,6 +9,8 @@ public class SchoolOfFishMovement : MonoBehaviour {
   private List<FishMovement> fish;
   [SerializeField]
   private List<GameObject> waypoints = new List<GameObject>();
+  [SerializeField]
+  private bool trapped;
 
   void Start () {
     collectFish();
@@ -18,6 +20,7 @@ public class SchoolOfFishMovement : MonoBehaviour {
     foreach(FishMovement f in fish){
       f.setLeadFish(leadFish);
       f.setWaypoints(waypoints);
+      f.setTrapped(trapped);
     }
     BroadcastNextWaypoint(0);
   }
@@ -37,5 +40,9 @@ public class SchoolOfFishMovement : MonoBehaviour {
     for (int i = 0; i < fishies.Length; i++){
       fish.Add(fishies[i]);
     }
+  }
+
+  public void free(){
+    trapped = false;
   }
 }

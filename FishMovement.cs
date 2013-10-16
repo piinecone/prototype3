@@ -61,6 +61,9 @@ public class FishMovement : MonoBehaviour {
   private float rushRotationSpeed;
   private float scatterDistance = 12f;
 
+  // trapped
+  private bool isTrapped;
+
   void Start () {
     player = GameObject.FindWithTag("Player");
     forwardSpeed = 16f;
@@ -87,6 +90,8 @@ public class FishMovement : MonoBehaviour {
       } else {
         moveTowardPlayer();
       }
+    } else if (isTrapped) {
+      spinAroundLikeAnIdiot();
     } else {
       if (needsNewWaypoint()) determineNextWaypoint();
       moveTowardNextWaypoint();
@@ -205,6 +210,9 @@ public class FishMovement : MonoBehaviour {
       transform.rotation = Quaternion.Slerp(transform.rotation, rotation, obstacleAvoidanceRotationSpeed * Time.deltaTime);
       transform.position += transform.forward * forwardSpeed * Time.deltaTime;
     }
+  }
+
+  private void spinAroundLikeAnIdiot(){
   }
 
   private void smoothlyLookAtNextWaypoint(){
@@ -350,5 +358,9 @@ public class FishMovement : MonoBehaviour {
   // TODO give leadfish their own behavior class
   public void setWaypoints(List<GameObject> theWaypoints){
     waypoints = theWaypoints;
+  }
+
+  public void setTrapped(bool trapped){
+    isTrapped = trapped;
   }
 }

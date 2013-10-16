@@ -10,6 +10,8 @@ public class Barrier : MonoBehaviour {
   [SerializeField]
   private GameObject trigger;
   [SerializeField]
+  private SchoolOfFishMovement trappedSchool;
+  [SerializeField]
   public GameObject sibling;
 
   private List<Rigidbody> barrierComponents = new List<Rigidbody>();
@@ -36,6 +38,7 @@ public class Barrier : MonoBehaviour {
       }
 
       disableTrigger();
+      freeTrappedSchool();
     }
   }
 
@@ -53,6 +56,11 @@ public class Barrier : MonoBehaviour {
 
   private void disableTrigger(){
     trigger.SetActive(false);
+  }
+
+  private void freeTrappedSchool(){
+    if (trappedSchool != null)
+      trappedSchool.free();
   }
 
   public bool willBeDestroyedByRushAttack(int attackStrength){

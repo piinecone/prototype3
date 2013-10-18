@@ -61,8 +61,24 @@ public class TurtleController : MonoBehaviour {
     Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
     //Debug.DrawRay(new Vector3(transform.position.x, transform.position.y + 1f, transform.position.z), mouseRay.direction, Color.red);
     Vector3 lookPos = mouseRay.direction;// - transform.position;
+    lookPos.y *= currentYAxisMultiplier();
     Quaternion targetRotation = Quaternion.LookRotation(lookPos);
-    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * rotateSpeed * Time.deltaTime);
+    // FIXME at some point in the future the currentRotateSpeed should be smoothed out based on the elapsed time since the 
+    // camera state changed. So if the camera were in targeting mode, then the targeting button was released, the release time
+    // would be recorded, decremented every update(), and used to calculate the rotation speed as follows:
+    // if (1f - timeSinceRelease) == 1
+    //   4 * slowRotationSpeed + 1 * fastRotationSpeed / 5
+    // else if (1f - timeSinceRelease >= .75)
+    //   3 * slowRotationSpeed + 2 * fastRotationSpeed / 5
+    // else if (1f - timeSinceRelease >= .5)
+    //   2 * slowRotationSpeed + 3 * fastRotationSpeed / 5
+    // else if (1f - timeSinceRelease >= .25)
+    //   1 * slowRotationSpeed + 4 * fastRotationSpeed / 5
+    // else if (1f - timeSinceRelease >= 0)
+    //   0 * slowRotationSpeed + 5 * fastRotationSpeed / 5
+    // end
+    // except do this intelligently with a function
+    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentRotateSpeed() * Time.deltaTime);
     moveDirection.y -= gravity * Time.deltaTime;
 
     controller.Move(moveDirection * Time.deltaTime);
@@ -83,5 +99,13 @@ public class TurtleController : MonoBehaviour {
 
   public void applyForceVectorToBarrier(Vector3 forceVector, GameObject barrier){
     barrierController.applyForceVectorToBarrier(forceVector, barrier);
+  }
+
+  private float currentRotateSpeed(){
+    return thirdPersonCamera.getCamState() == "Behind" ? defaultRotateSpeed : targetModeRotateSpeed;
+  }
+
+  private float currentYAxisMultiplier(){
+    return thirdPersonCamera.getCamState() == "Behind" ? 1.5f : 0.5f;
   }
 }

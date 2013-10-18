@@ -95,4 +95,15 @@ public class ThirdPersonCamera : MonoBehaviour {
    private void smoothPosition(Vector3 fromPos, Vector3 toPos){
      this.transform.position = Vector3.SmoothDamp(fromPos, toPos, ref velocityCamSmooth, camSmoothDampTime);
    }
+
+  public string getCamState(){
+   switch(camState){
+     case CamStates.Behind:
+       return "Behind";
+     case CamStates.Target:
+       return "Target";
+     default:
+       return "Behind";
+   }
+  }
 }

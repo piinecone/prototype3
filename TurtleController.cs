@@ -12,9 +12,14 @@ public class TurtleController : MonoBehaviour {
   public float speed = 4f;
   public float gravity = 20f;
   public FollowingFish followingFish;
+  [SerializeField]
+  private float defaultRotateSpeed;
+  [SerializeField]
+  private float targetModeRotateSpeed;
+  [SerializeField]
+  private ThirdPersonCamera thirdPersonCamera;
 
   private float speedInMedium = 8f;
-  private float rotateSpeed = 3f;
   private Vector3 moveDirection = Vector3.zero;
   private CharacterController controller;
   private Animator anim;

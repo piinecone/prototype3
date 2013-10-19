@@ -52,18 +52,7 @@ public class ThirdPersonCamera : MonoBehaviour {
   //}
 
   void LateUpdate() {
-    if (objectsThatShouldAlwaysBeVisible.Count > 0){
-      bool zoomOut = false;
-      float desiredDistance = distanceAway;
-      foreach(GameObject go in objectsThatShouldAlwaysBeVisible){
-        float distance = Vector3.Distance(go.transform.position, follow.position);
-        if ((distance + 7.5f) > desiredDistance) zoomOut = true;
-      }
-      desiredDistance += zoomOut == true ? (15f * Time.deltaTime) : (-5f * Time.deltaTime);
-      distanceAway = (desiredDistance > maxDistanceAway || desiredDistance < minDistanceAway) ? distanceAway : desiredDistance;
-      //Debug.Log("Desired: " + desiredDistance + ", current: " + distanceAway);
-    }
-
+    calculateDesiredDistanceAwayBasedOnFollowers();
     Vector3 characterOffset = follow.position + new Vector3(0f, distanceUp, 0f);
 
     // Determine camera state
@@ -93,6 +82,20 @@ public class ThirdPersonCamera : MonoBehaviour {
     //CompensateForWalls(characterOffset, ref targetPosition);
     smoothPosition(this.transform.position, targetPosition);
     transform.LookAt(follow);
+  }
+
+  private void calculateDesiredDistanceAwayBasedOnFollowers(){
+    if (objectsThatShouldAlwaysBeVisible.Count > 0){
+      bool zoomOut = false;
+      float desiredDistance = distanceAway;
+      foreach(GameObject go in objectsThatShouldAlwaysBeVisible){
+        float distance = Vector3.Distance(go.transform.position, follow.position);
+        if ((distance + 7.5f) > desiredDistance) zoomOut = true;
+      }
+      desiredDistance += zoomOut == true ? (15f * Time.deltaTime) : (-5f * Time.deltaTime);
+      distanceAway = (desiredDistance > maxDistanceAway || desiredDistance < minDistanceAway) ? distanceAway : desiredDistance;
+      //Debug.Log("Desired: " + desiredDistance + ", current: " + distanceAway);
+    }
   }
 
   private void CompensateForWalls(Vector3 fromObject, ref Vector3 toTarget){

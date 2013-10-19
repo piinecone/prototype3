@@ -8,7 +8,7 @@ public class Barrier : MonoBehaviour {
   [SerializeField]
   private int strength;
   [SerializeField]
-  private GameObject trigger;
+  public GameObject trigger;
   [SerializeField]
   private SchoolOfFishMovement trappedSchool;
   [SerializeField]
@@ -70,5 +70,9 @@ public class Barrier : MonoBehaviour {
     } else {
       return false;
     }
+  }
+
+  public bool isViableTarget(){
+    return !destroyed;
   }
 }

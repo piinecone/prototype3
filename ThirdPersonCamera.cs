@@ -18,6 +18,10 @@ public class ThirdPersonCamera : MonoBehaviour {
   private float targetingTime = 0.5f;
   [SerializeField]
   private TurtleState turtleState;
+  [SerializeField]
+  private float maxDistanceAway;
+  [SerializeField]
+  private float minDistanceAway;
 
   private Vector3 targetPosition;
   private Vector3 lookDir;
@@ -25,8 +29,6 @@ public class ThirdPersonCamera : MonoBehaviour {
   private float camSmoothDampTime = 0.1f;
   private CamStates camState = CamStates.Behind;
   private List<GameObject> objectsThatShouldAlwaysBeVisible = new List<GameObject>();
-  private float maxDistanceAway;
-  private float minDistanceAway;
 
   public enum CamStates {
     Behind,
@@ -36,7 +38,6 @@ public class ThirdPersonCamera : MonoBehaviour {
   void Start () {
     follow = GameObject.FindWithTag("Player").transform;
     lookDir = follow.forward;
-    maxDistanceAway = 3f * distanceAway;
     minDistanceAway = distanceAway;
   }
   

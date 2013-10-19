@@ -30,6 +30,10 @@ public class FishMovement : MonoBehaviour {
   private GameObject player;
   [SerializeField]
   private TurtleController turtleController;
+  [SerializeField]
+  private AudioSource startedFollowingSound;
+  [SerializeField]
+  private AudioSource stoppedFollowingSound;
 
   // waypoints
   private Transform nextWaypoint;
@@ -87,6 +91,7 @@ public class FishMovement : MonoBehaviour {
       if (boredByPlayer()){
         currentlyFollowingPlayer = false;
         turtleController.removeFish(this);
+        stoppedFollowingSound.Play();
       } else {
         moveTowardPlayer();
       }
@@ -102,7 +107,7 @@ public class FishMovement : MonoBehaviour {
     if (turtleController.velocity() < 10f){
       patienceLeft -= Time.deltaTime;
     } else {
-      patienceLeft = Random.Range(.75f, 1.25f) * patienceSeed;
+      patienceLeft = Random.Range(.75f, 2f) * patienceSeed;
     }
     return (patienceLeft <= 0f) ? true : false;
   }
@@ -115,6 +120,7 @@ public class FishMovement : MonoBehaviour {
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
         randomizedPlayerOffset = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(-3f, 1f), Random.Range(0f, 0f));
         turtleController.addFish(this);
+        startedFollowingSound.Play();
       }
       currentlyFollowingPlayer = true;
     }

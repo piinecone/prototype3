@@ -91,10 +91,12 @@ public class TurtleController : MonoBehaviour {
   // FIXME this is just a wrapper for followingFish :/
   public void addFish(FishMovement fish){
     followingFish.addFish(fish);
+    thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
   }
 
   public void removeFish(FishMovement fish){
     followingFish.removeFish(fish);
+    thirdPersonCamera.removeObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
   }
 
   public void applyForceVectorToBarrier(Vector3 forceVector, GameObject barrier){

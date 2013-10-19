@@ -26,10 +26,13 @@ public class BarrierController : MonoBehaviour {
     Barrier barrier = getBarrierInstanceFromBarrierGameObject(theBarrier);
     List<GameObject> allBarriers = new List<GameObject>();
     allBarriers.Add(theBarrier);
-    if (barrier.sibling != null)
-      allBarriers.Add(barrier.sibling);
+    if (barrier.sibling != null) allBarriers.Add(barrier.sibling);
 
     return allBarriers;
+  }
+
+  public List<Barrier> activeBarriers(){
+    return barriers;
   }
 
   private Barrier getBarrierInstanceFromBarrierGameObject(GameObject theBarrier){
@@ -40,5 +43,4 @@ public class BarrierController : MonoBehaviour {
     }
     return null;
   }
-
 }

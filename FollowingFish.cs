@@ -5,104 +5,65 @@ using System.Collections.Generic;
 [RequireComponent(typeof (BarrierController))]
 public class FollowingFish : MonoBehaviour {
   [SerializeField]
-  private float barrierTimeout;
-  [SerializeField]
   private float targetingDistance;
   [SerializeField]
-  private float minimumDistance;
+  private float nearbyBarrierDistanceThreshold;
 
   private BarrierController barrierController;
   private List<FishMovement> fishCurrentlyFollowingPlayer = new List<FishMovement>();
-  private float barrierTimeleft;
   private GameObject targetedBarrier = null;
 
   void Start () {
-    minimumDistance = 35f;
+    nearbyBarrierDistanceThreshold = 75f;
     barrierController = GetComponent<BarrierController>();
   }
   
   void Update () {
-    if (fishCurrentlyFollowingPlayer.Count > 0 && playerHasBeenLookingAtBarrierLongEnough()){
-        fireTheFishiesAtTargetedBarrier();
+    if (playerHasEnoughFish() && fishAreReadyToRush() && nearbyBarrierIsVisible()){
+      fireTheFishiesAtTargetedBarrier();
     }
   }
 
-  private bool playerHasBeenLookingAtBarrierLongEnough(){
-    RaycastHit hit;
-    Vector3 forwardRay = transform.forward * targetingDistance;
-    Vector3 leftRay = transform.forward * targetingDistance;
-    Vector3 rightRay = transform.forward * targetingDistance;
-    Vector3 topRay = transform.forward * targetingDistance;
-    Vector3 bottomRay = transform.forward * targetingDistance;
-    leftRay.x -= 5f;
-    rightRay.x += 5f;
-    topRay.y += 5f;
-    bottomRay.y -= 5f;
-    bool targetingBarrier = false;
-    Debug.DrawRay(transform.position, forwardRay, Color.green);
-    Debug.DrawRay(transform.position, topRay, Color.blue);
-    Debug.DrawRay(transform.position, bottomRay, Color.red);
-    Debug.DrawRay(transform.position, leftRay, Color.magenta);
-    Debug.DrawRay(transform.position, rightRay, Color.black);
+  private bool playerHasEnoughFish(){
+    return (fishCurrentlyFollowingPlayer.Count > 0);
+  }
 
-    if (Physics.Raycast(transform.position, forwardRay, out hit, targetingDistance)){
-      if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
-        targetingBarrier = true;
-        targetedBarrier = hit.transform.gameObject;
-        Debug.DrawRay(transform.position, forwardRay, Color.red);
-      } else {
-        targetedBarrier = null;
-      }
-    }
-    if (Physics.Raycast(transform.position, leftRay, out hit, targetingDistance)){
-      if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
-        targetingBarrier = true;
-        targetedBarrier = hit.transform.gameObject;
-        Debug.DrawRay(transform.position, leftRay, Color.red);
-      } else {
-        targetedBarrier = null;
-      }
-    }
-    if (Physics.Raycast(transform.position, rightRay, out hit, targetingDistance)){
-      if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
-        targetingBarrier = true;
-        targetedBarrier = hit.transform.gameObject;
-        Debug.DrawRay(transform.position, rightRay, Color.red);
-      } else {
-        targetedBarrier = null;
-      }
-    }
-    if (Physics.Raycast(transform.position, topRay, out hit, targetingDistance)){
-      if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
-        targetingBarrier = true;
-        targetedBarrier = hit.transform.gameObject;
-        Debug.DrawRay(transform.position, topRay, Color.red);
-      } else {
-        targetedBarrier = null;
-      }
-    }
-    if (Physics.Raycast(transform.position, bottomRay, out hit, targetingDistance)){
-      if (hit.transform.gameObject.tag == "Barrier" && Vector3.Distance(transform.position, hit.transform.position) >= minimumDistance){
-        targetingBarrier = true;
-        targetedBarrier = hit.transform.gameObject;
-        Debug.DrawRay(transform.position, bottomRay, Color.red);
-      } else {
-        targetedBarrier = null;
+  private bool fishAreReadyToRush(){
+    // FIXME check if the fish are currently rushing or finishing a rush
+    return true;
+  }
+
+  private bool nearbyBarrierIsVisible(){
+    targetedBarrier = null;
+    Barrier nearestVisibleBarrier;
+    float nearestBarrierDistance = nearbyBarrierDistanceThreshold;
+    List<Barrier> barriers = barrierController.activeBarriers();
+    foreach(Barrier barrier in barriers){
+      if (!barrier.isViableTarget()) continue;
+      Vector3 direction = (barrier.transform.position - transform.position).normalized;
+      Vector3 forward = transform.forward;
+      if (Vector3.Angle(direction, forward) < 45F){
+        float distance = Vector3.Distance(transform.position, barrier.transform.position);
+        if (distance < nearbyBarrierDistanceThreshold && distance < nearestBarrierDistance){
+          nearestBarrierDistance = distance;
+          nearestVisibleBarrier = barrier;
+          targetedBarrier = nearestVisibleBarrier.trigger;
+        }
       }
     }
 
-    barrierTimeleft = targetingBarrier ? barrierTimeleft - Time.deltaTime : barrierTimeout;
-    return (barrierTimeleft > 0) ? false : true;
+    return (targetedBarrier != null);
   }
 
   private void fireTheFishiesAtTargetedBarrier(){
+    int index = 0;
     List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(targetedBarrier);
     for (int i = 0; i < targetedBarriers.Count; i++){
       barrierController.attemptToMarkBarrierAsDestroyed(targetedBarriers[i], fishCurrentlyFollowingPlayer.Count);
     }
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
-      int index = Random.Range(0,targetedBarriers.Count-1);
-      fish.rushBarrier(targetedBarriers[index]);
+      fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count]);
+      index++;
     }
   }
 

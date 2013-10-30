@@ -9,6 +9,8 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private float forwardSpeed;
   [SerializeField]
+  private float shoalingSpeed;
+  [SerializeField]
   private float burstSpeed;
   [SerializeField]
   private float followingSpeed;
@@ -20,6 +22,8 @@ public class FishMovement : MonoBehaviour {
   private float obstacleAvoidanceRotationSpeed;
   [SerializeField]
   private float followingRotationSpeed;
+  [SerializeField]
+  private float shoalingRotationSpeed;
   [SerializeField]
   private float quickChangeOfDirectionDistance;
   [SerializeField]
@@ -65,18 +69,22 @@ public class FishMovement : MonoBehaviour {
   private float rushRotationSpeed;
   private float scatterDistance = 12f;
 
-  // trapped
+  // trapped + shoaling
+  private bool isShoaling;
   private bool isTrapped;
+  private Transform shoalPoint;
 
   void Start () {
     player = GameObject.FindWithTag("Player");
     forwardSpeed = 16f;
+    shoalingSpeed = 7f;
     burstSpeed = 25f;
     followingSpeed = 16.1f;
     rushingSpeed = 35f;
     fastRotationSpeed = 75f;
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
+    shoalingRotationSpeed = 1.8f;
     rushRotationSpeed = 5f;
     quickChangeOfDirectionDistance = .75f;
     patienceLeft = patienceSeed;
@@ -95,8 +103,8 @@ public class FishMovement : MonoBehaviour {
       } else {
         moveTowardPlayer();
       }
-    } else if (isTrapped) {
-      spinAroundLikeAnIdiot();
+    } else if (isShoaling) {
+      shoalAroundShoalPoint();
     } else {
       if (needsNewWaypoint()) determineNextWaypoint();
       moveTowardNextWaypoint();
@@ -113,8 +121,8 @@ public class FishMovement : MonoBehaviour {
   }
 
   void OnTriggerEnter(Collider collider){
-    if (collider.gameObject.tag == "PlayerInfluence" && playerIsInFront()){
-      if (!currentlyFollowingPlayer){ // then look at the player
+    if (collider.gameObject.tag == "PlayerInfluence" && shouldFollowPlayer()){
+      if (!currentlyFollowingPlayer && !isTrapped){ // then look at the player
         Vector3 direction = player.transform.forward.normalized;
         Quaternion rotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
@@ -201,6 +209,14 @@ public class FishMovement : MonoBehaviour {
     transform.position += transform.forward * speed * Time.deltaTime;
   }
 
+  private void shoalAroundShoalPoint(){
+    Vector3 targetPosition = shoalPoint.position;
+    Vector3 direction = directionAfterAvoidingObstacles(targetPosition, 200f, 1f, 1f);
+    Quaternion rotation = Quaternion.LookRotation(direction);
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, shoalingRotationSpeed * Time.deltaTime);
+    transform.position += transform.forward * shoalingSpeed * Time.deltaTime;
+  }
+
   private void moveTowardNextWaypoint(){
     Vector3 targetPosition = nextWaypoint.position - leadFishOffset;
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
@@ -218,9 +234,6 @@ public class FishMovement : MonoBehaviour {
     }
   }
 
-  private void spinAroundLikeAnIdiot(){
-  }
-
   private void smoothlyLookAtNextWaypoint(){
     Vector3 targetPosition = nextWaypoint.position - leadFishOffset;
     Vector3 direction = (targetPosition - transform.position).normalized;
@@ -234,13 +247,10 @@ public class FishMovement : MonoBehaviour {
     transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
   }
 
-  private Vector3 directionAfterAvoidingObstacles(Vector3 targetPosition){
+  private Vector3 directionAfterAvoidingObstacles(Vector3 targetPosition, float hitSensitivity=75f, float forwardSensoryDistance=10f, float angularSensoryDistance=5f){
     RaycastHit hit;
     Vector3 direction = (targetPosition - transform.position).normalized;
     float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
-    float forwardSensoryDistance = 10f;
-    float angularSensoryDistance = 5f;
-    float hitSensitivity = 75f;
 
     Vector3 forwardRay = transform.forward * forwardSensoryDistance;
     Vector3 leftRay = transform.forward * forwardSensoryDistance;
@@ -321,7 +331,7 @@ public class FishMovement : MonoBehaviour {
   public void setNextWaypoint(int index){
     nextWaypointIndex = index;
     lastWaypoint = nextWaypoint;
-    nextWaypoint = waypoints[nextWaypointIndex].transform;
+    if (nextWaypointIndex < waypoints.Count) nextWaypoint = waypoints[nextWaypointIndex].transform;
   }
 
   public void setLeadFish(FishMovement fish){
@@ -340,6 +350,10 @@ public class FishMovement : MonoBehaviour {
     } else {
       return false;
     }
+  }
+
+  private bool shouldFollowPlayer(){
+    return (isShoaling || playerIsInFront());
   }
 
   private bool playerIsInFront(){
@@ -368,5 +382,13 @@ public class FishMovement : MonoBehaviour {
 
   public void setTrapped(bool trapped){
     isTrapped = trapped;
+  }
+
+  public void setShoalPoint(Transform theShoalPoint){
+    shoalPoint = theShoalPoint;
+  }
+
+  public void toggleShoaling(bool shoaling){
+    isShoaling = shoaling;
   }
 }

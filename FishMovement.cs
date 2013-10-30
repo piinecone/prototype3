@@ -9,6 +9,8 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private float forwardSpeed;
   [SerializeField]
+  private float trappedSpeed;
+  [SerializeField]
   private float burstSpeed;
   [SerializeField]
   private float followingSpeed;
@@ -20,6 +22,8 @@ public class FishMovement : MonoBehaviour {
   private float obstacleAvoidanceRotationSpeed;
   [SerializeField]
   private float followingRotationSpeed;
+  [SerializeField]
+  private float trappedRotationSpeed;
   [SerializeField]
   private float quickChangeOfDirectionDistance;
   [SerializeField]
@@ -67,16 +71,19 @@ public class FishMovement : MonoBehaviour {
 
   // trapped
   private bool isTrapped;
+  private Transform trap;
 
   void Start () {
     player = GameObject.FindWithTag("Player");
     forwardSpeed = 16f;
+    trappedSpeed = 7f;
     burstSpeed = 25f;
     followingSpeed = 16.1f;
     rushingSpeed = 35f;
     fastRotationSpeed = 75f;
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
+    trappedRotationSpeed = 1.8f;
     rushRotationSpeed = 5f;
     quickChangeOfDirectionDistance = .75f;
     patienceLeft = patienceSeed;
@@ -96,7 +103,7 @@ public class FishMovement : MonoBehaviour {
         moveTowardPlayer();
       }
     } else if (isTrapped) {
-      spinAroundLikeAnIdiot();
+      shoalWithinTrap();
     } else {
       if (needsNewWaypoint()) determineNextWaypoint();
       moveTowardNextWaypoint();
@@ -114,7 +121,7 @@ public class FishMovement : MonoBehaviour {
 
   void OnTriggerEnter(Collider collider){
     if (collider.gameObject.tag == "PlayerInfluence" && playerIsInFront()){
-      if (!currentlyFollowingPlayer){ // then look at the player
+      if (!currentlyFollowingPlayer && !isTrapped){ // then look at the player
         Vector3 direction = player.transform.forward.normalized;
         Quaternion rotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
@@ -201,6 +208,14 @@ public class FishMovement : MonoBehaviour {
     transform.position += transform.forward * speed * Time.deltaTime;
   }
 
+  private void shoalWithinTrap(){
+    Vector3 targetPosition = trap.position;
+    Vector3 direction = directionAfterAvoidingObstacles(targetPosition, 200f, 1f, 1f);
+    Quaternion rotation = Quaternion.LookRotation(direction);
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, trappedRotationSpeed * Time.deltaTime);
+    transform.position += transform.forward * trappedSpeed * Time.deltaTime;
+  }
+
   private void moveTowardNextWaypoint(){
     Vector3 targetPosition = nextWaypoint.position - leadFishOffset;
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
@@ -218,9 +233,6 @@ public class FishMovement : MonoBehaviour {
     }
   }
 
-  private void spinAroundLikeAnIdiot(){
-  }
-
   private void smoothlyLookAtNextWaypoint(){
     Vector3 targetPosition = nextWaypoint.position - leadFishOffset;
     Vector3 direction = (targetPosition - transform.position).normalized;
@@ -234,13 +246,10 @@ public class FishMovement : MonoBehaviour {
     transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
   }
 
-  private Vector3 directionAfterAvoidingObstacles(Vector3 targetPosition){
+  private Vector3 directionAfterAvoidingObstacles(Vector3 targetPosition, float hitSensitivity=75f, float forwardSensoryDistance=10f, float angularSensoryDistance=5f){
     RaycastHit hit;
     Vector3 direction = (targetPosition - transform.position).normalized;
     float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
-    float forwardSensoryDistance = 10f;
-    float angularSensoryDistance = 5f;
-    float hitSensitivity = 75f;
 
     Vector3 forwardRay = transform.forward * forwardSensoryDistance;
     Vector3 leftRay = transform.forward * forwardSensoryDistance;
@@ -368,5 +377,10 @@ public class FishMovement : MonoBehaviour {
 
   public void setTrapped(bool trapped){
     isTrapped = trapped;
+    rigidbody.isKinematic = isTrapped;
+  }
+
+  public void setTrap(Transform theTrap){
+    trap = theTrap;
   }
 }

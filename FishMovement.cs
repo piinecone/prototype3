@@ -9,7 +9,7 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private float forwardSpeed;
   [SerializeField]
-  private float trappedSpeed;
+  private float shoalingSpeed;
   [SerializeField]
   private float burstSpeed;
   [SerializeField]
@@ -23,7 +23,7 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private float followingRotationSpeed;
   [SerializeField]
-  private float trappedRotationSpeed;
+  private float shoalingRotationSpeed;
   [SerializeField]
   private float quickChangeOfDirectionDistance;
   [SerializeField]
@@ -69,21 +69,22 @@ public class FishMovement : MonoBehaviour {
   private float rushRotationSpeed;
   private float scatterDistance = 12f;
 
-  // trapped
+  // trapped + shoaling
+  private bool isShoaling;
   private bool isTrapped;
-  private Transform trap;
+  private Transform shoalPoint;
 
   void Start () {
     player = GameObject.FindWithTag("Player");
     forwardSpeed = 16f;
-    trappedSpeed = 7f;
+    shoalingSpeed = 7f;
     burstSpeed = 25f;
     followingSpeed = 16.1f;
     rushingSpeed = 35f;
     fastRotationSpeed = 75f;
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
-    trappedRotationSpeed = 1.8f;
+    shoalingRotationSpeed = 1.8f;
     rushRotationSpeed = 5f;
     quickChangeOfDirectionDistance = .75f;
     patienceLeft = patienceSeed;
@@ -102,8 +103,8 @@ public class FishMovement : MonoBehaviour {
       } else {
         moveTowardPlayer();
       }
-    } else if (isTrapped) {
-      shoalWithinTrap();
+    } else if (isShoaling) {
+      shoalAroundShoalPoint();
     } else {
       if (needsNewWaypoint()) determineNextWaypoint();
       moveTowardNextWaypoint();
@@ -120,7 +121,7 @@ public class FishMovement : MonoBehaviour {
   }
 
   void OnTriggerEnter(Collider collider){
-    if (collider.gameObject.tag == "PlayerInfluence" && playerIsInFront()){
+    if (collider.gameObject.tag == "PlayerInfluence" && shouldFollowPlayer()){
       if (!currentlyFollowingPlayer && !isTrapped){ // then look at the player
         Vector3 direction = player.transform.forward.normalized;
         Quaternion rotation = Quaternion.LookRotation(direction);
@@ -208,12 +209,12 @@ public class FishMovement : MonoBehaviour {
     transform.position += transform.forward * speed * Time.deltaTime;
   }
 
-  private void shoalWithinTrap(){
-    Vector3 targetPosition = trap.position;
+  private void shoalAroundShoalPoint(){
+    Vector3 targetPosition = shoalPoint.position;
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition, 200f, 1f, 1f);
     Quaternion rotation = Quaternion.LookRotation(direction);
-    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, trappedRotationSpeed * Time.deltaTime);
-    transform.position += transform.forward * trappedSpeed * Time.deltaTime;
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, shoalingRotationSpeed * Time.deltaTime);
+    transform.position += transform.forward * shoalingSpeed * Time.deltaTime;
   }
 
   private void moveTowardNextWaypoint(){
@@ -330,7 +331,7 @@ public class FishMovement : MonoBehaviour {
   public void setNextWaypoint(int index){
     nextWaypointIndex = index;
     lastWaypoint = nextWaypoint;
-    nextWaypoint = waypoints[nextWaypointIndex].transform;
+    if (nextWaypointIndex < waypoints.Count) nextWaypoint = waypoints[nextWaypointIndex].transform;
   }
 
   public void setLeadFish(FishMovement fish){
@@ -349,6 +350,10 @@ public class FishMovement : MonoBehaviour {
     } else {
       return false;
     }
+  }
+
+  private bool shouldFollowPlayer(){
+    return (isShoaling || playerIsInFront());
   }
 
   private bool playerIsInFront(){
@@ -377,10 +382,13 @@ public class FishMovement : MonoBehaviour {
 
   public void setTrapped(bool trapped){
     isTrapped = trapped;
-    rigidbody.isKinematic = isTrapped;
   }
 
-  public void setTrap(Transform theTrap){
-    trap = theTrap;
+  public void setShoalPoint(Transform theShoalPoint){
+    shoalPoint = theShoalPoint;
+  }
+
+  public void toggleShoaling(bool shoaling){
+    isShoaling = shoaling;
   }
 }

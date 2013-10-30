@@ -10,6 +10,8 @@ public class SchoolOfFishMovement : MonoBehaviour {
   [SerializeField]
   private List<GameObject> waypoints = new List<GameObject>();
   [SerializeField]
+  private GameObject seedPoint;
+  [SerializeField]
   private Transform shoalPoint;
   [SerializeField]
   private bool trapped;
@@ -18,9 +20,25 @@ public class SchoolOfFishMovement : MonoBehaviour {
 
   void Start () {
     collectFish();
-    if (waypoints.Count == 0){
-      // randomize waypoints
+    initializeWaypoints();
+    initializeFish();
+    BroadcastNextWaypoint(0);
+  }
+
+  void initializeWaypoints(){
+    if (seedPoint != null && waypoints.Count == 0){
+      for (int i = 0; i < 20; i++){
+        GameObject waypoint = new GameObject();
+        Vector3 randomWaypoint = seedPoint.transform.position + Random.insideUnitSphere * 80;
+        float y = seedPoint.transform.position.y;
+        randomWaypoint.y = Random.Range(y - 10f, y + 10f);
+        waypoint.transform.position = randomWaypoint;
+        waypoints.Add(waypoint);
+      }
     }
+  }
+
+  void initializeFish(){
     foreach(FishMovement f in fish){
       f.setLeadFish(leadFish);
       f.toggleShoaling(shoaling);
@@ -31,7 +49,6 @@ public class SchoolOfFishMovement : MonoBehaviour {
         f.setWaypoints(waypoints);
       }
     }
-    BroadcastNextWaypoint(0);
   }
 
   void Update () {

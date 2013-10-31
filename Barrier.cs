@@ -30,16 +30,19 @@ public class Barrier : MonoBehaviour {
 
   public void applyForceVector(Vector3 forceVector){
     if (destroyed){
-      int times = Random.Range(1, 2);
-      for (int i = 0; i < times && barrierComponents.Count > 0; i++){
-        int index = Random.Range(0, barrierComponents.Count - 1);
-        Rigidbody component = barrierComponents[index];
-        jettisonComponent(component, forceVector);
-      }
-
+      jettisonBarrierComponents(forceVector);
       disableTrigger();
       freeTrappedSchool();
     }
+  }
+
+  private void jettisonBarrierComponents(Vector3 forceVector){
+    int times = Random.Range(1, 2);
+    for (int i = 0; i < times && barrierComponents.Count > 0; i++){
+      int index = Random.Range(0, barrierComponents.Count - 1);
+      Rigidbody component = barrierComponents[index];
+      jettisonComponent(component, forceVector);
+    } 
   }
 
   private void jettisonComponent(Rigidbody component, Vector3 forceVector){
@@ -59,8 +62,7 @@ public class Barrier : MonoBehaviour {
   }
 
   private void freeTrappedSchool(){
-    if (trappedSchool != null)
-      trappedSchool.free();
+    if (trappedSchool != null) trappedSchool.free();
   }
 
   public bool willBeDestroyedByRushAttack(int attackStrength){

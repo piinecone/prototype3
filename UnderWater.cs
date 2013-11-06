@@ -4,13 +4,16 @@ using System.Collections;
 public class UnderWater : MonoBehaviour {
 
   public float waterLevel;
+  public float atmosphericVisibility;
+  public float waterVisibility;
   private bool isUnderwater;
   private Color normalColor;
   private Color underwaterColor;
 
   void Start () {
     normalColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-    underwaterColor = new Color(0.22f, 0.65f, 0.77f, 0.5f);
+    //underwaterColor = new Color(0.22f, 0.65f, 0.77f, 0.5f); # original
+    underwaterColor = new Color(0.22f, 0.45f, 0.87f, 0.5f);
   }
 
   void Update () {
@@ -22,14 +25,12 @@ public class UnderWater : MonoBehaviour {
   }
 
   private void setUnderwater(){
-    Debug.Log("going underwater");
     RenderSettings.fogColor = underwaterColor;
-    RenderSettings.fogDensity = 0.1f;
+    RenderSettings.fogDensity = waterVisibility;
   }
 
   private void setAboveWater(){
-    Debug.Log("going above water");
     RenderSettings.fogColor = normalColor;
-    RenderSettings.fogDensity = 0.002f;
+    RenderSettings.fogDensity = atmosphericVisibility;
   }
 }

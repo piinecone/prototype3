@@ -52,8 +52,9 @@ public class TurtleController : MonoBehaviour {
   }
 
   void swim(){
-    gravity = 40f;
-    speedInMedium = speed * 4;
+    gravity = 30f;
+    //speedInMedium = speed * 4.1f;
+    speedInMedium = 16.5f;
     moveDirection = new Vector3(Input.GetAxis("Horizontal") * 0.5f, 0, Input.GetAxis("Vertical"));
     moveDirection = transform.TransformDirection(moveDirection);
     moveDirection *= speedInMedium;

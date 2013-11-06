@@ -93,7 +93,7 @@ public class ThirdPersonCamera : MonoBehaviour {
         float distance = Vector3.Distance(go.transform.position, follow.position);
         if ((distance + 7.5f) > desiredDistance) zoomOut = true;
       }
-      desiredDistance += zoomOut == true ? (15f * Time.deltaTime) : (-5f * Time.deltaTime);
+      desiredDistance += zoomOut == true ? (20f * Time.deltaTime) : (-5f * Time.deltaTime);
       distanceAway = (desiredDistance > maxDistanceAway || desiredDistance < minDistanceAway) ? distanceAway : desiredDistance;
       //Debug.Log("Desired: " + desiredDistance + ", current: " + distanceAway);
     }

@@ -77,6 +77,7 @@ public class FishMovement : MonoBehaviour {
 
   void Start () {
     player = GameObject.FindWithTag("Player");
+    turtleController = player.GetComponent<TurtleController>();
     forwardSpeed = 16f;
     shoalingSpeed = 7f;
     burstSpeed = 25f;

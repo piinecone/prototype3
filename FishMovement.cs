@@ -298,7 +298,7 @@ public class FishMovement : MonoBehaviour {
   }
 
   private bool transformShouldBeAvoided(Transform hitTransform){
-    if (hitTransform != transform && hitTransform != player.transform && hitTransform.gameObject != targetedBarrier){
+    if (hitTransform != transform && hitTransform != player.transform && hitTransform.gameObject != targetedBarrier && !hitTransform.collider.isTrigger){
       return true;
     } else {
       return false;

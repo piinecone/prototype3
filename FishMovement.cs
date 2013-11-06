@@ -59,6 +59,7 @@ public class FishMovement : MonoBehaviour {
   private bool currentlyFollowingPlayer = false;
   private float patienceSeed = 7f;
   private float patienceLeft;
+  private float patienceDistance = 20f;
 
   // barriers
   private Vector3 randomizedBarrierOffset;
@@ -111,8 +112,12 @@ public class FishMovement : MonoBehaviour {
     }
   }
 
+  private float distanceFromPlayer(){
+    return Vector3.Distance(transform.position, player.transform.position);
+  }
+
   private bool boredByPlayer(){
-    if (turtleController.velocity() < 10f){
+    if (turtleController.velocity() < 10f || distanceFromPlayer() > patienceDistance){
       patienceLeft -= Time.deltaTime;
     } else {
       patienceLeft = Random.Range(.75f, 2f) * patienceSeed;

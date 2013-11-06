@@ -12,6 +12,8 @@ public class SchoolOfFishMovement : MonoBehaviour {
   [SerializeField]
   private GameObject seedPoint;
   [SerializeField]
+  private float verticalRange = 10f;
+  [SerializeField]
   private Transform shoalPoint;
   [SerializeField]
   private bool trapped;
@@ -31,7 +33,7 @@ public class SchoolOfFishMovement : MonoBehaviour {
         GameObject waypoint = new GameObject();
         Vector3 randomWaypoint = seedPoint.transform.position + Random.insideUnitSphere * 80;
         float y = seedPoint.transform.position.y;
-        randomWaypoint.y = Random.Range(y - 10f, y + 10f);
+        randomWaypoint.y = Random.Range(y - verticalRange, y + verticalRange);
         waypoint.transform.position = randomWaypoint;
         waypoints.Add(waypoint);
       }

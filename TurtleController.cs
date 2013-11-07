@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof (Animator))]
 [RequireComponent(typeof (CapsuleCollider))]
@@ -30,8 +31,15 @@ public class TurtleController : MonoBehaviour {
 
   // temporary acceleration
   private float minSpeedInMedium;
+  private float maxSpeedInMedium;
   private float targetSpeedInMedium;
   private bool currentlyAccelerating;
+
+  // sequential barriers
+  [SerializeField]
+  private List<GameObject> sequentialBarriers;
+  private List<GameObject> destroyedSequentialBarriers = new List<GameObject>();
+  private List<Vector3> sequentialBarriersPositions = new List<Vector3>();
 
   void Start () {
     anim = GetComponent<Animator>();               
@@ -41,8 +49,10 @@ public class TurtleController : MonoBehaviour {
     barrierController = GetComponent<BarrierController>();
     speedInMedium = 16.5f;
     minSpeedInMedium = 16.5f;
+    maxSpeedInMedium = 25f;
     targetSpeedInMedium = 16.5f;
     currentlyAccelerating = false;
+    initializeSequentialBarriers();
   }
 
   void FixedUpdate ()
@@ -110,7 +120,7 @@ public class TurtleController : MonoBehaviour {
   }
 
   public void applyForceVectorToBarrier(Vector3 forceVector, GameObject barrier){
-    barrierController.applyForceVectorToBarrier(forceVector, barrier);
+    barrierController.applyForceVectorToBarrier(forceVector, barrier, this.transform.position);
   }
 
   private float currentRotateSpeed(){
@@ -124,7 +134,8 @@ public class TurtleController : MonoBehaviour {
   public void accelerateToward(Vector3 targetPosition, int strength){
     //Vector3 force = transform.InverseTransformDirection(targetPosition);
     //rigidbody.AddRelativeForce(force, ForceMode.Impulse);
-    targetSpeedInMedium = speedInMedium + (strength * 2);
+    float speed = speedInMedium + (strength * 1.5f);
+    targetSpeedInMedium = speed > maxSpeedInMedium ? maxSpeedInMedium : speed;
     currentlyAccelerating = true;
   }
 
@@ -134,10 +145,39 @@ public class TurtleController : MonoBehaviour {
     }
 
     if (currentlyAccelerating && speedInMedium < targetSpeedInMedium){
-      speedInMedium = Mathf.SmoothStep(speedInMedium, targetSpeedInMedium, .25f);
+      speedInMedium = Mathf.SmoothStep(speedInMedium, targetSpeedInMedium, .2f);
     } else if (speedInMedium >= minSpeedInMedium) {
-      speedInMedium = Mathf.SmoothStep(speedInMedium, minSpeedInMedium, .1f);
+      speedInMedium = Mathf.SmoothStep(speedInMedium, minSpeedInMedium, .2f);
     }
   }
 
+  public void rushNextSequentialBarrier(){
+    GameObject barrier = nextSequentialBarrier();
+    if (barrier != null){
+      followingFish.rushBarrier(barrier, special: true);
+    } else {
+      Debug.Log("can't rush a null barrier");
+      // get and rush position if all barriers are destroyed
+    }
+
+    // rush all fish toward barrier if it can be destroyed
+    // certain barriers require specific types of fish to be destroyed
+  }
+
+  private GameObject nextSequentialBarrier(){
+    GameObject nextBarrier = null;
+    foreach(GameObject barrier in sequentialBarriers){
+      if (!destroyedSequentialBarriers.Contains(barrier)){
+        nextBarrier = barrier;
+        break;
+      }
+    }
+    return nextBarrier;
+  }
+
+  private void initializeSequentialBarriers(){
+    foreach(GameObject barrier in sequentialBarriers){
+      sequentialBarriersPositions.Add(barrier.transform.position);
+    }
+  }
 }

@@ -74,9 +74,8 @@ public class SchoolOfFishMovement : MonoBehaviour {
   }
 
   public void free(){
-    trapped = false;
     foreach(FishMovement f in fish){
-      f.setTrapped(trapped);
+      f.setTrapped(false);
     }
   }
 }

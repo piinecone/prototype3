@@ -13,6 +13,10 @@ public class Barrier : MonoBehaviour {
   private SchoolOfFishMovement trappedSchool;
   [SerializeField]
   public GameObject sibling;
+  [SerializeField]
+  public bool special;
+  [SerializeField]
+  public List<SchoolOfFishMovement> requiredSchools = new List<SchoolOfFishMovement>();
 
   private List<Rigidbody> barrierComponents = new List<Rigidbody>();
   private Rigidbody[] barrierComponentsArray;
@@ -77,6 +81,10 @@ public class Barrier : MonoBehaviour {
   }
 
   public bool isViableTarget(){
-    return !destroyed;
+    return !destroyed && !special;
+  }
+
+  public bool isSpecial(){
+    return special;
   }
 }

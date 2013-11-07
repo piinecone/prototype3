@@ -12,9 +12,11 @@ public class BarrierController : MonoBehaviour {
   void Update () {
   }
 
-  public void applyForceVectorToBarrier(Vector3 forceVector, GameObject theBarrier){
+  public void applyForceVectorToBarrier(Vector3 forceVector, GameObject theBarrier, Vector3 playerPosition){
     Barrier barrier = getBarrierInstanceFromBarrierGameObject(theBarrier);
-    barrier.applyForceVector(forceVector);
+    if (!barrier.isSpecial() || (barrier.isSpecial() && Vector3.Distance(barrier.transform.position, playerPosition) < 10f)){
+      barrier.applyForceVector(forceVector);
+    }
   }
 
   public void attemptToMarkBarrierAsDestroyed(GameObject theBarrier, int attackStrength){
@@ -37,7 +39,7 @@ public class BarrierController : MonoBehaviour {
 
   private Barrier getBarrierInstanceFromBarrierGameObject(GameObject theBarrier){
     foreach(Barrier barrier in barriers){
-      if (barrier.gameObject == theBarrier.transform.parent.gameObject){
+      if (barrier.gameObject == theBarrier || barrier.gameObject == theBarrier.transform.parent.gameObject){
         return barrier;
       }
     }

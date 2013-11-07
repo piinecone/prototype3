@@ -24,10 +24,15 @@ public class FollowingFish : MonoBehaviour {
 
   void Update () {
     if (playerHasEnoughFish() && fishAreReadyToRush() && nearbyBarrierIsVisible()){
-      List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(targetedBarrier);
-      fireTheFishiesAtTargetedBarriers(targetedBarriers);
-      acceleratePlayerTowardTargetedBarrierPosition(targetedBarrier.transform.position);
+      rushBarrier();
     }
+  }
+
+  public void rushBarrier(GameObject theBarrier=null, bool special=false){
+    GameObject barrier = theBarrier == null ? targetedBarrier : theBarrier;
+    List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(barrier);
+    fireTheFishiesAtTargetedBarriers(targetedBarriers, special);
+    acceleratePlayerTowardTargetedBarrierPosition(targetedBarriers[0].transform.position);
   }
 
   private bool playerHasEnoughFish(){
@@ -61,12 +66,13 @@ public class FollowingFish : MonoBehaviour {
     return (targetedBarrier != null);
   }
 
-  private void fireTheFishiesAtTargetedBarriers(List<GameObject> targetedBarriers){
+  private void fireTheFishiesAtTargetedBarriers(List<GameObject> targetedBarriers, bool special=false){
     int index = 0;
     for (int i = 0; i < targetedBarriers.Count; i++){
       barrierController.attemptToMarkBarrierAsDestroyed(targetedBarriers[i], fishCurrentlyFollowingPlayer.Count);
     }
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
+      if (special && !fish.isSpecial()) continue;
       fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count]);
       index++;
     }

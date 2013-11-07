@@ -83,7 +83,7 @@ public class FishMovement : MonoBehaviour {
     shoalingSpeed = 7f;
     burstSpeed = 25f;
     followingSpeed = 16.1f;
-    rushingSpeed = 35f;
+    if (rushingSpeed == 0) rushingSpeed = 35f;
     fastRotationSpeed = 75f;
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
@@ -100,9 +100,7 @@ public class FishMovement : MonoBehaviour {
       finishRushBehavior();
     } else if (currentlyFollowingPlayer){
       if (boredByPlayer()){
-        currentlyFollowingPlayer = false;
-        turtleController.removeFish(this);
-        stoppedFollowingSound.Play();
+        stopFollowingPlayer();
       } else {
         moveTowardPlayer();
       }
@@ -128,16 +126,20 @@ public class FishMovement : MonoBehaviour {
   }
 
   void OnTriggerEnter(Collider collider){
-    if (collider.gameObject.tag == "PlayerInfluence" && shouldFollowPlayer()){
-      if (!currentlyFollowingPlayer && !isTrapped){ // then look at the player
-        Vector3 direction = player.transform.forward.normalized;
-        Quaternion rotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
-        randomizedPlayerOffset = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(-3f, 1f), Random.Range(0f, 0f));
-        turtleController.addFish(this);
-        startedFollowingSound.Play();
+    if (collider.gameObject.tag == "PlayerInfluence"){
+      if (shouldFollowPlayer()){
+        if (!currentlyFollowingPlayer && !isTrapped){ // then look at the player
+          Vector3 direction = player.transform.forward.normalized;
+          Quaternion rotation = Quaternion.LookRotation(direction);
+          transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
+          randomizedPlayerOffset = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(-3f, 1f), Random.Range(0f, 0f));
+          turtleController.addFish(this);
+          startedFollowingSound.Play();
+        }
+        currentlyFollowingPlayer = true;
+      } else if (!canFollowPlayer && !isTrapped){
+        hurryTowardTheNextSequentialBarrier();
       }
-      currentlyFollowingPlayer = true;
     }
   }
 
@@ -397,5 +399,20 @@ public class FishMovement : MonoBehaviour {
 
   public void toggleShoaling(bool shoaling){
     isShoaling = shoaling;
+  }
+
+  private void hurryTowardTheNextSequentialBarrier(){
+    turtleController.addFish(this);
+    turtleController.rushNextSequentialBarrier();
+  }
+
+  public void stopFollowingPlayer(){
+    currentlyFollowingPlayer = false;
+    turtleController.removeFish(this);
+    stoppedFollowingSound.Play();
+  }
+
+  public bool isSpecial(){
+    return !canFollowPlayer;
   }
 }

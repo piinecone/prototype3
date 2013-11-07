@@ -32,7 +32,7 @@ public class FollowingFish : MonoBehaviour {
     GameObject barrier = theBarrier == null ? targetedBarrier : theBarrier;
     List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(barrier);
     fireTheFishiesAtTargetedBarriers(targetedBarriers, special);
-    acceleratePlayerTowardTargetedBarrierPosition(targetedBarriers[0].transform.position);
+    //acceleratePlayerTowardTargetedBarrierPosition(targetedBarriers[0].transform.position);
   }
 
   private bool playerHasEnoughFish(){

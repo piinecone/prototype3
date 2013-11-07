@@ -102,4 +102,8 @@ public class FollowingFish : MonoBehaviour {
     fishCurrentlyFollowingPlayer.Remove(fish);
     // lostFish(fish);
   }
+
+  public int numberOfFollowingFish(){
+    return fishCurrentlyFollowingPlayer.Count;
+  }
 }

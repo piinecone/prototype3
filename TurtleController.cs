@@ -30,6 +30,7 @@ public class TurtleController : MonoBehaviour {
   private BarrierController barrierController;
 
   // temporary acceleration
+  private float initialMinimumSpeed;
   private float minSpeedInMedium;
   private float maxSpeedInMedium;
   private float targetSpeedInMedium;
@@ -49,9 +50,10 @@ public class TurtleController : MonoBehaviour {
     barrierController = GetComponent<BarrierController>();
     speedInMedium = 16.5f;
     minSpeedInMedium = 16.5f;
-    maxSpeedInMedium = 25f;
+    maxSpeedInMedium = 23.5f;
     targetSpeedInMedium = 16.5f;
     currentlyAccelerating = false;
+    initialMinimumSpeed = minSpeedInMedium;
     initializeSequentialBarriers();
   }
 
@@ -112,11 +114,13 @@ public class TurtleController : MonoBehaviour {
   public void addFish(FishMovement fish){
     followingFish.addFish(fish);
     thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
+    updateMinimumSpeed();
   }
 
   public void removeFish(FishMovement fish){
     followingFish.removeFish(fish);
     thirdPersonCamera.removeObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
+    updateMinimumSpeed();
   }
 
   public void applyForceVectorToBarrier(Vector3 forceVector, GameObject barrier){
@@ -135,12 +139,17 @@ public class TurtleController : MonoBehaviour {
     return thirdPersonCamera.getCamState() == "Behind" ? 1.5f : 0.5f;
   }
 
+  public void updateMinimumSpeed(){
+    float desiredSpeed = initialMinimumSpeed + (followingFish.numberOfFollowingFish() / 10f);
+    minSpeedInMedium = desiredSpeed > maxSpeedInMedium ? maxSpeedInMedium : desiredSpeed;
+  }
+
   public void accelerateToward(Vector3 targetPosition, int strength){
     //Vector3 force = transform.InverseTransformDirection(targetPosition);
     //rigidbody.AddRelativeForce(force, ForceMode.Impulse);
-    float speed = speedInMedium + (strength * 1.5f);
-    targetSpeedInMedium = speed > maxSpeedInMedium ? maxSpeedInMedium : speed;
-    currentlyAccelerating = true;
+    //float speed = speedInMedium + (strength * 1.5f);
+    //targetSpeedInMedium = speed > maxSpeedInMedium ? maxSpeedInMedium : speed;
+    //currentlyAccelerating = true;
   }
 
   private void calculateSpeedInMedium(){
@@ -152,6 +161,8 @@ public class TurtleController : MonoBehaviour {
       speedInMedium = Mathf.SmoothStep(speedInMedium, targetSpeedInMedium, .2f);
     } else if (speedInMedium >= minSpeedInMedium) {
       speedInMedium = Mathf.SmoothStep(speedInMedium, minSpeedInMedium, .2f);
+    } else if (speedInMedium < minSpeedInMedium) {
+      speedInMedium = Mathf.SmoothStep(minSpeedInMedium, speedInMedium, .3f);
     }
   }
 

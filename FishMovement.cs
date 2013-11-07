@@ -71,6 +71,12 @@ public class FishMovement : MonoBehaviour {
   private float rushRotationSpeed;
   private float scatterDistance = 12f;
 
+  // barrier rendezvous points
+  private bool currentlyMovingTowardRendezvousPoint = false;
+  private GameObject rendezvousPoint = null;
+  private float rendezvousDelayLeft = 5f;
+  private bool isAborting = false;
+
   // trapped + shoaling
   private bool isShoaling;
   private bool isTrapped;
@@ -98,6 +104,8 @@ public class FishMovement : MonoBehaviour {
       rushTowardBarrier();
     } else if (currentlyFinishingRush) {
       finishRushBehavior();
+    } else if (currentlyMovingTowardRendezvousPoint) {
+      moveTowardRendezvousPoint();
     } else if (currentlyFollowingPlayer){
       if (boredByPlayer()){
         stopFollowingPlayer();
@@ -137,7 +145,7 @@ public class FishMovement : MonoBehaviour {
           startedFollowingSound.Play();
         }
         currentlyFollowingPlayer = true;
-      } else if (!canFollowPlayer && !isTrapped){
+      } else if (!canFollowPlayer && !isTrapped && !isAborting){
         hurryTowardTheNextSequentialBarrier();
       }
     }
@@ -220,16 +228,37 @@ public class FishMovement : MonoBehaviour {
 
   private void shoalAroundShoalPoint(){
     Vector3 targetPosition = shoalPoint.position;
+    float distance = Vector3.Distance(transform.position, targetPosition);
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition, 200f, 1f, 1f);
     Quaternion rotation = Quaternion.LookRotation(direction);
     transform.rotation = Quaternion.Slerp(transform.rotation, rotation, shoalingRotationSpeed * Time.deltaTime);
-    transform.position += transform.forward * shoalingSpeed * Time.deltaTime;
+    float speed = distance >= 20f ? forwardSpeed : shoalingSpeed;
+    transform.position += transform.forward * speed * Time.deltaTime;
+    if (isAborting && distance < 20f) isAborting = false;
   }
 
   private void moveTowardNextWaypoint(){
     Vector3 targetPosition = nextWaypoint.position - leadFishOffset;
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
     moveInDirection(targetPosition, direction);
+  }
+
+  private void moveTowardRendezvousPoint(){
+    if (rendezvousDelayLeft <= 0f){
+      currentlyMovingTowardRendezvousPoint = false;
+      rushBarrier(targetedBarrier);
+      rendezvousDelayLeft = 5f;
+    } else {
+      float distance = Vector3.Distance(transform.position, rendezvousPoint.transform.position);
+      if (distance < 20f){ // 20f seems like a common shoaling radius
+        rendezvousDelayLeft -= Time.deltaTime;
+      } else {
+        rendezvousDelayLeft = 5f;
+      }
+      Vector3 targetPosition = rendezvousPoint.transform.position - leadFishOffset;
+      Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
+      moveInDirection(targetPosition, direction);
+    }
   }
 
   private void moveInDirection(Vector3 targetPosition, Vector3 direction){
@@ -372,14 +401,33 @@ public class FishMovement : MonoBehaviour {
     return (angle < 45F) ? true : false;
   }
 
-  public void rushBarrier(GameObject barrier){
+  public void rushBarrier(GameObject barrier, GameObject aRendezvousPoint=null){
     if (!currentlyRushingABarrier && !currentlyFinishingRush){
-      Vector3 direction = barrier.transform.position;
-      Quaternion rotation = Quaternion.LookRotation(direction);
-      transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
-      randomizedBarrierOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
-      currentlyRushingABarrier = true;
       targetedBarrier = barrier;
+      if (aRendezvousPoint != null){
+        currentlyMovingTowardRendezvousPoint = true;
+        rendezvousPoint = aRendezvousPoint;
+      } else {
+        currentlyRushingABarrier = true;
+        Vector3 direction = barrier.transform.position;
+        Quaternion rotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
+        randomizedBarrierOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
+      }
+    }
+  }
+
+  public void abortRushAttempt(){
+    if (isSpecial()){
+      isShoaling = true;
+      isAborting = true;
+      currentlyRushingABarrier = false;
+      currentlyFinishingRush = false;
+      currentlyMovingTowardRendezvousPoint = false;
+      currentlyFollowingPlayer = false;
+    } else {
+      currentlyRushingABarrier = false;
+      currentlyFinishingRush = false;
     }
   }
 

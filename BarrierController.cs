@@ -12,11 +12,13 @@ public class BarrierController : MonoBehaviour {
   void Update () {
   }
 
-  public void applyForceVectorToBarrier(Vector3 forceVector, GameObject theBarrier, Vector3 playerPosition){
+  public bool applyForceVectorToBarrier(Vector3 forceVector, GameObject theBarrier, Vector3 playerPosition){
     Barrier barrier = getBarrierInstanceFromBarrierGameObject(theBarrier);
-    if (!barrier.isSpecial() || (barrier.isSpecial() && Vector3.Distance(barrier.transform.position, playerPosition) < 10f)){
+    if (!barrier.isSpecial() || (barrier.isSpecial() && Vector3.Distance(barrier.transform.position, playerPosition) < 30f)){
       barrier.applyForceVector(forceVector);
+      return true;
     }
+    return false;
   }
 
   public void attemptToMarkBarrierAsDestroyed(GameObject theBarrier, int attackStrength){
@@ -35,6 +37,11 @@ public class BarrierController : MonoBehaviour {
 
   public List<Barrier> activeBarriers(){
     return barriers;
+  }
+
+  public GameObject rendezvousPointForBarrier(GameObject theBarrier){
+    Barrier barrier = getBarrierInstanceFromBarrierGameObject(theBarrier);
+    return barrier.rendezvousPoint;
   }
 
   private Barrier getBarrierInstanceFromBarrierGameObject(GameObject theBarrier){

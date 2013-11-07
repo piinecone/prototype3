@@ -120,7 +120,11 @@ public class TurtleController : MonoBehaviour {
   }
 
   public void applyForceVectorToBarrier(Vector3 forceVector, GameObject barrier){
-    barrierController.applyForceVectorToBarrier(forceVector, barrier, this.transform.position);
+    bool success = barrierController.applyForceVectorToBarrier(forceVector, barrier, this.transform.position);
+    if (success){
+    } else {
+      followingFish.abortRushAttempt(special: true);
+    }
   }
 
   private float currentRotateSpeed(){

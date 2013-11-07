@@ -68,15 +68,24 @@ public class FollowingFish : MonoBehaviour {
 
   private void fireTheFishiesAtTargetedBarriers(List<GameObject> targetedBarriers, bool special=false){
     int index = 0;
+    GameObject rendezvousPoint = barrierController.rendezvousPointForBarrier(targetedBarriers[0]);
     for (int i = 0; i < targetedBarriers.Count; i++){
       barrierController.attemptToMarkBarrierAsDestroyed(targetedBarriers[i], fishCurrentlyFollowingPlayer.Count);
     }
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
       if (special && !fish.isSpecial()) continue;
-      fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count]);
+      fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count], rendezvousPoint);
       index++;
     }
   }
+
+  public void abortRushAttempt(bool special=false){
+    foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
+      if (special && !fish.isSpecial()) continue;
+      fish.abortRushAttempt();
+    }
+  }
+
 
   private void acceleratePlayerTowardTargetedBarrierPosition(Vector3 position){
     int fishCount = fishCurrentlyFollowingPlayer.Count;

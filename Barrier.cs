@@ -17,6 +17,8 @@ public class Barrier : MonoBehaviour {
   public bool special;
   [SerializeField]
   public List<SchoolOfFishMovement> requiredSchools = new List<SchoolOfFishMovement>();
+  [SerializeField]
+  public GameObject rendezvousPoint;
 
   private List<Rigidbody> barrierComponents = new List<Rigidbody>();
   private Rigidbody[] barrierComponentsArray;

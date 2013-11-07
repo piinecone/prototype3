@@ -3,24 +3,30 @@ using System.Collections;
 using System.Collections.Generic;
 
 [RequireComponent(typeof (BarrierController))]
+[RequireComponent(typeof (TurtleController))]
 public class FollowingFish : MonoBehaviour {
   [SerializeField]
   private float targetingDistance;
   [SerializeField]
   private float nearbyBarrierDistanceThreshold;
+  [SerializeField]
+  private TurtleController turtleController;
 
   private BarrierController barrierController;
   private List<FishMovement> fishCurrentlyFollowingPlayer = new List<FishMovement>();
   private GameObject targetedBarrier = null;
 
   void Start () {
+    turtleController = GetComponent<TurtleController>();
     nearbyBarrierDistanceThreshold = 75f;
     barrierController = GetComponent<BarrierController>();
   }
-  
+
   void Update () {
     if (playerHasEnoughFish() && fishAreReadyToRush() && nearbyBarrierIsVisible()){
-      fireTheFishiesAtTargetedBarrier();
+      List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(targetedBarrier);
+      fireTheFishiesAtTargetedBarriers(targetedBarriers);
+      acceleratePlayerTowardTargetedBarrierPosition(targetedBarrier.transform.position);
     }
   }
 
@@ -55,9 +61,8 @@ public class FollowingFish : MonoBehaviour {
     return (targetedBarrier != null);
   }
 
-  private void fireTheFishiesAtTargetedBarrier(){
+  private void fireTheFishiesAtTargetedBarriers(List<GameObject> targetedBarriers){
     int index = 0;
-    List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(targetedBarrier);
     for (int i = 0; i < targetedBarriers.Count; i++){
       barrierController.attemptToMarkBarrierAsDestroyed(targetedBarriers[i], fishCurrentlyFollowingPlayer.Count);
     }
@@ -65,6 +70,12 @@ public class FollowingFish : MonoBehaviour {
       fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count]);
       index++;
     }
+  }
+
+  private void acceleratePlayerTowardTargetedBarrierPosition(Vector3 position){
+    int fishCount = fishCurrentlyFollowingPlayer.Count;
+    int strength = fishCount > 10 ? 10 : fishCount;
+    turtleController.accelerateToward(position, strength);
   }
 
   public void addFish(FishMovement fish){

@@ -28,12 +28,21 @@ public class TurtleController : MonoBehaviour {
   private Vector3 previousPosition;
   private BarrierController barrierController;
 
+  // temporary acceleration
+  private float minSpeedInMedium;
+  private float targetSpeedInMedium;
+  private bool currentlyAccelerating;
+
   void Start () {
     anim = GetComponent<Animator>();               
     col = GetComponent<CapsuleCollider>();          
     controller = GetComponent<CharacterController>();
     followingFish = GetComponent<FollowingFish>();
     barrierController = GetComponent<BarrierController>();
+    speedInMedium = 16.5f;
+    minSpeedInMedium = 16.5f;
+    targetSpeedInMedium = 16.5f;
+    currentlyAccelerating = false;
   }
 
   void FixedUpdate ()
@@ -47,6 +56,7 @@ public class TurtleController : MonoBehaviour {
   }
   
   void Update () {
+    calculateSpeedInMedium();
     previousPosition = transform.position;
     swim(); // we're always underwater for now
   }
@@ -54,7 +64,6 @@ public class TurtleController : MonoBehaviour {
   void swim(){
     gravity = 30f;
     //speedInMedium = speed * 4.1f;
-    speedInMedium = 16.5f;
     moveDirection = new Vector3(Input.GetAxis("Horizontal") * 0.5f, 0, Input.GetAxis("Vertical"));
     moveDirection = transform.TransformDirection(moveDirection);
     moveDirection *= speedInMedium;
@@ -111,4 +120,24 @@ public class TurtleController : MonoBehaviour {
   private float currentYAxisMultiplier(){
     return thirdPersonCamera.getCamState() == "Behind" ? 1.5f : 0.5f;
   }
+
+  public void accelerateToward(Vector3 targetPosition, int strength){
+    //Vector3 force = transform.InverseTransformDirection(targetPosition);
+    //rigidbody.AddRelativeForce(force, ForceMode.Impulse);
+    targetSpeedInMedium = speedInMedium + (strength * 2);
+    currentlyAccelerating = true;
+  }
+
+  private void calculateSpeedInMedium(){
+    if (currentlyAccelerating && speedInMedium >= (targetSpeedInMedium - 1f) && speedInMedium <= (targetSpeedInMedium + 1f)){
+      currentlyAccelerating = false;
+    }
+
+    if (currentlyAccelerating && speedInMedium < targetSpeedInMedium){
+      speedInMedium = Mathf.SmoothStep(speedInMedium, targetSpeedInMedium, .25f);
+    } else if (speedInMedium >= minSpeedInMedium) {
+      speedInMedium = Mathf.SmoothStep(speedInMedium, minSpeedInMedium, .1f);
+    }
+  }
+
 }

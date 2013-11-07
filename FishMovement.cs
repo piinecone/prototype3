@@ -60,7 +60,7 @@ public class FishMovement : MonoBehaviour {
   private bool currentlyFollowingPlayer = false;
   private float patienceSeed = 7f;
   private float patienceLeft;
-  private float patienceDistance = 20f;
+  private float patienceDistance = 25f;
 
   // barriers
   private Vector3 randomizedBarrierOffset;
@@ -70,6 +70,12 @@ public class FishMovement : MonoBehaviour {
   private GameObject targetedBarrier = null;
   private float rushRotationSpeed;
   private float scatterDistance = 12f;
+
+  // barrier rendezvous points
+  private bool currentlyMovingTowardRendezvousPoint = false;
+  private GameObject rendezvousPoint = null;
+  private float rendezvousDelayLeft = 5f;
+  private bool isAborting = false;
 
   // trapped + shoaling
   private bool isShoaling;
@@ -83,7 +89,7 @@ public class FishMovement : MonoBehaviour {
     shoalingSpeed = 7f;
     burstSpeed = 25f;
     followingSpeed = 16.1f;
-    rushingSpeed = 35f;
+    if (rushingSpeed == 0) rushingSpeed = 35f;
     fastRotationSpeed = 75f;
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
@@ -98,11 +104,11 @@ public class FishMovement : MonoBehaviour {
       rushTowardBarrier();
     } else if (currentlyFinishingRush) {
       finishRushBehavior();
+    } else if (currentlyMovingTowardRendezvousPoint) {
+      moveTowardRendezvousPoint();
     } else if (currentlyFollowingPlayer){
       if (boredByPlayer()){
-        currentlyFollowingPlayer = false;
-        turtleController.removeFish(this);
-        stoppedFollowingSound.Play();
+        stopFollowingPlayer();
       } else {
         moveTowardPlayer();
       }
@@ -128,16 +134,20 @@ public class FishMovement : MonoBehaviour {
   }
 
   void OnTriggerEnter(Collider collider){
-    if (collider.gameObject.tag == "PlayerInfluence" && shouldFollowPlayer()){
-      if (!currentlyFollowingPlayer && !isTrapped){ // then look at the player
-        Vector3 direction = player.transform.forward.normalized;
-        Quaternion rotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
-        randomizedPlayerOffset = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(-3f, 1f), Random.Range(0f, 0f));
-        turtleController.addFish(this);
-        startedFollowingSound.Play();
+    if (collider.gameObject.tag == "PlayerInfluence"){
+      if (shouldFollowPlayer()){
+        if (!currentlyFollowingPlayer && !isTrapped){ // then look at the player
+          Vector3 direction = player.transform.forward.normalized;
+          Quaternion rotation = Quaternion.LookRotation(direction);
+          transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
+          randomizedPlayerOffset = new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(-3f, 1f), Random.Range(0f, 0f));
+          turtleController.addFish(this);
+          startedFollowingSound.Play();
+        }
+        currentlyFollowingPlayer = true;
+      } else if (!canFollowPlayer && !isTrapped && !isAborting){
+        hurryTowardTheNextSequentialBarrier();
       }
-      currentlyFollowingPlayer = true;
     }
   }
 
@@ -218,16 +228,37 @@ public class FishMovement : MonoBehaviour {
 
   private void shoalAroundShoalPoint(){
     Vector3 targetPosition = shoalPoint.position;
+    float distance = Vector3.Distance(transform.position, targetPosition);
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition, 200f, 1f, 1f);
     Quaternion rotation = Quaternion.LookRotation(direction);
     transform.rotation = Quaternion.Slerp(transform.rotation, rotation, shoalingRotationSpeed * Time.deltaTime);
-    transform.position += transform.forward * shoalingSpeed * Time.deltaTime;
+    float speed = distance >= 20f ? forwardSpeed : shoalingSpeed;
+    transform.position += transform.forward * speed * Time.deltaTime;
+    if (isAborting && distance < 20f) isAborting = false;
   }
 
   private void moveTowardNextWaypoint(){
     Vector3 targetPosition = nextWaypoint.position - leadFishOffset;
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
     moveInDirection(targetPosition, direction);
+  }
+
+  private void moveTowardRendezvousPoint(){
+    if (rendezvousDelayLeft <= 0f){
+      currentlyMovingTowardRendezvousPoint = false;
+      rushBarrier(targetedBarrier);
+      rendezvousDelayLeft = 5f;
+    } else {
+      float distance = Vector3.Distance(transform.position, rendezvousPoint.transform.position);
+      if (distance < 20f){ // 20f seems like a common shoaling radius
+        rendezvousDelayLeft -= Time.deltaTime;
+      } else {
+        rendezvousDelayLeft = 5f;
+      }
+      Vector3 targetPosition = rendezvousPoint.transform.position - leadFishOffset;
+      Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
+      moveInDirection(targetPosition, direction);
+    }
   }
 
   private void moveInDirection(Vector3 targetPosition, Vector3 direction){
@@ -370,14 +401,33 @@ public class FishMovement : MonoBehaviour {
     return (angle < 45F) ? true : false;
   }
 
-  public void rushBarrier(GameObject barrier){
+  public void rushBarrier(GameObject barrier, GameObject aRendezvousPoint=null){
     if (!currentlyRushingABarrier && !currentlyFinishingRush){
-      Vector3 direction = barrier.transform.position;
-      Quaternion rotation = Quaternion.LookRotation(direction);
-      transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
-      randomizedBarrierOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
-      currentlyRushingABarrier = true;
       targetedBarrier = barrier;
+      if (aRendezvousPoint != null){
+        currentlyMovingTowardRendezvousPoint = true;
+        rendezvousPoint = aRendezvousPoint;
+      } else {
+        currentlyRushingABarrier = true;
+        Vector3 direction = barrier.transform.position;
+        Quaternion rotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
+        randomizedBarrierOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
+      }
+    }
+  }
+
+  public void abortRushAttempt(){
+    if (isSpecial()){
+      isShoaling = true;
+      isAborting = true;
+      currentlyRushingABarrier = false;
+      currentlyFinishingRush = false;
+      currentlyMovingTowardRendezvousPoint = false;
+      currentlyFollowingPlayer = false;
+    } else {
+      currentlyRushingABarrier = false;
+      currentlyFinishingRush = false;
     }
   }
 
@@ -397,5 +447,20 @@ public class FishMovement : MonoBehaviour {
 
   public void toggleShoaling(bool shoaling){
     isShoaling = shoaling;
+  }
+
+  private void hurryTowardTheNextSequentialBarrier(){
+    turtleController.addFish(this);
+    turtleController.rushNextSequentialBarrier();
+  }
+
+  public void stopFollowingPlayer(){
+    currentlyFollowingPlayer = false;
+    turtleController.removeFish(this);
+    stoppedFollowingSound.Play();
+  }
+
+  public bool isSpecial(){
+    return !canFollowPlayer;
   }
 }

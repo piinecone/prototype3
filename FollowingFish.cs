@@ -24,10 +24,15 @@ public class FollowingFish : MonoBehaviour {
 
   void Update () {
     if (playerHasEnoughFish() && fishAreReadyToRush() && nearbyBarrierIsVisible()){
-      List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(targetedBarrier);
-      fireTheFishiesAtTargetedBarriers(targetedBarriers);
-      acceleratePlayerTowardTargetedBarrierPosition(targetedBarrier.transform.position);
+      rushBarrier();
     }
+  }
+
+  public void rushBarrier(GameObject theBarrier=null, bool special=false){
+    GameObject barrier = theBarrier == null ? targetedBarrier : theBarrier;
+    List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(barrier);
+    fireTheFishiesAtTargetedBarriers(targetedBarriers, special);
+    //acceleratePlayerTowardTargetedBarrierPosition(targetedBarriers[0].transform.position);
   }
 
   private bool playerHasEnoughFish(){
@@ -61,16 +66,26 @@ public class FollowingFish : MonoBehaviour {
     return (targetedBarrier != null);
   }
 
-  private void fireTheFishiesAtTargetedBarriers(List<GameObject> targetedBarriers){
+  private void fireTheFishiesAtTargetedBarriers(List<GameObject> targetedBarriers, bool special=false){
     int index = 0;
+    GameObject rendezvousPoint = barrierController.rendezvousPointForBarrier(targetedBarriers[0]);
     for (int i = 0; i < targetedBarriers.Count; i++){
       barrierController.attemptToMarkBarrierAsDestroyed(targetedBarriers[i], fishCurrentlyFollowingPlayer.Count);
     }
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
-      fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count]);
+      if (special && !fish.isSpecial()) continue;
+      fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count], rendezvousPoint);
       index++;
     }
   }
+
+  public void abortRushAttempt(bool special=false){
+    foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
+      if (special && !fish.isSpecial()) continue;
+      fish.abortRushAttempt();
+    }
+  }
+
 
   private void acceleratePlayerTowardTargetedBarrierPosition(Vector3 position){
     int fishCount = fishCurrentlyFollowingPlayer.Count;
@@ -86,5 +101,9 @@ public class FollowingFish : MonoBehaviour {
   public void removeFish(FishMovement fish){
     fishCurrentlyFollowingPlayer.Remove(fish);
     // lostFish(fish);
+  }
+
+  public int numberOfFollowingFish(){
+    return fishCurrentlyFollowingPlayer.Count;
   }
 }

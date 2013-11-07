@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof (Animator))]
 [RequireComponent(typeof (CapsuleCollider))]
@@ -29,9 +30,17 @@ public class TurtleController : MonoBehaviour {
   private BarrierController barrierController;
 
   // temporary acceleration
+  private float initialMinimumSpeed;
   private float minSpeedInMedium;
+  private float maxSpeedInMedium;
   private float targetSpeedInMedium;
   private bool currentlyAccelerating;
+
+  // sequential barriers
+  [SerializeField]
+  private List<GameObject> sequentialBarriers;
+  private List<GameObject> destroyedSequentialBarriers = new List<GameObject>();
+  private List<Vector3> sequentialBarriersPositions = new List<Vector3>();
 
   void Start () {
     anim = GetComponent<Animator>();               
@@ -41,8 +50,11 @@ public class TurtleController : MonoBehaviour {
     barrierController = GetComponent<BarrierController>();
     speedInMedium = 16.5f;
     minSpeedInMedium = 16.5f;
+    maxSpeedInMedium = 23.5f;
     targetSpeedInMedium = 16.5f;
     currentlyAccelerating = false;
+    initialMinimumSpeed = minSpeedInMedium;
+    initializeSequentialBarriers();
   }
 
   void FixedUpdate ()
@@ -102,15 +114,21 @@ public class TurtleController : MonoBehaviour {
   public void addFish(FishMovement fish){
     followingFish.addFish(fish);
     thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
+    updateMinimumSpeed();
   }
 
   public void removeFish(FishMovement fish){
     followingFish.removeFish(fish);
     thirdPersonCamera.removeObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
+    updateMinimumSpeed();
   }
 
   public void applyForceVectorToBarrier(Vector3 forceVector, GameObject barrier){
-    barrierController.applyForceVectorToBarrier(forceVector, barrier);
+    bool success = barrierController.applyForceVectorToBarrier(forceVector, barrier, this.transform.position);
+    if (success){
+    } else {
+      followingFish.abortRushAttempt(special: true);
+    }
   }
 
   private float currentRotateSpeed(){
@@ -121,11 +139,17 @@ public class TurtleController : MonoBehaviour {
     return thirdPersonCamera.getCamState() == "Behind" ? 1.5f : 0.5f;
   }
 
+  public void updateMinimumSpeed(){
+    float desiredSpeed = initialMinimumSpeed + (followingFish.numberOfFollowingFish() / 10f);
+    minSpeedInMedium = desiredSpeed > maxSpeedInMedium ? maxSpeedInMedium : desiredSpeed;
+  }
+
   public void accelerateToward(Vector3 targetPosition, int strength){
     //Vector3 force = transform.InverseTransformDirection(targetPosition);
     //rigidbody.AddRelativeForce(force, ForceMode.Impulse);
-    targetSpeedInMedium = speedInMedium + (strength * 2);
-    currentlyAccelerating = true;
+    //float speed = speedInMedium + (strength * 1.5f);
+    //targetSpeedInMedium = speed > maxSpeedInMedium ? maxSpeedInMedium : speed;
+    //currentlyAccelerating = true;
   }
 
   private void calculateSpeedInMedium(){
@@ -134,10 +158,41 @@ public class TurtleController : MonoBehaviour {
     }
 
     if (currentlyAccelerating && speedInMedium < targetSpeedInMedium){
-      speedInMedium = Mathf.SmoothStep(speedInMedium, targetSpeedInMedium, .25f);
+      speedInMedium = Mathf.SmoothStep(speedInMedium, targetSpeedInMedium, .2f);
     } else if (speedInMedium >= minSpeedInMedium) {
-      speedInMedium = Mathf.SmoothStep(speedInMedium, minSpeedInMedium, .1f);
+      speedInMedium = Mathf.SmoothStep(speedInMedium, minSpeedInMedium, .2f);
+    } else if (speedInMedium < minSpeedInMedium) {
+      speedInMedium = Mathf.SmoothStep(minSpeedInMedium, speedInMedium, .3f);
     }
   }
 
+  public void rushNextSequentialBarrier(){
+    GameObject barrier = nextSequentialBarrier();
+    if (barrier != null){
+      followingFish.rushBarrier(barrier, special: true);
+    } else {
+      Debug.Log("can't rush a null barrier");
+      // get and rush position if all barriers are destroyed
+    }
+
+    // rush all fish toward barrier if it can be destroyed
+    // certain barriers require specific types of fish to be destroyed
+  }
+
+  private GameObject nextSequentialBarrier(){
+    GameObject nextBarrier = null;
+    foreach(GameObject barrier in sequentialBarriers){
+      if (!destroyedSequentialBarriers.Contains(barrier)){
+        nextBarrier = barrier;
+        break;
+      }
+    }
+    return nextBarrier;
+  }
+
+  private void initializeSequentialBarriers(){
+    foreach(GameObject barrier in sequentialBarriers){
+      sequentialBarriersPositions.Add(barrier.transform.position);
+    }
+  }
 }

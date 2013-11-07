@@ -37,7 +37,7 @@ public class Barrier : MonoBehaviour {
   }
 
   private void jettisonBarrierComponents(Vector3 forceVector){
-    int times = Random.Range(1, 2);
+    int times = Random.Range(1, 4);
     for (int i = 0; i < times && barrierComponents.Count > 0; i++){
       int index = Random.Range(0, barrierComponents.Count - 1);
       Rigidbody component = barrierComponents[index];
@@ -47,6 +47,8 @@ public class Barrier : MonoBehaviour {
 
   private void jettisonComponent(Rigidbody component, Vector3 forceVector){
     component.useGravity = true;
+    component.collider.isTrigger = true;
+    component.constraints = RigidbodyConstraints.None;
     Vector3 force = transform.InverseTransformDirection(forceVector);
     force.x = 0;
     float originalZ = force.z;

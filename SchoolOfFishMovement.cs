@@ -19,6 +19,8 @@ public class SchoolOfFishMovement : MonoBehaviour {
   private bool trapped;
   [SerializeField]
   private bool shoaling;
+  [SerializeField]
+  private bool canFollowPlayer;
 
   void Start () {
     collectFish();
@@ -45,6 +47,7 @@ public class SchoolOfFishMovement : MonoBehaviour {
       f.setLeadFish(leadFish);
       f.toggleShoaling(shoaling);
       f.setTrapped(trapped);
+      f.canFollowPlayer = canFollowPlayer;
       if (shoalPoint != null) {
         f.setShoalPoint(shoalPoint);
       } else {

@@ -55,6 +55,7 @@ public class FishMovement : MonoBehaviour {
   private float currentBurstSpeed;
 
   // player following
+  public bool canFollowPlayer;
   private Vector3 randomizedPlayerOffset;
   private bool currentlyFollowingPlayer = false;
   private float patienceSeed = 7f;
@@ -359,7 +360,7 @@ public class FishMovement : MonoBehaviour {
   }
 
   private bool shouldFollowPlayer(){
-    return (isShoaling || playerIsInFront());
+    return (canFollowPlayer && (isShoaling || playerIsInFront()));
   }
 
   private bool playerIsInFront(){

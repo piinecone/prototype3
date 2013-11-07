@@ -60,7 +60,7 @@ public class FishMovement : MonoBehaviour {
   private bool currentlyFollowingPlayer = false;
   private float patienceSeed = 7f;
   private float patienceLeft;
-  private float patienceDistance = 20f;
+  private float patienceDistance = 25f;
 
   // barriers
   private Vector3 randomizedBarrierOffset;

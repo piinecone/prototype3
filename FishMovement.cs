@@ -246,14 +246,15 @@ public class FishMovement : MonoBehaviour {
   private void moveTowardRendezvousPoint(){
     if (rendezvousDelayLeft <= 0f){
       currentlyMovingTowardRendezvousPoint = false;
-      rushBarrier(targetedBarrier);
-      rendezvousDelayLeft = 5f;
+      rendezvousDelayLeft = 1.5f;
+      schoolOfFish.RushBarrier();
     } else {
-      float distance = Vector3.Distance(transform.position, rendezvousPoint.transform.position);
-      if (distance < 20f){ // 20f seems like a common shoaling radius
+      float distanceFromPlayer = Vector3.Distance(transform.position, player.transform.position);
+      float distanceFromPoint = Vector3.Distance(transform.position, rendezvousPoint.transform.position);
+      if (distanceFromPlayer < 12f && distanceFromPoint < 20f){
         rendezvousDelayLeft -= Time.deltaTime;
       } else {
-        rendezvousDelayLeft = 5f;
+        rendezvousDelayLeft = 1.5f;
       }
       Vector3 targetPosition = rendezvousPoint.transform.position - leadFishOffset;
       Vector3 direction = directionAfterAvoidingObstacles(targetPosition);

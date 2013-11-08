@@ -66,6 +66,11 @@ public class SchoolOfFishMovement : MonoBehaviour {
     }
   }
 
+  public void RushBarrier(){
+    foreach(FishMovement f in fish)
+      f.rushTargetedBarrier();
+  }
+
   void collectFish(){
     FishMovement[] fishies = GetComponentsInChildren<FishMovement>();
     for (int i = 0; i < fishies.Length; i++){

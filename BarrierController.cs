@@ -23,8 +23,9 @@ public class BarrierController : MonoBehaviour {
   }
 
   private bool playerIsCloseToBarrierOrSibling(Barrier barrier, Vector3 playerPosition){
-    return (Vector3.Distance(barrier.transform.position, playerPosition) < 30f ||
-              Vector3.Distance(barrier.sibling.transform.position, playerPosition) < 30f);
+    float maxDistance = 50f;
+    return (Vector3.Distance(barrier.transform.position, playerPosition) < maxDistance ||
+              (barrier.sibling != null && Vector3.Distance(barrier.sibling.transform.position, playerPosition) < maxDistance));
   }
 
   public void attemptToMarkBarrierAsDestroyed(GameObject theBarrier, int attackStrength, bool special=false){

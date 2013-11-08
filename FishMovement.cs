@@ -90,7 +90,7 @@ public class FishMovement : MonoBehaviour {
     burstSpeed = 25f;
     followingSpeed = 16.1f;
     if (rushingSpeed == 0) rushingSpeed = 35f;
-    fastRotationSpeed = 75f;
+    if (fastRotationSpeed == 0) fastRotationSpeed = 75f;
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
     shoalingRotationSpeed = 1.8f;

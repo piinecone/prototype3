@@ -17,6 +17,8 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private float fastRotationSpeed;
   [SerializeField]
+  private float rushRotationSpeed;
+  [SerializeField]
   private float rushingSpeed;
   [SerializeField]
   private float obstacleAvoidanceRotationSpeed;
@@ -68,8 +70,6 @@ public class FishMovement : MonoBehaviour {
   private bool currentlyRushingABarrier = false;
   private bool currentlyFinishingRush = false;
   private GameObject targetedBarrier = null;
-  [SerializeField]
-  private float rushRotationSpeed;
   private float scatterDistance = 12f;
 
   // barrier rendezvous points

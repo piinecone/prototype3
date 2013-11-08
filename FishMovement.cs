@@ -68,6 +68,7 @@ public class FishMovement : MonoBehaviour {
   private bool currentlyRushingABarrier = false;
   private bool currentlyFinishingRush = false;
   private GameObject targetedBarrier = null;
+  [SerializeField]
   private float rushRotationSpeed;
   private float scatterDistance = 12f;
 
@@ -94,7 +95,7 @@ public class FishMovement : MonoBehaviour {
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
     shoalingRotationSpeed = 1.8f;
-    rushRotationSpeed = 5f;
+    if (rushRotationSpeed == 0) rushRotationSpeed = 5f;
     quickChangeOfDirectionDistance = .75f;
     patienceLeft = patienceSeed;
   }

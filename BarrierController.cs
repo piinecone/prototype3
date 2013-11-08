@@ -14,16 +14,22 @@ public class BarrierController : MonoBehaviour {
 
   public bool applyForceVectorToBarrier(Vector3 forceVector, GameObject theBarrier, Vector3 playerPosition){
     Barrier barrier = getBarrierInstanceFromBarrierGameObject(theBarrier);
-    if (!barrier.isSpecial() || (barrier.isSpecial() && Vector3.Distance(barrier.transform.position, playerPosition) < 30f)){
+    if (!barrier.isSpecial() || (barrier.isSpecial() && playerIsCloseToBarrierOrSibling(barrier, playerPosition))){
+      barrier.markAsDestroyed();
       barrier.applyForceVector(forceVector);
       return true;
     }
     return false;
   }
 
-  public void attemptToMarkBarrierAsDestroyed(GameObject theBarrier, int attackStrength){
+  private bool playerIsCloseToBarrierOrSibling(Barrier barrier, Vector3 playerPosition){
+    return (Vector3.Distance(barrier.transform.position, playerPosition) < 30f ||
+              Vector3.Distance(barrier.sibling.transform.position, playerPosition) < 30f);
+  }
+
+  public void attemptToMarkBarrierAsDestroyed(GameObject theBarrier, int attackStrength, bool special=false){
     Barrier barrier = getBarrierInstanceFromBarrierGameObject(theBarrier);
-    barrier.willBeDestroyedByRushAttack(attackStrength);
+    barrier.willBeDestroyedByRushAttack(attackStrength, special);
   }
 
   public List<GameObject> getAllBarriersFor(GameObject theBarrier){
@@ -44,7 +50,12 @@ public class BarrierController : MonoBehaviour {
     return barrier.rendezvousPoint;
   }
 
-  private Barrier getBarrierInstanceFromBarrierGameObject(GameObject theBarrier){
+  public void trapSchoolForBarrier(GameObject aBarrier){
+    Barrier barrier = getBarrierInstanceFromBarrierGameObject(aBarrier);
+    barrier.trapSchool();
+  }
+
+  public Barrier getBarrierInstanceFromBarrierGameObject(GameObject theBarrier){
     foreach(Barrier barrier in barriers){
       if (barrier.gameObject == theBarrier || barrier.gameObject == theBarrier.transform.parent.gameObject){
         return barrier;

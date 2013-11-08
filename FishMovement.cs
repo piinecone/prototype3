@@ -172,7 +172,7 @@ public class FishMovement : MonoBehaviour {
     finishRushTargetPosition.x = Random.Range(xComponent - 30f, xComponent + 30f);
     quicklyLookAt(finishRushTargetPosition);
     currentlyFinishingRush = true;
-    turtleController.applyForceVectorToBarrier(finishRushTargetPosition, barrier);
+    turtleController.applyForceVectorToBarrier(finishRushTargetPosition, barrier, isLeadFish: isLeadFish);
   }
 
   private void finishRushBehavior(){
@@ -424,7 +424,6 @@ public class FishMovement : MonoBehaviour {
       currentlyRushingABarrier = false;
       currentlyFinishingRush = false;
       currentlyMovingTowardRendezvousPoint = false;
-      currentlyFollowingPlayer = false;
     } else {
       currentlyRushingABarrier = false;
       currentlyFinishingRush = false;

@@ -417,6 +417,10 @@ public class FishMovement : MonoBehaviour {
     }
   }
 
+  public void rushTargetedBarrier(){
+    if (targetedBarrier != null) rushBarrier(targetedBarrier);
+  }
+
   public void abortRushAttempt(){
     if (isSpecial()){
       isShoaling = true;

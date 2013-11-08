@@ -183,11 +183,20 @@ public class TurtleController : MonoBehaviour {
     int indexOfNextBarrier = indexOfBarrier(currentBarrier) + 1;
     if (indexOfNextBarrier < sequentialBarriers.Count){
       nextBarrier = sequentialBarriers[indexOfNextBarrier];
-    } else {
+    } else if (allSequentialBarriersDestroyed()) {
+      Debug.Log("You freed all the fish you need to move the staircase!");
       // check if all sequential barriers have been destroyed and their
       // respective schools released
       // if so: you did it! Send the fish to the sunken staircase
     }
+  }
+
+  private bool allSequentialBarriersDestroyed(){
+    foreach(GameObject theBarrier in sequentialBarriers){
+      Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(theBarrier);
+      if (!barrier.isDestroyed()) return false;
+    }
+    return true;
   }
 
   // make the first barrier the next one

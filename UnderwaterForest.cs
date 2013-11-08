@@ -7,6 +7,8 @@ public class UnderwaterForest : MonoBehaviour {
   private float highFogDensity = 0.03f;
   [SerializeField]
   private float lowFogDensity = 0.009f;
+  [SerializeField]
+  private UnderWater underwaterCameraState;
 
   private float targetDensity;
   private Transform player;
@@ -26,7 +28,7 @@ public class UnderwaterForest : MonoBehaviour {
   
   void LateUpdate () {
     //if (playerIsNearForest()){
-    if (cameraIsNearForest()){
+    if (cameraIsNearForest() && underwaterCameraState.currentlyUnderwater()){
       float density = RenderSettings.fogDensity;
       if (density != targetDensity){
         RenderSettings.fogDensity = Mathf.SmoothStep(density, targetDensity, .08f);

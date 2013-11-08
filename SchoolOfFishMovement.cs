@@ -21,6 +21,8 @@ public class SchoolOfFishMovement : MonoBehaviour {
   private bool shoaling;
   [SerializeField]
   private bool canFollowPlayer;
+  [SerializeField]
+  private bool gameWinner;
 
   void Start () {
     collectFish();
@@ -89,5 +91,9 @@ public class SchoolOfFishMovement : MonoBehaviour {
       f.setTrapped(true);
       f.stopFollowingPlayer();
     }
+  }
+
+  public bool isGameWinner(){
+    return gameWinner;
   }
 }

@@ -21,6 +21,8 @@ public class TurtleController : MonoBehaviour {
   private ThirdPersonCamera thirdPersonCamera;
   [SerializeField]
   private CutSceneManager manager;
+  [SerializeField]
+  private SunkenStaircase sunkenStaircase;
 
   private float speedInMedium = 8f;
   private Vector3 moveDirection = Vector3.zero;
@@ -78,6 +80,15 @@ public class TurtleController : MonoBehaviour {
     swim(); // we're always underwater for now
   }
 
+  // Uncomment if you want to immediately raise the staircase
+  //void LateUpdate(){
+  //  if (followingFish.numberOfFollowingFish() > 5 && Time.time > 5f && Time.time < 5.5f){
+  //    followingFish.beginOrbiting(sunkenStaircase.getFocalPoint());
+  //    sunkenStaircase.scheduleRaise();
+  //    manager.cutTo(sunkenStaircase.getFocalPoint(), 40f, new Vector3(-10f, 10f, -50f));
+  //  }
+  //}
+
   void swim(){
     gravity = 30f;
     //speedInMedium = speed * 4.1f;
@@ -120,6 +131,9 @@ public class TurtleController : MonoBehaviour {
     followingFish.addFish(fish);
     thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
     updateMinimumSpeed();
+    if (fish.isTheLeadFish() && fish.parentSchool().isGameWinner()){
+      freedGameWinningFish();
+    }
   }
 
   public void removeFish(FishMovement fish){
@@ -191,12 +205,23 @@ public class TurtleController : MonoBehaviour {
       nextBarrier = sequentialBarriers[indexOfNextBarrier];
       Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
       if (!barrier.isDestroyed()) acceptRendezvousPointCutSceneReminder = true;
-    } else if (allSequentialBarriersDestroyed()) {
-      Debug.Log("You freed all the fish you need to move the staircase!");
-      // check if all sequential barriers have been destroyed and their
-      // respective schools released
-      // if so: you did it! Send the fish to the sunken staircase
+    }// else if (!sunkenStaircase.isReadyToRaise() && allSequentialBarriersDestroyed()) {
+     // followingFish.beginOrbiting(sunkenStaircase.getFocalPoint());
+     // sunkenStaircase.scheduleRaise();
+     // manager.cutTo(sunkenStaircase.getFocalPoint(), 40f, new Vector3(-10f, 10f, -50f));
+    //}
+  }
+
+  private void freedGameWinningFish(){
+    if (!sunkenStaircase.isReadyToRaise() && allSequentialBarriersDestroyed()) {
+      followingFish.beginOrbiting(sunkenStaircase.getFocalPoint());
+      sunkenStaircase.scheduleRaise();
+      manager.cutTo(sunkenStaircase.getFocalPoint(), 40f, new Vector3(-10f, 10f, -50f));
     }
+  }
+
+  public void tellFollowingFishToLeaveStaircase(){
+    followingFish.stopOrbiting();
   }
 
   private bool allSequentialBarriersDestroyed(){

@@ -109,4 +109,14 @@ public class FollowingFish : MonoBehaviour {
   public int numberOfFollowingFish(){
     return fishCurrentlyFollowingPlayer.Count;
   }
+
+  public void beginOrbiting(GameObject aGameObject){
+    foreach(FishMovement fish in fishCurrentlyFollowingPlayer)
+      fish.BeginToOrbit(aGameObject);
+  }
+
+  public void stopOrbiting(){
+    foreach(FishMovement fish in fishCurrentlyFollowingPlayer)
+      fish.StopOrbiting();
+  }
 }

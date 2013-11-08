@@ -49,7 +49,7 @@ public class TurtleController : MonoBehaviour {
     barrierController = GetComponent<BarrierController>();
     speedInMedium = 16.5f;
     minSpeedInMedium = 16.5f;
-    maxSpeedInMedium = 23.5f;
+    maxSpeedInMedium = 20f;
     targetSpeedInMedium = 16.5f;
     currentlyAccelerating = false;
     initialMinimumSpeed = minSpeedInMedium;
@@ -145,7 +145,7 @@ public class TurtleController : MonoBehaviour {
   }
 
   public void updateMinimumSpeed(){
-    float desiredSpeed = initialMinimumSpeed + (followingFish.numberOfFollowingFish() / 10f);
+    float desiredSpeed = initialMinimumSpeed + (followingFish.numberOfFollowingFish() / 20f);
     minSpeedInMedium = desiredSpeed > maxSpeedInMedium ? maxSpeedInMedium : desiredSpeed;
   }
 

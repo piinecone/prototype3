@@ -39,19 +39,14 @@ public class UnderwaterForest : MonoBehaviour {
   }
 
   void OnTriggerEnter(Collider collider){
-    Debug.Log("collision");
     //if (collider.gameObject.tag == "Player"){
-    Debug.Log(collider.gameObject);
-    Debug.Log(collider.gameObject.tag);
     if (collider.gameObject.tag == "MainCamera"){
       increaseFogDensity();
     }
   }
 
   void OnTriggerExit(Collider collider){
-    Debug.Log("collision");
     //if (collider.gameObject.tag == "Player"){
-    Debug.Log(collider.gameObject);
     if (collider.gameObject.tag == "MainCamera"){
       revertFogDensity();
     }

@@ -22,10 +22,9 @@ public class FollowingFish : MonoBehaviour {
     barrierController = GetComponent<BarrierController>();
   }
 
-  void Update () {
-    if (playerHasEnoughFish() && fishAreReadyToRush() && nearbyBarrierIsVisible()){
+  void Update () { // LateUpdate ?
+    if (playerHasEnoughFish() && fishAreReadyToRush() && nearbyBarrierIsVisible())
       rushBarrier();
-    }
   }
 
   public void rushBarrier(GameObject theBarrier=null, bool special=false){

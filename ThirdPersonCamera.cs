@@ -80,6 +80,8 @@ public class ThirdPersonCamera : MonoBehaviour {
     }
 
     targetPosition = characterOffset + follow.up * distanceUp - lookDir * distanceAway;
+    // FIXME turn this back on and just have it respect terrain and terrain-like elements
+    // smooth it out a little as well
     //CompensateForWalls(characterOffset, ref targetPosition);
     smoothPosition(this.transform.position, targetPosition);
     transform.LookAt(follow);
@@ -95,15 +97,15 @@ public class ThirdPersonCamera : MonoBehaviour {
       }
       desiredDistance += zoomOut == true ? (15f * Time.deltaTime) : (-5f * Time.deltaTime);
       distanceAway = (desiredDistance > maxDistanceAway || desiredDistance < minDistanceAway) ? distanceAway : desiredDistance;
-      //Debug.Log("Desired: " + desiredDistance + ", current: " + distanceAway);
+    } else {
+      distanceAway = minDistanceAway;
     }
   }
 
   private void CompensateForWalls(Vector3 fromObject, ref Vector3 toTarget){
     Debug.DrawLine(fromObject, toTarget, Color.cyan);
     RaycastHit wallHit = new RaycastHit();
-    if (Physics.Linecast(fromObject, toTarget, out wallHit))
-    {
+    if (Physics.Linecast(fromObject, toTarget, out wallHit)) {
       Debug.DrawRay(wallHit.point, Vector3.left, Color.red);
       toTarget = new Vector3(wallHit.point.x, toTarget.y, wallHit.point.z);
     }

@@ -68,6 +68,7 @@ public class FishMovement : MonoBehaviour {
   private bool currentlyRushingABarrier = false;
   private bool currentlyFinishingRush = false;
   private GameObject targetedBarrier = null;
+  [SerializeField]
   private float rushRotationSpeed;
   private float scatterDistance = 12f;
 
@@ -94,7 +95,7 @@ public class FishMovement : MonoBehaviour {
     obstacleAvoidanceRotationSpeed = 1.5f;
     followingRotationSpeed = 1.6f;
     shoalingRotationSpeed = 1.8f;
-    rushRotationSpeed = 5f;
+    if (rushRotationSpeed == 0) rushRotationSpeed = 5f;
     quickChangeOfDirectionDistance = .75f;
     patienceLeft = patienceSeed;
   }
@@ -234,7 +235,10 @@ public class FishMovement : MonoBehaviour {
     transform.rotation = Quaternion.Slerp(transform.rotation, rotation, shoalingRotationSpeed * Time.deltaTime);
     float speed = distance >= 20f ? forwardSpeed : shoalingSpeed;
     transform.position += transform.forward * speed * Time.deltaTime;
-    if (isAborting && distance < 20f) isAborting = false;
+    if (isAborting && distance < 20f){
+      isAborting = false;
+      turtleController.showPlayerInitialBarrier(schoolOfFish);
+    }
   }
 
   private void moveTowardNextWaypoint(){
@@ -251,6 +255,7 @@ public class FishMovement : MonoBehaviour {
     } else {
       float distanceFromPlayer = Vector3.Distance(transform.position, player.transform.position);
       float distanceFromPoint = Vector3.Distance(transform.position, rendezvousPoint.transform.position);
+      if (turtleController.needsRendezvousPointReminder() && distanceFromPoint < 20f) turtleController.rendezvousPointReached(rendezvousPoint);
       if (distanceFromPlayer < 12f && distanceFromPoint < 20f){
         rendezvousDelayLeft -= Time.deltaTime;
       } else {

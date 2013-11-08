@@ -100,12 +100,10 @@ public class FollowingFish : MonoBehaviour {
 
   public void addFish(FishMovement fish){
     fishCurrentlyFollowingPlayer.Add(fish);
-    // gainedFish(fish);
   }
 
   public void removeFish(FishMovement fish){
     fishCurrentlyFollowingPlayer.Remove(fish);
-    // lostFish(fish);
   }
 
   public int numberOfFollowingFish(){

@@ -19,6 +19,8 @@ public class TurtleController : MonoBehaviour {
   private float targetModeRotateSpeed;
   [SerializeField]
   private ThirdPersonCamera thirdPersonCamera;
+  [SerializeField]
+  private CutSceneManager manager;
 
   private float speedInMedium = 8f;
   private Vector3 moveDirection = Vector3.zero;
@@ -40,6 +42,10 @@ public class TurtleController : MonoBehaviour {
   [SerializeField]
   private List<GameObject> sequentialBarriers;
   private GameObject nextBarrier = null;
+
+  // cut scenes
+  private bool acceptRendezvousPointCutSceneReminder = true;
+  private bool willShowPlayerInitialBarrier = false;
 
   void Start () {
     anim = GetComponent<Animator>();               
@@ -183,6 +189,8 @@ public class TurtleController : MonoBehaviour {
     int indexOfNextBarrier = indexOfBarrier(currentBarrier) + 1;
     if (indexOfNextBarrier < sequentialBarriers.Count){
       nextBarrier = sequentialBarriers[indexOfNextBarrier];
+      Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
+      if (!barrier.isDestroyed()) acceptRendezvousPointCutSceneReminder = true;
     } else if (allSequentialBarriersDestroyed()) {
       Debug.Log("You freed all the fish you need to move the staircase!");
       // check if all sequential barriers have been destroyed and their
@@ -207,6 +215,7 @@ public class TurtleController : MonoBehaviour {
     nextBarrier = sequentialBarriers[0];
     foreach(GameObject barrier in sequentialBarriers)
       barrierController.trapSchoolForBarrier(barrier);
+    willShowPlayerInitialBarrier = true;
   }
 
   private int indexOfBarrier(GameObject aBarrier){
@@ -229,5 +238,25 @@ public class TurtleController : MonoBehaviour {
     }
 
     return sequentialBarriers.Count;
+  }
+
+  public int numberOfFollowingFish(){
+    return followingFish.numberOfFollowingFish();
+  }
+
+  public bool needsRendezvousPointReminder(){
+    return acceptRendezvousPointCutSceneReminder;
+  }
+
+  public void rendezvousPointReached(GameObject point){
+    manager.cutTo(point, 10f, new Vector3(10f, 10f, -25f));
+    acceptRendezvousPointCutSceneReminder = false;
+  }
+
+  public void showPlayerInitialBarrier(SchoolOfFishMovement school){
+    if (willShowPlayerInitialBarrier && manager.InitialBarrier().schoolOfFish() == school){
+      manager.playCutSceneFor("Abort Barrier");
+      willShowPlayerInitialBarrier = false;
+    }
   }
 }

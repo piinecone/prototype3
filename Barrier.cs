@@ -77,6 +77,10 @@ public class Barrier : MonoBehaviour {
     if (trappedSchool != null) trappedSchool.trap();
   }
 
+  public SchoolOfFishMovement schoolOfFish(){
+    return trappedSchool;
+  }
+
   public bool willBeDestroyedByRushAttack(int attackStrength, bool special=false){
     if (special && isSpecial()){
       return false;
@@ -104,5 +108,9 @@ public class Barrier : MonoBehaviour {
 
   public void markAsDestroyed(){
     destroyed = true;
+  }
+
+  public int Strength(){
+    return strength;
   }
 }

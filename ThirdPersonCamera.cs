@@ -22,13 +22,24 @@ public class ThirdPersonCamera : MonoBehaviour {
   private float maxDistanceAway;
   [SerializeField]
   private float minDistanceAway;
+  [SerializeField]
+  private GameObject testPosition;
 
+  [SerializeField] // just for testing
   private Vector3 targetPosition;
   private Vector3 lookDir;
   private Vector3 velocityCamSmooth = Vector3.zero;
-  private float camSmoothDampTime = 0.1f;
+  //private float camSmoothDampTime = 0.1f;
+  private float camSmoothDampTime = 0.2f;
   private CamStates camState = CamStates.Behind;
   private List<GameObject> objectsThatShouldAlwaysBeVisible = new List<GameObject>();
+
+  // cut scenes
+  private bool currentlyInCutScene = false;
+  private GameObject cutSceneTarget;
+  private float cutSceneTimeLeft;
+  [SerializeField]
+  private Vector3 cutSceneOffsetVector;
 
   public enum CamStates {
     Behind,
@@ -53,11 +64,35 @@ public class ThirdPersonCamera : MonoBehaviour {
   //}
 
   void LateUpdate() {
+    if (currentlyInCutScene){
+      continueToDisplayCutScene();
+    } else {
+      performNormalCameraMovement();
+    }
+  }
+
+  private void continueToDisplayCutScene(){
+    if (cutSceneTimeLeft > 0f){
+      cutSceneTimeLeft -= Time.deltaTime;
+      Vector3 offset = cutSceneTarget.transform.position + cutSceneOffsetVector;
+      lookDir = offset - this.transform.position;
+      lookDir.y = 0;
+      lookDir.Normalize();
+      targetPosition = offset + cutSceneTarget.transform.up * 0f - lookDir * 0f;
+      this.transform.position = Vector3.Lerp(this.transform.position, targetPosition, .7f * Time.deltaTime);
+      //this.transform.position = Vector3.SmoothDamp(this.transform.position, targetPosition, ref velocityCamSmooth, 1f);
+      transform.LookAt(cutSceneTarget.transform);
+    } else {
+      currentlyInCutScene = false;
+    }
+  }
+
+  private void performNormalCameraMovement(){
     calculateDesiredDistanceAwayBasedOnFollowers();
     Vector3 characterOffset = follow.position + new Vector3(0f, distanceUp, 0f);
 
     // Determine camera state
-    if (Input.GetAxis("Fire2") > 0.01f){
+    if (Input.GetAxis("Fire2") > 0.01f){ // FIXME change to space bar
       //barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, widescreen, targetingTime);
       camState = CamStates.Target;
     } else {
@@ -132,5 +167,14 @@ public class ThirdPersonCamera : MonoBehaviour {
 
   public void removeObjectThatMustAlwaysRemainInFieldOfView(GameObject theGameObject){
     objectsThatShouldAlwaysBeVisible.Remove(theGameObject);
+  }
+
+  public void cutTo(GameObject aGameObject, float timeToWatch, Vector3 offsetVector){
+    if (!currentlyInCutScene){
+      currentlyInCutScene = true;
+      cutSceneTarget = aGameObject;
+      cutSceneTimeLeft = timeToWatch;
+      cutSceneOffsetVector = offsetVector;
+    }
   }
 }

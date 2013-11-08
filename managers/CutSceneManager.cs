@@ -56,12 +56,10 @@ public class CutSceneManager : MonoBehaviour {
   }
 
   private void RemindPlayerToVisitForest(){
-    Debug.Log("Remind player of underwater forest");
     if (shouldRemindPlayerAboutForest()) playCutSceneFor("Underwater Forest");
   }
 
   private void ShowPlayerWhichBarrierToVisit(){
-    Debug.Log("Remind player of initial barrier");
     if (shouldRemindPlayerAboutInitialBarrier()) playCutSceneFor("Initial Barrier");
   }
 

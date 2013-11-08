@@ -22,10 +22,9 @@ public class FollowingFish : MonoBehaviour {
     barrierController = GetComponent<BarrierController>();
   }
 
-  void Update () {
-    if (playerHasEnoughFish() && fishAreReadyToRush() && nearbyBarrierIsVisible()){
+  void Update () { // LateUpdate ?
+    if (playerHasEnoughFish() && fishAreReadyToRush() && nearbyBarrierIsVisible())
       rushBarrier();
-    }
   }
 
   public void rushBarrier(GameObject theBarrier=null, bool special=false){
@@ -108,5 +107,15 @@ public class FollowingFish : MonoBehaviour {
 
   public int numberOfFollowingFish(){
     return fishCurrentlyFollowingPlayer.Count;
+  }
+
+  public void beginOrbiting(GameObject aGameObject){
+    foreach(FishMovement fish in fishCurrentlyFollowingPlayer)
+      fish.BeginToOrbit(aGameObject);
+  }
+
+  public void stopOrbiting(){
+    foreach(FishMovement fish in fishCurrentlyFollowingPlayer)
+      fish.StopOrbiting();
   }
 }

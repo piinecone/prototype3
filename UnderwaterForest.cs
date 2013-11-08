@@ -7,6 +7,8 @@ public class UnderwaterForest : MonoBehaviour {
   private float highFogDensity = 0.03f;
   [SerializeField]
   private float lowFogDensity = 0.009f;
+  [SerializeField]
+  private UnderWater underwaterCameraState;
 
   private float targetDensity;
   private Transform player;
@@ -26,7 +28,7 @@ public class UnderwaterForest : MonoBehaviour {
   
   void LateUpdate () {
     //if (playerIsNearForest()){
-    if (cameraIsNearForest()){
+    if (cameraIsNearForest() && underwaterCameraState.currentlyUnderwater()){
       float density = RenderSettings.fogDensity;
       if (density != targetDensity){
         RenderSettings.fogDensity = Mathf.SmoothStep(density, targetDensity, .08f);
@@ -39,19 +41,14 @@ public class UnderwaterForest : MonoBehaviour {
   }
 
   void OnTriggerEnter(Collider collider){
-    Debug.Log("collision");
     //if (collider.gameObject.tag == "Player"){
-    Debug.Log(collider.gameObject);
-    Debug.Log(collider.gameObject.tag);
     if (collider.gameObject.tag == "MainCamera"){
       increaseFogDensity();
     }
   }
 
   void OnTriggerExit(Collider collider){
-    Debug.Log("collision");
     //if (collider.gameObject.tag == "Player"){
-    Debug.Log(collider.gameObject);
     if (collider.gameObject.tag == "MainCamera"){
       revertFogDensity();
     }

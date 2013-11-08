@@ -33,4 +33,8 @@ public class UnderWater : MonoBehaviour {
     RenderSettings.fogColor = normalColor;
     RenderSettings.fogDensity = atmosphericVisibility;
   }
+
+  public bool currentlyUnderwater(){
+    return isUnderwater;
+  }
 }

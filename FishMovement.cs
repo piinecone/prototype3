@@ -17,6 +17,8 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private float fastRotationSpeed;
   [SerializeField]
+  private float rushRotationSpeed;
+  [SerializeField]
   private float rushingSpeed;
   [SerializeField]
   private float obstacleAvoidanceRotationSpeed;
@@ -68,8 +70,6 @@ public class FishMovement : MonoBehaviour {
   private bool currentlyRushingABarrier = false;
   private bool currentlyFinishingRush = false;
   private GameObject targetedBarrier = null;
-  [SerializeField]
-  private float rushRotationSpeed;
   private float scatterDistance = 12f;
 
   // barrier rendezvous points
@@ -82,6 +82,10 @@ public class FishMovement : MonoBehaviour {
   private bool isShoaling;
   private bool isTrapped;
   private Transform shoalPoint;
+
+  // orbiting
+  private bool orbitingUntilReleased = false;
+  private GameObject orbitPoint;
 
   void Start () {
     player = GameObject.FindWithTag("Player");
@@ -101,7 +105,13 @@ public class FishMovement : MonoBehaviour {
   }
   
   void Update () {
-    if (currentlyRushingABarrier){
+    // for debug purposes only
+    //if (Time.time > 5f && Time.time < 5.5f)
+    //  if (isSpecial()) turtleController.addFish(this);
+
+    if (orbitingUntilReleased){
+      orbitAroundOrbitPoint();
+    } else if (currentlyRushingABarrier){
       rushTowardBarrier();
     } else if (currentlyFinishingRush) {
       finishRushBehavior();
@@ -225,6 +235,15 @@ public class FishMovement : MonoBehaviour {
     //}
     float speed = followingSpeed * speedMultiplier;
     transform.position += transform.forward * speed * Time.deltaTime;
+  }
+
+  private void orbitAroundOrbitPoint(){
+    Vector3 targetPosition = orbitPoint.transform.position;
+    float distance = Vector3.Distance(transform.position, targetPosition);
+    Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
+    Quaternion rotation = Quaternion.LookRotation(direction);
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, obstacleAvoidanceRotationSpeed * Time.deltaTime);
+    transform.position += transform.forward * forwardSpeed * 2f * Time.deltaTime;
   }
 
   private void shoalAroundShoalPoint(){
@@ -471,5 +490,22 @@ public class FishMovement : MonoBehaviour {
 
   public bool isSpecial(){
     return !canFollowPlayer;
+  }
+
+  public void BeginToOrbit(GameObject aGameObject){
+    orbitPoint = aGameObject;
+    orbitingUntilReleased = true;
+  }
+
+  public void StopOrbiting(){
+    orbitingUntilReleased = false;
+  }
+
+  public bool isTheLeadFish(){
+    return isLeadFish;
+  }
+
+  public SchoolOfFishMovement parentSchool(){
+    return schoolOfFish;
   }
 }

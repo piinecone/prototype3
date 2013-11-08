@@ -70,7 +70,7 @@ public class FollowingFish : MonoBehaviour {
     int index = 0;
     GameObject rendezvousPoint = barrierController.rendezvousPointForBarrier(targetedBarriers[0]);
     for (int i = 0; i < targetedBarriers.Count; i++){
-      barrierController.attemptToMarkBarrierAsDestroyed(targetedBarriers[i], fishCurrentlyFollowingPlayer.Count);
+      barrierController.attemptToMarkBarrierAsDestroyed(targetedBarriers[i], fishCurrentlyFollowingPlayer.Count, special);
     }
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
       if (special && !fish.isSpecial()) continue;
@@ -80,9 +80,14 @@ public class FollowingFish : MonoBehaviour {
   }
 
   public void abortRushAttempt(bool special=false){
+    List<FishMovement> fishToRemoveFromFollowers = new List<FishMovement>();
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
       if (special && !fish.isSpecial()) continue;
       fish.abortRushAttempt();
+      fishToRemoveFromFollowers.Add(fish);
+    }
+    foreach(FishMovement fish in fishToRemoveFromFollowers){
+      fish.stopFollowingPlayer();
     }
   }
 

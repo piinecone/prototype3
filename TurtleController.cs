@@ -39,8 +39,7 @@ public class TurtleController : MonoBehaviour {
   // sequential barriers
   [SerializeField]
   private List<GameObject> sequentialBarriers;
-  private List<GameObject> destroyedSequentialBarriers = new List<GameObject>();
-  private List<Vector3> sequentialBarriersPositions = new List<Vector3>();
+  private GameObject nextBarrier = null;
 
   void Start () {
     anim = GetComponent<Animator>();               
@@ -54,7 +53,7 @@ public class TurtleController : MonoBehaviour {
     targetSpeedInMedium = 16.5f;
     currentlyAccelerating = false;
     initialMinimumSpeed = minSpeedInMedium;
-    initializeSequentialBarriers();
+    nextBarrier = sequentialBarriers[0];
   }
 
   void FixedUpdate ()
@@ -123,11 +122,17 @@ public class TurtleController : MonoBehaviour {
     updateMinimumSpeed();
   }
 
-  public void applyForceVectorToBarrier(Vector3 forceVector, GameObject barrier){
-    bool success = barrierController.applyForceVectorToBarrier(forceVector, barrier, this.transform.position);
-    if (success){
-    } else {
-      followingFish.abortRushAttempt(special: true);
+  // this is always assuming special rush attempts against sequential barriers
+  public void applyForceVectorToBarrier(Vector3 forceVector, GameObject theBarrier, bool isLeadFish=false){
+    bool success = barrierController.applyForceVectorToBarrier(forceVector, theBarrier, this.transform.position);
+    if (isLeadFish){ // we only need to check once...ish (each school has a lead)
+      Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(theBarrier);
+      if (barrier.isDestroyed()){
+        setNextBarrier(theBarrier);
+      } else {
+        followingFish.abortRushAttempt(special: true);
+        resetBarriers(theBarrier);
+      }
     }
   }
 
@@ -167,32 +172,53 @@ public class TurtleController : MonoBehaviour {
   }
 
   public void rushNextSequentialBarrier(){
-    GameObject barrier = nextSequentialBarrier();
-    if (barrier != null){
-      followingFish.rushBarrier(barrier, special: true);
+    if (nextBarrier != null){
+      followingFish.rushBarrier(nextBarrier, special: true);
     } else {
       Debug.Log("can't rush a null barrier");
-      // get and rush position if all barriers are destroyed
     }
-
-    // rush all fish toward barrier if it can be destroyed
-    // certain barriers require specific types of fish to be destroyed
   }
 
-  private GameObject nextSequentialBarrier(){
-    GameObject nextBarrier = null;
-    foreach(GameObject barrier in sequentialBarriers){
-      if (!destroyedSequentialBarriers.Contains(barrier)){
-        nextBarrier = barrier;
-        break;
+  private void setNextBarrier(GameObject currentBarrier){
+    int indexOfNextBarrier = indexOfBarrier(currentBarrier) + 1;
+    if (indexOfNextBarrier < sequentialBarriers.Count){
+      nextBarrier = sequentialBarriers[indexOfNextBarrier];
+    } else {
+      // check if all sequential barriers have been destroyed and their
+      // respective schools released
+      // if so: you did it! Send the fish to the sunken staircase
+    }
+  }
+
+  // make the first barrier the next one
+  // trap all sequential fish, even if they were freed before, so the player
+  // has to complete everything sequentially
+  // TODO: LERP camera to cue player
+  private void resetBarriers(GameObject abortedBarrier){
+    nextBarrier = sequentialBarriers[0];
+    foreach(GameObject barrier in sequentialBarriers)
+      barrierController.trapSchoolForBarrier(barrier);
+  }
+
+  private int indexOfBarrier(GameObject aBarrier){
+    for (int i = 0; i < sequentialBarriers.Count; i++){
+      if (aBarrier != null){
+        // super blargh :/
+        if (sequentialBarriers[i].transform.parent.gameObject != null){
+          GameObject den = sequentialBarriers[i].transform.parent.gameObject;
+          if (aBarrier.transform.parent.gameObject != null){
+            GameObject currentBarrier = aBarrier.transform.parent.gameObject;
+            if (den == currentBarrier) return i;
+
+            // vomit
+            if (currentBarrier != null && currentBarrier.transform.parent != null){
+              if (den == currentBarrier.transform.parent.gameObject) return i;
+            }
+          }
+        }
       }
     }
-    return nextBarrier;
-  }
 
-  private void initializeSequentialBarriers(){
-    foreach(GameObject barrier in sequentialBarriers){
-      sequentialBarriersPositions.Add(barrier.transform.position);
-    }
+    return sequentialBarriers.Count;
   }
 }

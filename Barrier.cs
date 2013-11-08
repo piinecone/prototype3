@@ -73,12 +73,20 @@ public class Barrier : MonoBehaviour {
     if (trappedSchool != null) trappedSchool.free();
   }
 
-  public bool willBeDestroyedByRushAttack(int attackStrength){
-    if (strength <= attackStrength){
-      destroyed = true;
-      return true;
-    } else {
+  public void trapSchool(){
+    if (trappedSchool != null) trappedSchool.trap();
+  }
+
+  public bool willBeDestroyedByRushAttack(int attackStrength, bool special=false){
+    if (special && isSpecial()){
       return false;
+    } else {
+      if (strength <= attackStrength){
+        destroyed = true;
+        return true;
+      } else {
+        return false;
+      }
     }
   }
 
@@ -88,5 +96,13 @@ public class Barrier : MonoBehaviour {
 
   public bool isSpecial(){
     return special;
+  }
+
+  public bool isDestroyed(){
+    return destroyed;
+  }
+
+  public void markAsDestroyed(){
+    destroyed = true;
   }
 }

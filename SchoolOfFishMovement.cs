@@ -78,4 +78,11 @@ public class SchoolOfFishMovement : MonoBehaviour {
       f.setTrapped(false);
     }
   }
+
+  public void trap(){
+    foreach(FishMovement f in fish){
+      f.setTrapped(true);
+      f.stopFollowingPlayer();
+    }
+  }
 }

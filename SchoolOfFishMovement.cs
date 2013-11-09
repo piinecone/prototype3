@@ -23,12 +23,16 @@ public class SchoolOfFishMovement : MonoBehaviour {
   private bool canFollowPlayer;
   [SerializeField]
   private bool gameWinner;
+  [SerializeField]
+  private GameObject player;
 
   void Start () {
+    player = GameObject.FindWithTag("Player");
     collectFish();
     initializeWaypoints();
     initializeFish();
     BroadcastNextWaypoint(0);
+    InvokeRepeating("determineIfCalculationsShouldBePerformedBasedOnDistanceFromPlayer", Random.Range(3,15), 5);
   }
 
   void initializeWaypoints(){
@@ -58,7 +62,14 @@ public class SchoolOfFishMovement : MonoBehaviour {
     }
   }
 
-  void Update () {
+  public void determineIfCalculationsShouldBePerformedBasedOnDistanceFromPlayer(){
+    if (Vector3.Distance(player.transform.position, transform.position) < 150f){
+      foreach(FishMovement f in fish)
+        f.playerIsClose(true);
+    } else {
+      foreach(FishMovement f in fish)
+        f.playerIsClose(false);
+    }
   }
 
   public void BroadcastNextWaypoint(int waypointIndex){

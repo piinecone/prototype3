@@ -88,6 +88,10 @@ public class FishMovement : MonoBehaviour {
   private bool orbitingUntilReleased = false;
   private GameObject orbitPoint;
 
+  // performance
+  private bool shouldDoCalculations = false;
+  private bool playerIsNearby = false;
+
   void Start () {
     player = GameObject.FindWithTag("Player");
     turtleController = player.GetComponent<TurtleController>();
@@ -103,9 +107,12 @@ public class FishMovement : MonoBehaviour {
     if (rushRotationSpeed == 0) rushRotationSpeed = 5f;
     quickChangeOfDirectionDistance = .75f;
     patienceLeft = patienceSeed;
+
+    InvokeRepeating("checkIfShouldStartDoingCalculations", Random.Range(3,15), 5);
   }
   
-  void Update () {
+  //void Update () {
+  void LateUpdate () {
     // for debug purposes only
     //if (Time.time > 5f && Time.time < 5.5f)
     //  if (isSpecial()) turtleController.addFish(this);
@@ -318,6 +325,9 @@ public class FishMovement : MonoBehaviour {
   private Vector3 directionAfterAvoidingObstacles(Vector3 targetPosition, float hitSensitivity=75f, float forwardSensoryDistance=10f, float angularSensoryDistance=5f){
     RaycastHit hit;
     Vector3 direction = (targetPosition - transform.position).normalized;
+    // only perform AI steering when visible
+    if (!shouldDoCalculations) return direction;
+
     float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
 
     Vector3 forwardRay = transform.forward * forwardSensoryDistance;

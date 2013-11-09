@@ -129,7 +129,7 @@ public class TurtleController : MonoBehaviour {
   // FIXME this is just a wrapper for followingFish :/
   public void addFish(FishMovement fish){
     followingFish.addFish(fish);
-    thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
+    if (!fish.isSpecial()) thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
     updateMinimumSpeed();
     if (fish.isTheLeadFish() && fish.parentSchool().isGameWinner()){
       freedGameWinningFish();
@@ -138,7 +138,7 @@ public class TurtleController : MonoBehaviour {
 
   public void removeFish(FishMovement fish){
     followingFish.removeFish(fish);
-    thirdPersonCamera.removeObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
+    if (!fish.isSpecial()) thirdPersonCamera.removeObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
     updateMinimumSpeed();
   }
 

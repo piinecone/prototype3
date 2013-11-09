@@ -103,8 +103,9 @@ public class ThirdPersonCamera : MonoBehaviour {
     switch(camState){
       case CamStates.Behind:
         // calculate direction from camera to player, kill y, and normalize to give a valid direction with unit magnitude
-        lookDir = characterOffset - this.transform.position;
-        lookDir.y = 0;
+        lookDir = characterOffset - this.transform.position + (10 * follow.forward);
+        //lookDir.y = 0;
+        lookDir.y = lookDir.y / 2f;
         lookDir.Normalize();
         //Debug.DrawRay(this.transform.position, lookDir, Color.green);
         //Debug.DrawLine(follow.position, targetPosition, Color.magenta);
@@ -117,7 +118,7 @@ public class ThirdPersonCamera : MonoBehaviour {
     targetPosition = characterOffset + follow.up * distanceUp - lookDir * distanceAway;
     // FIXME turn this back on and just have it respect terrain and terrain-like elements
     // smooth it out a little as well
-    //CompensateForWalls(characterOffset, ref targetPosition);
+    CompensateForWalls(characterOffset, ref targetPosition);
     smoothPosition(this.transform.position, targetPosition);
     transform.LookAt(follow);
   }
@@ -141,8 +142,12 @@ public class ThirdPersonCamera : MonoBehaviour {
     Debug.DrawLine(fromObject, toTarget, Color.cyan);
     RaycastHit wallHit = new RaycastHit();
     if (Physics.Linecast(fromObject, toTarget, out wallHit)) {
-      Debug.DrawRay(wallHit.point, Vector3.left, Color.red);
-      toTarget = new Vector3(wallHit.point.x, toTarget.y, wallHit.point.z);
+      string hitTag = wallHit.transform.gameObject.tag;
+      if (hitTag != "Player" && hitTag != "Fish" && hitTag != "BigTreeRoot"){ // :|
+        //Debug.DrawRay(wallHit.point, Vector3.left, Color.red);
+        //toTarget = new Vector3(wallHit.point.x, toTarget.y, wallHit.point.z);
+        toTarget = new Vector3(wallHit.point.x, wallHit.point.y, wallHit.point.z); // incorporate Y
+      }
     }
   }
 

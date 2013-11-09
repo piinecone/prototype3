@@ -129,7 +129,7 @@ public class TurtleController : MonoBehaviour {
   // FIXME this is just a wrapper for followingFish :/
   public void addFish(FishMovement fish){
     followingFish.addFish(fish);
-    thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
+    if (!fish.isSpecial()) thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
     updateMinimumSpeed();
     if (fish.isTheLeadFish() && fish.parentSchool().isGameWinner()){
       freedGameWinningFish();
@@ -138,7 +138,7 @@ public class TurtleController : MonoBehaviour {
 
   public void removeFish(FishMovement fish){
     followingFish.removeFish(fish);
-    thirdPersonCamera.removeObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
+    if (!fish.isSpecial()) thirdPersonCamera.removeObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
     updateMinimumSpeed();
   }
 
@@ -147,12 +147,14 @@ public class TurtleController : MonoBehaviour {
     bool success = barrierController.applyForceVectorToBarrier(forceVector, theBarrier, this.transform.position);
     if (isLeadFish){ // we only need to check once...ish (each school has a lead)
       Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(theBarrier);
-      if (barrier.isDestroyed()){
+      // FIXME re-enable game logic
+      //if (barrier.isDestroyed()){
         setNextBarrier(theBarrier);
-      } else {
-        followingFish.abortRushAttempt(special: true);
-        resetBarriers(theBarrier);
-      }
+      // FIXME fix bug with fish rushing the wrong barrier and causing aborts
+      //} else {
+      //  followingFish.abortRushAttempt(special: true);
+      //  resetBarriers(theBarrier);
+      //}
     }
   }
 

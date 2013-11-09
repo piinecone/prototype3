@@ -15,6 +15,8 @@ public class CutSceneManager : MonoBehaviour {
   private float underwaterForestReminderInterval;
   [SerializeField]
   private Barrier initialBarrier;
+  [SerializeField]
+  private bool disabled = false;
 
   void Start (){
   }
@@ -31,28 +33,30 @@ public class CutSceneManager : MonoBehaviour {
 
   public void startReminders(){
     InvokeRepeating("RemindPlayerToVisitForest", underwaterForestReminderInterval, underwaterForestReminderInterval);
-    InvokeRepeating("ShowPlayerWhichBarrierToVisit", 5, 30);
+    InvokeRepeating("ShowPlayerWhichBarrierToVisit", 5, 45);
   }
 
   public void playCutSceneFor(string sceneName){
-    switch(sceneName){
-      case "Lake Entry":
-        camera.cutTo(bigTree, 8f, new Vector3(-10f, 4f, -50f));
-        break;
-      case "Underwater Forest":
-        camera.cutTo(underwaterForest, 6f, new Vector3(0f, -10f, -140f));
-        break;
-      case "Initial Barrier":
-        camera.cutTo(initialBarrier.gameObject, 7f, new Vector3(0f, 0f, 10f));
-        break;
-      case "Abort Barrier":
-        camera.cutTo(initialBarrier.gameObject, 11f, new Vector3(0f, 0f, 10f));
-        break;
+    if (!disabled){
+      switch(sceneName){
+        case "Lake Entry":
+          camera.cutTo(bigTree, 8f, new Vector3(-10f, 4f, -50f));
+          break;
+        case "Underwater Forest":
+          camera.cutTo(underwaterForest, 6f, new Vector3(0f, -10f, -140f));
+          break;
+        case "Initial Barrier":
+          camera.cutTo(initialBarrier.gameObject, 7f, new Vector3(0f, 0f, 10f));
+          break;
+        case "Abort Barrier":
+          camera.cutTo(initialBarrier.gameObject, 11f, new Vector3(0f, 0f, 10f));
+          break;
+      }
     }
   }
 
   public void cutTo(GameObject aGameObject, float duration, Vector3 offsetVector){
-    camera.cutTo(aGameObject, duration, offsetVector);
+    if (!disabled) camera.cutTo(aGameObject, duration, offsetVector);
   }
 
   private void RemindPlayerToVisitForest(){

@@ -94,9 +94,11 @@ public class TurtleController : MonoBehaviour {
   //}
 
   void swim(){
-    gravity = 30f;
+    gravity = 20f;
     //speedInMedium = speed * 4.1f;
-    moveDirection = new Vector3(Input.GetAxis("Horizontal") * 0.5f, 0, Input.GetAxis("Vertical"));
+    //moveDirection = new Vector3(Input.GetAxis("Horizontal") * 0.5f, 0, Input.GetAxis("Vertical")); // slower left/right rotation
+    moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+    if (moveDirection.z < 0f) moveDirection.z = 0f;
     moveDirection = transform.TransformDirection(moveDirection);
     moveDirection *= speedInMedium;
 
@@ -171,7 +173,7 @@ public class TurtleController : MonoBehaviour {
   }
 
   public void updateMinimumSpeed(){
-    float desiredSpeed = initialMinimumSpeed + (followingFish.numberOfFollowingFish() / 20f);
+    float desiredSpeed = initialMinimumSpeed + (followingFish.numberOfFollowingFish() / 30f);
     minSpeedInMedium = desiredSpeed > maxSpeedInMedium ? maxSpeedInMedium : desiredSpeed;
   }
 

@@ -77,6 +77,7 @@ public class FishMovement : MonoBehaviour {
   private GameObject rendezvousPoint = null;
   private float rendezvousDelayLeft = 5f;
   private bool isAborting = false;
+  private bool hasReachedCurrentRendezvousPoint = false;
 
   // trapped + shoaling
   private bool isShoaling;
@@ -131,6 +132,10 @@ public class FishMovement : MonoBehaviour {
     }
   }
 
+  private float currentDistanceFromPlayer(){
+    return distanceFromPlayer();
+  }
+
   private float distanceFromPlayer(){
     return Vector3.Distance(transform.position, player.transform.position);
   }
@@ -178,11 +183,11 @@ public class FishMovement : MonoBehaviour {
   }
 
   private void beginFinishingBarrierRush(GameObject barrier){
+    currentlyFinishingRush = true;
     finishRushTargetPosition = (transform.position + transform.up * scatterDistance);
     float xComponent = finishRushTargetPosition.x;
     finishRushTargetPosition.x = Random.Range(xComponent - 30f, xComponent + 30f);
     quicklyLookAt(finishRushTargetPosition);
-    currentlyFinishingRush = true;
     turtleController.applyForceVectorToBarrier(finishRushTargetPosition, barrier, isLeadFish: isLeadFish);
   }
 
@@ -268,18 +273,26 @@ public class FishMovement : MonoBehaviour {
 
   private void moveTowardRendezvousPoint(){
     if (rendezvousDelayLeft <= 0f){
-      currentlyMovingTowardRendezvousPoint = false;
       rendezvousDelayLeft = 1.5f;
-      schoolOfFish.RushBarrier();
+      currentlyMovingTowardRendezvousPoint = false;
+      currentlyRushingABarrier = false;
+      currentlyFinishingRush = false;
+      //schoolOfFish.RushBarrier();
+      turtleController.rushRequiredSchools();
     } else {
-      float distanceFromPlayer = Vector3.Distance(transform.position, player.transform.position);
+      float distanceFromPlayer = currentDistanceFromPlayer();
       float distanceFromPoint = Vector3.Distance(transform.position, rendezvousPoint.transform.position);
-      if (turtleController.needsRendezvousPointReminder() && distanceFromPoint < 20f) turtleController.rendezvousPointReached(rendezvousPoint);
-      if (distanceFromPlayer < 12f && distanceFromPoint < 20f){
-        rendezvousDelayLeft -= Time.deltaTime;
-      } else {
-        rendezvousDelayLeft = 1.5f;
+      if (distanceFromPoint < 30f) hasReachedCurrentRendezvousPoint = true;
+
+      if (distanceFromPlayer < 5f && turtleController.allRequiredSchoolsAreInPlace()){
+        if (turtleController.needsRendezvousPointReminder() && hasReachedCurrentRendezvousPoint) turtleController.rendezvousPointReached(rendezvousPoint);
+        if (hasReachedCurrentRendezvousPoint){
+          rendezvousDelayLeft -= Time.deltaTime;
+        } else {
+          rendezvousDelayLeft = 1.5f;
+        }
       }
+
       Vector3 targetPosition = rendezvousPoint.transform.position - leadFishOffset;
       Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
       moveInDirection(targetPosition, direction);
@@ -427,12 +440,15 @@ public class FishMovement : MonoBehaviour {
   }
 
   public void rushBarrier(GameObject barrier, GameObject aRendezvousPoint=null, bool force=false){
-    if (!force && !currentlyRushingABarrier && !currentlyFinishingRush){
+    if (force || (!currentlyRushingABarrier && !currentlyFinishingRush)){
       targetedBarrier = barrier;
       if (aRendezvousPoint != null){
         currentlyMovingTowardRendezvousPoint = true;
-        rendezvousPoint = aRendezvousPoint;
-        schoolOfFish.rendezvousFor(barrier, aRendezvousPoint);
+        if (rendezvousPoint != aRendezvousPoint){
+          hasReachedCurrentRendezvousPoint = false;
+          rendezvousPoint = aRendezvousPoint;
+          schoolOfFish.rendezvousFor(barrier, aRendezvousPoint); // may not need this
+        }
       } else {
         currentlyRushingABarrier = true;
         Vector3 direction = barrier.transform.position;
@@ -484,10 +500,10 @@ public class FishMovement : MonoBehaviour {
     turtleController.rushNextSequentialBarrier();
   }
 
-  public void stopFollowingPlayer(){
+  public void stopFollowingPlayer(bool playSound=true){
     currentlyFollowingPlayer = false;
     turtleController.removeFish(this);
-    stoppedFollowingSound.Play();
+    if (playSound) stoppedFollowingSound.Play();
   }
 
   public bool isSpecial(){
@@ -509,5 +525,32 @@ public class FishMovement : MonoBehaviour {
 
   public SchoolOfFishMovement parentSchool(){
     return schoolOfFish;
+  }
+
+  public bool isNearRendezvousPoint(){
+    return hasReachedCurrentRendezvousPoint;
+  }
+
+  public void forceRushWithRendezvous(GameObject aBarrier, GameObject aRendezvousPoint){
+    currentlyRushingABarrier = false;
+    currentlyFinishingRush = false;
+    currentlyMovingTowardRendezvousPoint = true;
+    if (rendezvousPoint != aRendezvousPoint){
+      hasReachedCurrentRendezvousPoint = false;
+      rendezvousPoint = aRendezvousPoint;
+    }
+  }
+
+  void checkIfShouldStartDoingCalculations(){
+    shouldDoCalculations = ((playerIsNearby && renderer.isVisible) || performingNecessaryMovement());
+  }
+
+  bool performingNecessaryMovement(){
+    return (currentlyRushingABarrier || currentlyFinishingRush ||
+        currentlyFollowingPlayer || currentlyMovingTowardRendezvousPoint);
+  }
+
+  public void playerIsClose(bool state=true){
+    playerIsNearby = state;
   }
 }

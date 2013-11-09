@@ -27,10 +27,10 @@ public class FollowingFish : MonoBehaviour {
       rushBarrier();
   }
 
-  public void rushBarrier(GameObject theBarrier=null, bool special=false){
+  public void rushBarrier(GameObject theBarrier=null, bool special=false, bool force=false){
     GameObject barrier = theBarrier == null ? targetedBarrier : theBarrier;
     List<GameObject> targetedBarriers = barrierController.getAllBarriersFor(barrier);
-    fireTheFishiesAtTargetedBarriers(targetedBarriers, special);
+    fireTheFishiesAtTargetedBarriers(targetedBarriers, special, force);
     //acceleratePlayerTowardTargetedBarrierPosition(targetedBarriers[0].transform.position);
   }
 
@@ -65,15 +65,14 @@ public class FollowingFish : MonoBehaviour {
     return (targetedBarrier != null);
   }
 
-  private void fireTheFishiesAtTargetedBarriers(List<GameObject> targetedBarriers, bool special=false){
+  private void fireTheFishiesAtTargetedBarriers(List<GameObject> targetedBarriers, bool special=false, bool force=false){
     int index = 0;
     GameObject rendezvousPoint = barrierController.rendezvousPointForBarrier(targetedBarriers[0]);
-    for (int i = 0; i < targetedBarriers.Count; i++){
+    for (int i = 0; i < targetedBarriers.Count; i++)
       barrierController.attemptToMarkBarrierAsDestroyed(targetedBarriers[i], fishCurrentlyFollowingPlayer.Count, special);
-    }
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
       if (special && !fish.isSpecial()) continue;
-      fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count], rendezvousPoint);
+      fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count], rendezvousPoint, force);
       index++;
     }
   }
@@ -86,7 +85,7 @@ public class FollowingFish : MonoBehaviour {
       fishToRemoveFromFollowers.Add(fish);
     }
     foreach(FishMovement fish in fishToRemoveFromFollowers){
-      fish.stopFollowingPlayer();
+      fish.stopFollowingPlayer(playSound: false);
     }
   }
 
@@ -117,5 +116,12 @@ public class FollowingFish : MonoBehaviour {
   public void stopOrbiting(){
     foreach(FishMovement fish in fishCurrentlyFollowingPlayer)
       fish.StopOrbiting();
+  }
+
+  public void forceStragglersToRushBarrier(GameObject barrier, GameObject rendezvousPoint){
+    foreach(FishMovement fish in fishCurrentlyFollowingPlayer){
+      if (!fish.isSpecial()) continue;
+      fish.forceRushWithRendezvous(barrier, rendezvousPoint);
+    }
   }
 }

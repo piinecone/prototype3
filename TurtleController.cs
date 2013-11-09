@@ -44,6 +44,8 @@ public class TurtleController : MonoBehaviour {
   [SerializeField]
   private List<GameObject> sequentialBarriers;
   private GameObject nextBarrier = null;
+  private Barrier nextBarrierInstance = null;
+  private bool schoolsMayLeave = false;
 
   // cut scenes
   private bool acceptRendezvousPointCutSceneReminder = true;
@@ -62,6 +64,7 @@ public class TurtleController : MonoBehaviour {
     currentlyAccelerating = false;
     initialMinimumSpeed = minSpeedInMedium;
     nextBarrier = sequentialBarriers[0];
+    nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
   }
 
   void FixedUpdate ()
@@ -78,6 +81,7 @@ public class TurtleController : MonoBehaviour {
     calculateSpeedInMedium();
     previousPosition = transform.position;
     swim(); // we're always underwater for now
+    schoolsMayLeave = false;
   }
 
   // Uncomment if you want to immediately raise the staircase
@@ -148,13 +152,13 @@ public class TurtleController : MonoBehaviour {
     if (isLeadFish){ // we only need to check once...ish (each school has a lead)
       Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(theBarrier);
       // FIXME re-enable game logic
-      //if (barrier.isDestroyed()){
+      if (barrier.isDestroyed()){
         setNextBarrier(theBarrier);
       // FIXME fix bug with fish rushing the wrong barrier and causing aborts
-      //} else {
-      //  followingFish.abortRushAttempt(special: true);
-      //  resetBarriers(theBarrier);
-      //}
+      } else {
+        followingFish.abortRushAttempt(special: true);
+        resetBarriers(theBarrier);
+      }
     }
   }
 
@@ -193,25 +197,27 @@ public class TurtleController : MonoBehaviour {
     }
   }
 
-  public void rushNextSequentialBarrier(){
+  public void rushNextSequentialBarrier(bool force=false){
     if (nextBarrier != null){
-      followingFish.rushBarrier(nextBarrier, special: true);
+      if (!allRequiredSchoolsAreInPlace()) forceStragglersIntoPlace();
+      followingFish.rushBarrier(nextBarrier, special: true, force: true);
     } else {
       Debug.Log("can't rush a null barrier");
     }
   }
 
   private void setNextBarrier(GameObject currentBarrier){
-    int indexOfNextBarrier = indexOfBarrier(currentBarrier) + 1;
-    if (indexOfNextBarrier < sequentialBarriers.Count){
-      nextBarrier = sequentialBarriers[indexOfNextBarrier];
-      Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
-      if (!barrier.isDestroyed()) acceptRendezvousPointCutSceneReminder = true;
-    }// else if (!sunkenStaircase.isReadyToRaise() && allSequentialBarriersDestroyed()) {
-     // followingFish.beginOrbiting(sunkenStaircase.getFocalPoint());
-     // sunkenStaircase.scheduleRaise();
-     // manager.cutTo(sunkenStaircase.getFocalPoint(), 40f, new Vector3(-10f, 10f, -50f));
-    //}
+    // get the next non-destroyed barrier
+    schoolsMayLeave = false;
+    foreach(GameObject barrierGameObject in sequentialBarriers){
+      Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(barrierGameObject);
+      if (!barrier.isDestroyed()){
+        nextBarrier = barrierGameObject;
+        nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
+        rushNextSequentialBarrier(force: true);
+        break;
+      }
+    }
   }
 
   private void freedGameWinningFish(){
@@ -240,8 +246,9 @@ public class TurtleController : MonoBehaviour {
   // TODO: LERP camera to cue player
   private void resetBarriers(GameObject abortedBarrier){
     nextBarrier = sequentialBarriers[0];
+    nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
     foreach(GameObject barrier in sequentialBarriers)
-      barrierController.trapSchoolForBarrier(barrier);
+      barrierController.resurrectBarrier(barrier);
     willShowPlayerInitialBarrier = true;
   }
 
@@ -285,5 +292,28 @@ public class TurtleController : MonoBehaviour {
       manager.playCutSceneFor("Abort Barrier");
       willShowPlayerInitialBarrier = false;
     }
+  }
+
+  public bool allRequiredSchoolsAreInPlace(){
+    if (schoolsMayLeave){
+      return true;
+    } else {
+      foreach(SchoolOfFishMovement school in nextBarrierInstance.requiredSchools){
+        if (!school.mayLeaveRendezvousPoint()){
+          schoolsMayLeave = false;
+          return schoolsMayLeave;
+        }
+      }
+      return true;
+    }
+  }
+
+  public void forceStragglersIntoPlace(){
+    followingFish.forceStragglersToRushBarrier(nextBarrier, nextBarrierInstance.rendezvousPoint);
+  }
+
+  public void rushRequiredSchools(){
+    foreach(SchoolOfFishMovement school in nextBarrierInstance.requiredSchools)
+      school.RushBarrier();
   }
 }

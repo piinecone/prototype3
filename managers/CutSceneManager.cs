@@ -18,15 +18,6 @@ public class CutSceneManager : MonoBehaviour {
   [SerializeField]
   private bool disabled = false;
 
-  void Start (){
-  }
-
-  void Update (){
-  }
-
-  void LateUpdate(){
-  }
-
   public Barrier InitialBarrier(){
     return initialBarrier;
   }

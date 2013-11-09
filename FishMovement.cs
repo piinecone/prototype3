@@ -206,19 +206,11 @@ public class FishMovement : MonoBehaviour {
   }
 
   private bool shouldContinueRushingBarrier(){
-    if (Vector3.Distance(transform.position, targetedBarrier.transform.position) > 15f){
-      return true;
-    } else {
-      return false;
-    }
+    return (Vector3.Distance(transform.position, targetedBarrier.transform.position) > 10f);
   }
 
   private bool shouldFinishRushBehavior(){
-    if (Vector3.Distance(transform.position, finishRushTargetPosition) > 5f){
-      return true;
-    } else {
-      return false;
-    }
+    return (Vector3.Distance(transform.position, finishRushTargetPosition) > 5f);
   }
 
   private void moveTowardPlayer(){
@@ -393,9 +385,8 @@ public class FishMovement : MonoBehaviour {
 
   private void determineNextWaypoint(){
     nextWaypointIndex++;
-    if (waypoints.Count <= nextWaypointIndex){
+    if (waypoints.Count <= nextWaypointIndex)
       nextWaypointIndex = 0;
-    }
     setNextWaypoint(nextWaypointIndex);
     schoolOfFish.BroadcastNextWaypoint(nextWaypointIndex);
   }

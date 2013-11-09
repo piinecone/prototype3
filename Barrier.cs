@@ -106,8 +106,8 @@ public class Barrier : MonoBehaviour {
     return destroyed;
   }
 
-  public void markAsDestroyed(){
-    destroyed = true;
+  public void markAsDestroyed(bool isDestroyed=true){
+    destroyed = isDestroyed;
   }
 
   public int Strength(){

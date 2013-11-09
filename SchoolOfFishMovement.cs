@@ -89,7 +89,7 @@ public class SchoolOfFishMovement : MonoBehaviour {
   public void trap(){
     foreach(FishMovement f in fish){
       f.setTrapped(true);
-      f.stopFollowingPlayer();
+      f.stopFollowingPlayer(playSound: false);
     }
   }
 
@@ -104,5 +104,12 @@ public class SchoolOfFishMovement : MonoBehaviour {
   public void rendezvousFor(GameObject barrier, GameObject rendezvousPoint){
     foreach(FishMovement f in fish)
       f.rushBarrier(barrier, rendezvousPoint, true);
+  }
+
+  public bool mayLeaveRendezvousPoint(){
+    foreach(FishMovement f in fish)
+      if (!f.isNearRendezvousPoint()) return false;
+
+    return true;
   }
 }

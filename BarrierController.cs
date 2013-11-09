@@ -51,8 +51,9 @@ public class BarrierController : MonoBehaviour {
     return barrier.rendezvousPoint;
   }
 
-  public void trapSchoolForBarrier(GameObject aBarrier){
+  public void resurrectBarrier(GameObject aBarrier){
     Barrier barrier = getBarrierInstanceFromBarrierGameObject(aBarrier);
+    barrier.markAsDestroyed(false);
     barrier.trapSchool();
   }
 

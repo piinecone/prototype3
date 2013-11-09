@@ -426,12 +426,13 @@ public class FishMovement : MonoBehaviour {
     return (angle < 45F) ? true : false;
   }
 
-  public void rushBarrier(GameObject barrier, GameObject aRendezvousPoint=null){
-    if (!currentlyRushingABarrier && !currentlyFinishingRush){
+  public void rushBarrier(GameObject barrier, GameObject aRendezvousPoint=null, bool force=false){
+    if (!force && !currentlyRushingABarrier && !currentlyFinishingRush){
       targetedBarrier = barrier;
       if (aRendezvousPoint != null){
         currentlyMovingTowardRendezvousPoint = true;
         rendezvousPoint = aRendezvousPoint;
+        schoolOfFish.rendezvousFor(barrier, aRendezvousPoint);
       } else {
         currentlyRushingABarrier = true;
         Vector3 direction = barrier.transform.position;
@@ -478,7 +479,8 @@ public class FishMovement : MonoBehaviour {
   }
 
   private void hurryTowardTheNextSequentialBarrier(){
-    turtleController.addFish(this);
+    foreach(FishMovement fish in schoolOfFish.allFish())
+      turtleController.addFish(fish);
     turtleController.rushNextSequentialBarrier();
   }
 

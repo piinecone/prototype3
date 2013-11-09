@@ -15,6 +15,8 @@ public class CutSceneManager : MonoBehaviour {
   private float underwaterForestReminderInterval;
   [SerializeField]
   private Barrier initialBarrier;
+  [SerializeField]
+  private bool disabled = false;
 
   void Start (){
   }

@@ -147,12 +147,14 @@ public class TurtleController : MonoBehaviour {
     bool success = barrierController.applyForceVectorToBarrier(forceVector, theBarrier, this.transform.position);
     if (isLeadFish){ // we only need to check once...ish (each school has a lead)
       Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(theBarrier);
-      if (barrier.isDestroyed()){
+      // FIXME re-enable game logic
+      //if (barrier.isDestroyed()){
         setNextBarrier(theBarrier);
-      } else {
-        followingFish.abortRushAttempt(special: true);
-        resetBarriers(theBarrier);
-      }
+      // FIXME fix bug with fish rushing the wrong barrier and causing aborts
+      //} else {
+      //  followingFish.abortRushAttempt(special: true);
+      //  resetBarriers(theBarrier);
+      //}
     }
   }
 

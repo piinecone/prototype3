@@ -96,4 +96,13 @@ public class SchoolOfFishMovement : MonoBehaviour {
   public bool isGameWinner(){
     return gameWinner;
   }
+
+  public List<FishMovement> allFish(){
+    return fish;
+  }
+
+  public void rendezvousFor(GameObject barrier, GameObject rendezvousPoint){
+    foreach(FishMovement f in fish)
+      f.rushBarrier(barrier, rendezvousPoint, true);
+  }
 }

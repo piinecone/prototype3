@@ -14,6 +14,8 @@ public class CutSceneManager : MonoBehaviour {
   [SerializeField]
   private float underwaterForestReminderInterval;
   [SerializeField]
+  private GameObject sunkenStaircase;
+  [SerializeField]
   private Barrier initialBarrier;
   [SerializeField]
   private bool disabled = false;
@@ -31,7 +33,13 @@ public class CutSceneManager : MonoBehaviour {
     if (!disabled){
       switch(sceneName){
         case "Lake Entry":
-          camera.cutTo(bigTree, 8f, new Vector3(-10f, 4f, -50f));
+          float duration = 8f;
+          camera.cutTo(bigTree, duration, new Vector3(-10f, 4f, -50f));
+          Invoke("playCutSceneForSunkenStaircase", duration + .25f);
+          break;
+        case "Sunken Staircase":
+          Debug.Log("cutting to sunken staircase");
+          camera.cutTo(sunkenStaircase, 4f, new Vector3(0f, 30f, 80f));
           break;
         case "Underwater Forest":
           camera.cutTo(underwaterForest, 6f, new Vector3(0f, -10f, -140f));
@@ -44,6 +52,10 @@ public class CutSceneManager : MonoBehaviour {
           break;
       }
     }
+  }
+
+  private void playCutSceneForSunkenStaircase(){
+    playCutSceneFor("Sunken Staircase");
   }
 
   public void cutTo(GameObject aGameObject, float duration, Vector3 offsetVector){

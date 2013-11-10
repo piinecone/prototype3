@@ -41,6 +41,8 @@ public class ThirdPersonCamera : MonoBehaviour {
   [SerializeField]
   private Vector3 cutSceneOffsetVector;
 
+  public float waterSurfaceLevel = 177.5f;
+
   public enum CamStates {
     Behind,
     Target
@@ -105,11 +107,19 @@ public class ThirdPersonCamera : MonoBehaviour {
     }
 
     targetPosition = characterOffset + follow.up * distanceUp - lookDir * distanceAway;
-    // FIXME turn this back on and just have it respect terrain and terrain-like elements
-    // smooth it out a little as well
+    AdjustYValue(ref targetPosition);
     CompensateForWalls(characterOffset, ref targetPosition);
     smoothPosition(this.transform.position, targetPosition);
     transform.LookAt(follow);
+  }
+
+  private void AdjustYValue(ref Vector3 toTarget){
+    float followY = follow.transform.position.y;
+    if (followY >= (waterSurfaceLevel - 1f)){
+      if (toTarget.y <= waterSurfaceLevel) toTarget.y += distanceUp;
+    } else if (followY <= waterSurfaceLevel){
+      if (toTarget.y >= waterSurfaceLevel) toTarget.y -= distanceUp;
+    }
   }
 
   private void calculateDesiredDistanceAwayBasedOnFollowers(){
@@ -135,7 +145,7 @@ public class ThirdPersonCamera : MonoBehaviour {
       if (hitTag != "Player" && hitTag != "Fish" && hitTag != "BigTreeRoot" && hitTag != "MainCamera" && !wallHit.transform.collider.isTrigger){ // :|
         //Debug.DrawRay(wallHit.point, Vector3.left, Color.red);
         //toTarget = new Vector3(wallHit.point.x, toTarget.y, wallHit.point.z);
-        if (transform.position.y >= 177.5f) // shit :| - water surface level... for this level
+        if (transform.position.y >= waterSurfaceLevel) // shit :| - water surface level... for this level
           toTarget = new Vector3(wallHit.point.x, toTarget.y, wallHit.point.z);
         else
           toTarget = new Vector3(wallHit.point.x, wallHit.point.y, wallHit.point.z); // incorporate Y

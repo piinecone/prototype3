@@ -33,6 +33,12 @@ public class TurtleController : MonoBehaviour {
   private Vector3 previousPosition;
   private BarrierController barrierController;
 
+  // physics
+  private bool isNearSurface = false;
+  private float currentLookPosY = 0f;
+  [SerializeField]
+  private float surfaceLevel = 177.50f;
+
   // temporary acceleration
   private float initialMinimumSpeed;
   private float minSpeedInMedium;
@@ -186,16 +192,19 @@ public class TurtleController : MonoBehaviour {
   }
 
   private void calculateSpeedInMedium(){
-    if (currentlyAccelerating && speedInMedium >= (targetSpeedInMedium - 1f) && speedInMedium <= (targetSpeedInMedium + 1f)){
-      currentlyAccelerating = false;
-    }
+    if (transform.position.y > surfaceLevel){
+      speedInMedium = 12f;
+    } else {
+      if (currentlyAccelerating && speedInMedium >= (targetSpeedInMedium - 1f) && speedInMedium <= (targetSpeedInMedium + 1f))
+        currentlyAccelerating = false;
 
-    if (currentlyAccelerating && speedInMedium < targetSpeedInMedium){
-      speedInMedium = Mathf.SmoothStep(speedInMedium, targetSpeedInMedium, .2f);
-    } else if (speedInMedium >= minSpeedInMedium) {
-      speedInMedium = Mathf.SmoothStep(speedInMedium, minSpeedInMedium, .2f);
-    } else if (speedInMedium < minSpeedInMedium) {
-      speedInMedium = Mathf.SmoothStep(minSpeedInMedium, speedInMedium, .3f);
+      if (currentlyAccelerating && speedInMedium < targetSpeedInMedium){
+        speedInMedium = Mathf.SmoothStep(speedInMedium, targetSpeedInMedium, .2f);
+      } else if (speedInMedium >= minSpeedInMedium) {
+        speedInMedium = Mathf.SmoothStep(speedInMedium, minSpeedInMedium, .2f);
+      } else if (speedInMedium < minSpeedInMedium) {
+        speedInMedium = Mathf.SmoothStep(minSpeedInMedium, speedInMedium, .3f);
+      }
     }
   }
 
@@ -317,5 +326,17 @@ public class TurtleController : MonoBehaviour {
   public void rushRequiredSchools(){
     foreach(SchoolOfFishMovement school in nextBarrierInstance.requiredSchools)
       school.RushBarrier();
+  }
+
+  public void playerIsNearTheSurface(bool state=true){
+    isNearSurface = state;
+  }
+
+  public bool isUnderwater(){
+    return (transform.position.y <= surfaceLevel && !isTouchingTerrainFromSurface());
+  }
+
+  public bool isEmerging(){
+    return isTouchingTerrainFromSurface();
   }
 }

@@ -81,7 +81,7 @@ public class ThirdPersonCamera : MonoBehaviour {
     Vector3 characterOffset = follow.position + new Vector3(0f, distanceUp, 0f);
 
     // Determine camera state
-    if (Input.GetAxis("Fire2") > 0.01f){ // FIXME change to space bar
+    if (Input.GetAxis("Jump") > 0.01f){
       //barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, widescreen, targetingTime);
       camState = CamStates.Target;
     } else {

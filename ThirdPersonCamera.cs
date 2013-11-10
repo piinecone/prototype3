@@ -51,17 +51,6 @@ public class ThirdPersonCamera : MonoBehaviour {
     lookDir = follow.forward;
     minDistanceAway = distanceAway;
   }
-  
-  void Update () {
-  }
-
-  //if (turtleState.isUnderwater()){
-  //  distanceAway = 15;
-  //  distanceUp = 2;
-  //} else {
-  //  distanceAway = 10;
-  //  distanceUp = 4;
-  //}
 
   void LateUpdate() {
     if (currentlyInCutScene){

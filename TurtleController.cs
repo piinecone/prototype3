@@ -56,6 +56,7 @@ public class TurtleController : MonoBehaviour {
   // cut scenes
   private bool acceptRendezvousPointCutSceneReminder = true;
   private bool willShowPlayerInitialBarrier = false;
+  private bool staircaseHasBeenRaised = false;
 
   void Start () {
     anim = GetComponent<Animator>();               
@@ -215,9 +216,8 @@ public class TurtleController : MonoBehaviour {
     followingFish.addFish(fish);
     if (!fish.isSpecial()) thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
     updateMinimumSpeed();
-    if (fish.isTheLeadFish() && fish.parentSchool().isGameWinner()){
-      freedGameWinningFish();
-    }
+    if (fish.isTheLeadFish() && fish.parentSchool().isGameWinner())
+      Invoke("freedGameWinningFish", 5f);
   }
 
   public void removeFish(FishMovement fish){
@@ -298,14 +298,19 @@ public class TurtleController : MonoBehaviour {
       if (!barrier.isDestroyed()){
         nextBarrier = barrierGameObject;
         nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
-        rushNextSequentialBarrier(force: true);
+        Invoke("forceRushOfNextBarrier", 3f);
         break;
       }
     }
   }
 
+  private void forceRushOfNextBarrier(){
+    rushNextSequentialBarrier(force: true);
+  }
+
   private void freedGameWinningFish(){
     if (!sunkenStaircase.isReadyToRaise() && allSequentialBarriersDestroyed()) {
+      staircaseHasBeenRaised = true;
       followingFish.beginOrbiting(sunkenStaircase.getFocalPoint());
       sunkenStaircase.scheduleRaise();
       manager.cutTo(sunkenStaircase.getFocalPoint(), 40f, new Vector3(-10f, 10f, -50f));
@@ -363,7 +368,7 @@ public class TurtleController : MonoBehaviour {
   }
 
   public bool needsRendezvousPointReminder(){
-    return acceptRendezvousPointCutSceneReminder;
+    return (!staircaseHasBeenRaised && acceptRendezvousPointCutSceneReminder);
   }
 
   public void rendezvousPointReached(GameObject point){

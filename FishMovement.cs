@@ -276,15 +276,16 @@ public class FishMovement : MonoBehaviour {
       currentlyMovingTowardRendezvousPoint = false;
       currentlyRushingABarrier = false;
       currentlyFinishingRush = false;
-      //schoolOfFish.RushBarrier();
       turtleController.rushRequiredSchools();
     } else {
       float distanceFromPlayer = currentDistanceFromPlayer();
       float distanceFromPoint = Vector3.Distance(transform.position, rendezvousPoint.transform.position);
-      if (distanceFromPoint < 30f) hasReachedCurrentRendezvousPoint = true;
+      if (distanceFromPoint < 20f){
+        hasReachedCurrentRendezvousPoint = true;
+        if (turtleController.needsRendezvousPointReminder()) turtleController.rendezvousPointReached(rendezvousPoint);
+      }
 
-      if (distanceFromPlayer < 5f && turtleController.allRequiredSchoolsAreInPlace()){
-        if (turtleController.needsRendezvousPointReminder() && hasReachedCurrentRendezvousPoint) turtleController.rendezvousPointReached(rendezvousPoint);
+      if (distanceFromPlayer < 10f && turtleController.allRequiredSchoolsAreInPlace()){
         if (hasReachedCurrentRendezvousPoint){
           rendezvousDelayLeft -= Time.deltaTime;
         } else {

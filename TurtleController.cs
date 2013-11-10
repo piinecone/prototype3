@@ -86,8 +86,80 @@ public class TurtleController : MonoBehaviour {
   void Update () {
     calculateSpeedInMedium();
     previousPosition = transform.position;
-    swim(); // we're always underwater for now
-    schoolsMayLeave = false;
+    if (isUnderwater()){
+      swim();
+      anim.SetBool("Underwater", true); 
+    } else if (isEmerging()){
+      walk(slope: 60f, normalRay: Vector3.forward);
+      anim.SetBool("Underwater", false); 
+    } else {
+      walk(slope: 45f, normalRay: Vector3.down);
+      anim.SetBool("Underwater", false); 
+    }
+  }
+
+  void walk(float slope, Vector3 normalRay){
+    if (slope != null) controller.slopeLimit = slope;
+    RaycastHit hit;
+    float distance = 4f;
+    Vector3 downRay = transform.TransformDirection(normalRay);
+    Vector3 normal = transform.TransformDirection(Vector3.up);
+    Vector3 lookDirection = transform.forward + transform.TransformDirection(new Vector3(Input.GetAxis("Horizontal"), 0, 0));
+    if (Physics.Raycast(transform.position, downRay, out hit, distance))
+      normal = hit.normal;
+    Quaternion rotation = Quaternion.FromToRotation(transform.up, normal);
+    rotation = rotation * Quaternion.LookRotation(lookDirection);
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, currentRotateSpeed() * .1f * Time.deltaTime);
+
+    gravity = 80f;
+    moveDirection = new Vector3(0, 0, Input.GetAxis("Vertical"));
+    moveDirection = transform.TransformDirection(moveDirection);
+    moveDirection *= speedInMedium;
+    moveDirection.y -= gravity * Time.deltaTime;
+    controller.Move(moveDirection * Time.deltaTime);
+  }
+
+  void swim(){
+    gravity = 15f;
+
+    // apply keyboard
+    moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+    if (moveDirection.z < 0f) moveDirection.z = 0f;
+    moveDirection = transform.TransformDirection(moveDirection);
+    moveDirection *= speedInMedium;
+
+    // apply mouselook
+    Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+    Vector3 lookPos = mouseRay.direction;// - transform.position;
+    lookPos.y *= currentYAxisMultiplier();
+
+    if (transform.position.y >= surfaceLevel && lookPos.y >= 0f){
+      lookPos.y = currentLookPosY;
+      lookPos = Vector3.Lerp(lookPos, new Vector3(lookPos.x, 0f, lookPos.z), 10f * Time.deltaTime);
+    }
+
+    Quaternion targetRotation = Quaternion.LookRotation(lookPos);
+    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentRotateSpeed() * Time.deltaTime);
+    if (!isNearSurface) moveDirection.y -= gravity * Time.deltaTime;
+    controller.Move(moveDirection * Time.deltaTime);
+
+    if (isNearSurface)
+      if (transform.position.y > surfaceLevel) transform.position = new Vector3(transform.position.x, surfaceLevel, transform.position.z);
+    currentLookPosY = transform.forward.y;
+  }
+
+  private bool isTouchingTerrainFromSurface(){
+    if (transform.position.y < (surfaceLevel - 2f)) return false;
+
+    float distance = 5f;
+    RaycastHit hit;
+    Vector3 forwardRay = transform.forward * distance;
+    Debug.DrawRay(transform.position, forwardRay, Color.red);
+    if (Physics.Raycast(transform.position, forwardRay, out hit, distance)){
+      return (hit.normal.y > .3);
+    } else {
+      return false;
+    }
   }
 
   // Uncomment if you want to immediately raise the staircase
@@ -99,40 +171,40 @@ public class TurtleController : MonoBehaviour {
   //  }
   //}
 
-  void swim(){
-    gravity = 20f;
-    //speedInMedium = speed * 4.1f;
-    //moveDirection = new Vector3(Input.GetAxis("Horizontal") * 0.5f, 0, Input.GetAxis("Vertical")); // slower left/right rotation
-    moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-    if (moveDirection.z < 0f) moveDirection.z = 0f;
-    moveDirection = transform.TransformDirection(moveDirection);
-    moveDirection *= speedInMedium;
+  //void legacySwim(){
+  //  gravity = 20f;
+  //  //speedInMedium = speed * 4.1f;
+  //  //moveDirection = new Vector3(Input.GetAxis("Horizontal") * 0.5f, 0, Input.GetAxis("Vertical")); // slower left/right rotation
+  //  moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+  //  if (moveDirection.z < 0f) moveDirection.z = 0f;
+  //  moveDirection = transform.TransformDirection(moveDirection);
+  //  moveDirection *= speedInMedium;
 
-    Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-    //Debug.DrawRay(new Vector3(transform.position.x, transform.position.y + 1f, transform.position.z), mouseRay.direction, Color.red);
-    Vector3 lookPos = mouseRay.direction;// - transform.position;
-    lookPos.y *= currentYAxisMultiplier();
-    Quaternion targetRotation = Quaternion.LookRotation(lookPos);
-    // FIXME at some point in the future the currentRotateSpeed should be smoothed out based on the elapsed time since the 
-    // camera state changed. So if the camera were in targeting mode, then the targeting button was released, the release time
-    // would be recorded, decremented every update(), and used to calculate the rotation speed as follows:
-    // if (1f - timeSinceRelease) == 1
-    //   4 * slowRotationSpeed + 1 * fastRotationSpeed / 5
-    // else if (1f - timeSinceRelease >= .75)
-    //   3 * slowRotationSpeed + 2 * fastRotationSpeed / 5
-    // else if (1f - timeSinceRelease >= .5)
-    //   2 * slowRotationSpeed + 3 * fastRotationSpeed / 5
-    // else if (1f - timeSinceRelease >= .25)
-    //   1 * slowRotationSpeed + 4 * fastRotationSpeed / 5
-    // else if (1f - timeSinceRelease >= 0)
-    //   0 * slowRotationSpeed + 5 * fastRotationSpeed / 5
-    // end
-    // except do this intelligently with a function
-    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentRotateSpeed() * Time.deltaTime);
-    moveDirection.y -= gravity * Time.deltaTime;
+  //  Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+  //  //Debug.DrawRay(new Vector3(transform.position.x, transform.position.y + 1f, transform.position.z), mouseRay.direction, Color.red);
+  //  Vector3 lookPos = mouseRay.direction;// - transform.position;
+  //  lookPos.y *= currentYAxisMultiplier();
+  //  Quaternion targetRotation = Quaternion.LookRotation(lookPos);
+  //  // FIXME at some point in the future the currentRotateSpeed should be smoothed out based on the elapsed time since the 
+  //  // camera state changed. So if the camera were in targeting mode, then the targeting button was released, the release time
+  //  // would be recorded, decremented every update(), and used to calculate the rotation speed as follows:
+  //  // if (1f - timeSinceRelease) == 1
+  //  //   4 * slowRotationSpeed + 1 * fastRotationSpeed / 5
+  //  // else if (1f - timeSinceRelease >= .75)
+  //  //   3 * slowRotationSpeed + 2 * fastRotationSpeed / 5
+  //  // else if (1f - timeSinceRelease >= .5)
+  //  //   2 * slowRotationSpeed + 3 * fastRotationSpeed / 5
+  //  // else if (1f - timeSinceRelease >= .25)
+  //  //   1 * slowRotationSpeed + 4 * fastRotationSpeed / 5
+  //  // else if (1f - timeSinceRelease >= 0)
+  //  //   0 * slowRotationSpeed + 5 * fastRotationSpeed / 5
+  //  // end
+  //  // except do this intelligently with a function
+  //  transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentRotateSpeed() * Time.deltaTime);
+  //  moveDirection.y -= gravity * Time.deltaTime;
 
-    controller.Move(moveDirection * Time.deltaTime);
-  }
+  //  controller.Move(moveDirection * Time.deltaTime);
+  //}
 
   public float velocity(){
     return (Vector3.Distance(transform.position, previousPosition)) / Time.deltaTime;

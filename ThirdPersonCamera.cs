@@ -132,10 +132,13 @@ public class ThirdPersonCamera : MonoBehaviour {
     RaycastHit wallHit = new RaycastHit();
     if (Physics.Linecast(fromObject, toTarget, out wallHit)) {
       string hitTag = wallHit.transform.gameObject.tag;
-      if (hitTag != "Player" && hitTag != "Fish" && hitTag != "BigTreeRoot" && !wallHit.transform.collider.isTrigger){ // :|
+      if (hitTag != "Player" && hitTag != "Fish" && hitTag != "BigTreeRoot" && hitTag != "MainCamera" && !wallHit.transform.collider.isTrigger){ // :|
         //Debug.DrawRay(wallHit.point, Vector3.left, Color.red);
         //toTarget = new Vector3(wallHit.point.x, toTarget.y, wallHit.point.z);
-        toTarget = new Vector3(wallHit.point.x, wallHit.point.y, wallHit.point.z); // incorporate Y
+        if (transform.position.y >= 177.5f) // shit :| - water surface level... for this level
+          toTarget = new Vector3(wallHit.point.x, toTarget.y, wallHit.point.z);
+        else
+          toTarget = new Vector3(wallHit.point.x, wallHit.point.y, wallHit.point.z); // incorporate Y
       }
     }
   }

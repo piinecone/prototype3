@@ -90,10 +90,10 @@ public class TurtleController : MonoBehaviour {
       swim();
       anim.SetBool("Underwater", true); 
     } else if (isEmerging()){
-      walk(slope: 60f, normalRay: Vector3.forward);
+      walk(slope: 90f, normalRay: Vector3.forward);
       anim.SetBool("Underwater", false); 
     } else {
-      walk(slope: 45f, normalRay: Vector3.down);
+      walk(slope: 90f, normalRay: Vector3.down);
       anim.SetBool("Underwater", false); 
     }
   }

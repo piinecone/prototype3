@@ -8,7 +8,9 @@ public class SunkenStaircase : MonoBehaviour {
   [SerializeField]
   private GameObject focalPoint;
   [SerializeField]
-  private AudioSource audio;
+  private AudioSource music;
+  [SerializeField]
+  private AudioSource snap;
 
   private Vector3 finalPosition = new Vector3(438.2f, 206.8f, 651f);
   private Quaternion finalRotation = new Quaternion(0f, 0f, 0f, 1f);
@@ -23,6 +25,7 @@ public class SunkenStaircase : MonoBehaviour {
     if (closeToFinalPosition() && !toldDemFish){
       turtleController.tellFollowingFishToLeaveStaircase();
       toldDemFish = true;
+      Invoke("PlaySnapSound", 5f);
     }
     // FIXME this requires that startCoroutine use a string method name, but limits the call to 
     // one argument and has a higher performance overhead
@@ -43,6 +46,10 @@ public class SunkenStaircase : MonoBehaviour {
     return (distance < 10f && angle < 5f);
   }
 
+  private void PlaySnapSound(){
+    snap.Play();
+  }
+
   IEnumerator SmoothlyMoveStaircase(float duration){
     float step = 0f;
     while (step <= 1f) {
@@ -58,7 +65,7 @@ public class SunkenStaircase : MonoBehaviour {
   }
 
   public void scheduleRaise(){
-    audio.Play();
+    music.Play();
     readyToRaise = true;
     timeLeftUntilRaise = 15f;
   }

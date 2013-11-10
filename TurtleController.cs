@@ -290,8 +290,9 @@ public class TurtleController : MonoBehaviour {
   }
 
   private void setNextBarrier(GameObject currentBarrier){
-    // get the next non-destroyed barrier
     schoolsMayLeave = false;
+    acceptRendezvousPointCutSceneReminder = true;
+
     foreach(GameObject barrierGameObject in sequentialBarriers){
       Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(barrierGameObject);
       if (!barrier.isDestroyed()){

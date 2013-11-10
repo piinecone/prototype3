@@ -7,6 +7,8 @@ public class SunkenStaircase : MonoBehaviour {
   private TurtleController turtleController;
   [SerializeField]
   private GameObject focalPoint;
+  [SerializeField]
+  private AudioSource audio;
 
   private Vector3 finalPosition = new Vector3(438.2f, 206.8f, 651f);
   private Quaternion finalRotation = new Quaternion(0f, 0f, 0f, 1f);
@@ -56,6 +58,7 @@ public class SunkenStaircase : MonoBehaviour {
   }
 
   public void scheduleRaise(){
+    audio.Play();
     readyToRaise = true;
     timeLeftUntilRaise = 15f;
   }

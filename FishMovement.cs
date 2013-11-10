@@ -285,7 +285,7 @@ public class FishMovement : MonoBehaviour {
         if (turtleController.needsRendezvousPointReminder()) turtleController.rendezvousPointReached(rendezvousPoint);
       }
 
-      if (distanceFromPlayer < 10f && turtleController.allRequiredSchoolsAreInPlace()){
+      if (distanceFromPlayer < 20f && turtleController.allRequiredSchoolsAreInPlace()){
         if (hasReachedCurrentRendezvousPoint){
           rendezvousDelayLeft -= Time.deltaTime;
         } else {

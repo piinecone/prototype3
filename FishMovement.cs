@@ -92,6 +92,9 @@ public class FishMovement : MonoBehaviour {
   private bool shouldDoCalculations = false;
   private bool playerIsNearby = false;
 
+  // particles
+  private ParticleSystem particleEmitter;
+
   void Start () {
     player = GameObject.FindWithTag("Player");
     turtleController = player.GetComponent<TurtleController>();
@@ -107,6 +110,7 @@ public class FishMovement : MonoBehaviour {
     if (rushRotationSpeed == 0) rushRotationSpeed = 5f;
     quickChangeOfDirectionDistance = .75f;
     patienceLeft = patienceSeed;
+    particleEmitter = GetComponent<ParticleSystem>();
 
     InvokeRepeating("checkIfShouldStartDoingCalculations", Random.Range(3,15), 5);
   }
@@ -457,6 +461,7 @@ public class FishMovement : MonoBehaviour {
         Quaternion rotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
         randomizedBarrierOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
+        particleEmitter.Play();
       }
     }
   }

@@ -12,14 +12,12 @@ public class FollowingFish : MonoBehaviour {
   [SerializeField]
   private TurtleController turtleController;
 
-  private ParticleSystem emitter;
   private BarrierController barrierController;
   private List<FishMovement> fishCurrentlyFollowingPlayer = new List<FishMovement>();
   private GameObject targetedBarrier = null;
 
   void Start () {
     turtleController = GetComponent<TurtleController>();
-    emitter = turtleController.getBubbleEmitter();
     nearbyBarrierDistanceThreshold = 75f;
     barrierController = GetComponent<BarrierController>();
   }
@@ -77,19 +75,9 @@ public class FollowingFish : MonoBehaviour {
       fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count], rendezvousPoint, force);
       index++;
     }
-    if (!force) dischargeParticles();
+    if (!force) turtleController.GetComponentInChildren<AudioSource>().Play();
   }
 
-  private void dischargeParticles(){
-    emitter.transform.position = turtleController.transform.position;
-    emitter.transform.LookAt(targetedBarrier.transform);
-    Vector3 targetPosition = emitter.transform.position;
-    targetPosition.z -= 50f;
-    emitter.transform.position = targetPosition;
-    emitter.transform.Rotate(transform.up, 180f);
-    emitter.Play();
-    emitter.GetComponentInChildren<AudioSource>().Play();
-  }
 
   public void abortRushAttempt(bool special=false){
     List<FishMovement> fishToRemoveFromFollowers = new List<FishMovement>();

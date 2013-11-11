@@ -23,8 +23,6 @@ public class TurtleController : MonoBehaviour {
   private CutSceneManager manager;
   [SerializeField]
   private SunkenStaircase sunkenStaircase;
-  [SerializeField]
-  private ParticleSystem bubbler;
 
   private float speedInMedium = 8f;
   private Vector3 moveDirection = Vector3.zero;
@@ -406,18 +404,7 @@ public class TurtleController : MonoBehaviour {
   public void rushRequiredSchools(){
     foreach(SchoolOfFishMovement school in nextBarrierInstance.requiredSchools)
       school.RushBarrier();
-    dischargeParticles();
-  }
-
-  private void dischargeParticles(){
-    bubbler.transform.position = nextBarrierInstance.rendezvousPoint.transform.position;
-    bubbler.transform.LookAt(nextBarrier.transform);
-    Vector3 targetPosition = bubbler.transform.position;
-    targetPosition.z -= 50f;
-    bubbler.transform.position = targetPosition;
-    bubbler.transform.Rotate(transform.up, 180f);
-    bubbler.Play();
-    bubbler.GetComponentInChildren<AudioSource>().Play();
+    nextBarrierInstance.rendezvousPoint.GetComponentInChildren<AudioSource>().Play();
   }
 
   public void playerIsNearTheSurface(bool state=true){

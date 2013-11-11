@@ -18,9 +18,6 @@ public class SunkenStaircase : MonoBehaviour {
   private float timeLeftUntilRaise = 5f;
   private bool toldDemFish = false;
 
-  void Start () {
-  }
-
   void LateUpdate () {
     if (closeToFinalPosition() && !toldDemFish){
       turtleController.tellFollowingFishToLeaveStaircase();

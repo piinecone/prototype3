@@ -17,8 +17,6 @@ public class ThirdPersonCamera : MonoBehaviour {
   [SerializeField]
   private float targetingTime = 0.5f;
   [SerializeField]
-  private TurtleState turtleState;
-  [SerializeField]
   private float maxDistanceAway;
   [SerializeField]
   private float minDistanceAway;

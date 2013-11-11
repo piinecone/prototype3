@@ -152,6 +152,8 @@ public class FishMovement : MonoBehaviour {
   }
 
   private bool boredByPlayer(){
+    if (turtleController.isFrozen()) return false;
+
     if (turtleController.velocity() < 10f || distanceFromPlayer() > patienceDistance){
       patienceLeft -= Time.deltaTime;
     } else {

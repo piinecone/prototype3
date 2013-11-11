@@ -57,6 +57,7 @@ public class TurtleController : MonoBehaviour {
   private bool acceptRendezvousPointCutSceneReminder = true;
   private bool willShowPlayerInitialBarrier = false;
   private bool staircaseHasBeenRaised = false;
+  private bool playerIsFrozen = false;
 
   void Start () {
     anim = GetComponent<Animator>();               
@@ -384,6 +385,8 @@ public class TurtleController : MonoBehaviour {
   }
 
   public bool allRequiredSchoolsAreInPlace(){
+    if (isFrozen()) return false;
+
     if (schoolsMayLeave){
       return true;
     } else {
@@ -419,7 +422,16 @@ public class TurtleController : MonoBehaviour {
     return isTouchingTerrainFromSurface();
   }
 
-  public ParticleSystem getBubbleEmitter(){
-    return bubbler;
+  public void FreezePlayer(float duration){
+    playerIsFrozen = true;
+    Invoke("ReleasePlayer", duration);
+  }
+
+  public void ReleasePlayer(){
+    playerIsFrozen = false;
+  }
+
+  public bool isFrozen(){
+    return playerIsFrozen;
   }
 }

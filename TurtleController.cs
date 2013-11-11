@@ -59,6 +59,12 @@ public class TurtleController : MonoBehaviour {
   private bool staircaseHasBeenRaised = false;
   private bool playerIsFrozen = false;
 
+  // audio
+  [SerializeField]
+  private AudioSource bubbleSound;
+  [SerializeField]
+  private AudioSource failureSound;
+
   void Start () {
     anim = GetComponent<Animator>();               
     col = GetComponent<CapsuleCollider>();          
@@ -340,6 +346,7 @@ public class TurtleController : MonoBehaviour {
     foreach(GameObject barrier in sequentialBarriers)
       barrierController.resurrectBarrier(barrier);
     willShowPlayerInitialBarrier = true;
+    PlayFailSound();
   }
 
   private int indexOfBarrier(GameObject aBarrier){
@@ -433,5 +440,13 @@ public class TurtleController : MonoBehaviour {
 
   public bool isFrozen(){
     return playerIsFrozen;
+  }
+
+  public void PlayRushSound(){
+    bubbleSound.Play();
+  }
+
+  public void PlayFailSound(){
+    failureSound.Play();
   }
 }

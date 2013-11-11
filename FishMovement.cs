@@ -463,9 +463,14 @@ public class FishMovement : MonoBehaviour {
         Quaternion rotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
         randomizedBarrierOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
-        particleEmitter.Play();
+        emitBubbleTrail();
+        //Invoke("emitBubbleTrail", 1f);
       }
     }
+  }
+
+  private void emitBubbleTrail(){
+    particleEmitter.Play();
   }
 
   public void rushTargetedBarrier(){

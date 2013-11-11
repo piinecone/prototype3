@@ -39,7 +39,6 @@ public class CutSceneManager : MonoBehaviour {
           managePlayer(duration);
           break;
         case "Sunken Staircase":
-          Debug.Log("cutting to sunken staircase");
           camera.cutTo(sunkenStaircase, 8f, new Vector3(0f, 30f, 80f));
           managePlayer(8f);
           break;

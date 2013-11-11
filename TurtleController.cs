@@ -57,6 +57,7 @@ public class TurtleController : MonoBehaviour {
   private bool acceptRendezvousPointCutSceneReminder = true;
   private bool willShowPlayerInitialBarrier = false;
   private bool staircaseHasBeenRaised = false;
+  private bool playerIsFrozen = false;
 
   void Start () {
     anim = GetComponent<Animator>();               
@@ -91,7 +92,7 @@ public class TurtleController : MonoBehaviour {
       swim();
       anim.SetBool("Underwater", true); 
     } else if (isEmerging()){
-      walk(slope: 90f, normalRay: Vector3.forward);
+      walk(slope: 120f, normalRay: Vector3.forward);
       anim.SetBool("Underwater", false); 
     } else {
       walk(slope: 90f, normalRay: Vector3.down);
@@ -110,7 +111,7 @@ public class TurtleController : MonoBehaviour {
       normal = hit.normal;
     Quaternion rotation = Quaternion.FromToRotation(transform.up, normal);
     rotation = rotation * Quaternion.LookRotation(lookDirection);
-    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, currentRotateSpeed() * .1f * Time.deltaTime);
+    transform.rotation = Quaternion.Slerp(transform.rotation, rotation, currentRotateSpeed() * .05f * Time.deltaTime);
 
     gravity = 80f;
     moveDirection = new Vector3(0, 0, Input.GetAxis("Vertical"));
@@ -152,7 +153,7 @@ public class TurtleController : MonoBehaviour {
   private bool isTouchingTerrainFromSurface(){
     if (transform.position.y < (surfaceLevel - 2f)) return false;
 
-    float distance = 5f;
+    float distance = 10f;
     RaycastHit hit;
     Vector3 forwardRay = transform.forward * distance;
     Debug.DrawRay(transform.position, forwardRay, Color.red);
@@ -384,6 +385,8 @@ public class TurtleController : MonoBehaviour {
   }
 
   public bool allRequiredSchoolsAreInPlace(){
+    if (isFrozen()) return false;
+
     if (schoolsMayLeave){
       return true;
     } else {
@@ -404,6 +407,7 @@ public class TurtleController : MonoBehaviour {
   public void rushRequiredSchools(){
     foreach(SchoolOfFishMovement school in nextBarrierInstance.requiredSchools)
       school.RushBarrier();
+    nextBarrierInstance.rendezvousPoint.GetComponentInChildren<AudioSource>().Play();
   }
 
   public void playerIsNearTheSurface(bool state=true){
@@ -416,5 +420,18 @@ public class TurtleController : MonoBehaviour {
 
   public bool isEmerging(){
     return isTouchingTerrainFromSurface();
+  }
+
+  public void FreezePlayer(float duration){
+    playerIsFrozen = true;
+    Invoke("ReleasePlayer", duration);
+  }
+
+  public void ReleasePlayer(){
+    playerIsFrozen = false;
+  }
+
+  public bool isFrozen(){
+    return playerIsFrozen;
   }
 }

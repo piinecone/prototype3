@@ -26,7 +26,7 @@ public class CutSceneManager : MonoBehaviour {
 
   public void startReminders(){
     InvokeRepeating("RemindPlayerToVisitForest", underwaterForestReminderInterval, underwaterForestReminderInterval);
-    InvokeRepeating("ShowPlayerWhichBarrierToVisit", 5, 45);
+    InvokeRepeating("ShowPlayerWhichBarrierToVisit", 5, 40);
   }
 
   public void playCutSceneFor(string sceneName){
@@ -35,20 +35,25 @@ public class CutSceneManager : MonoBehaviour {
         case "Lake Entry":
           float duration = 8f;
           camera.cutTo(bigTree, duration, new Vector3(-10f, 4f, -50f));
-          Invoke("playCutSceneForSunkenStaircase", duration + .25f);
+          Invoke("playCutSceneForSunkenStaircase", duration + .2f);
+          managePlayer(duration);
           break;
         case "Sunken Staircase":
           Debug.Log("cutting to sunken staircase");
-          camera.cutTo(sunkenStaircase, 4f, new Vector3(0f, 30f, 80f));
+          camera.cutTo(sunkenStaircase, 8f, new Vector3(0f, 30f, 80f));
+          managePlayer(8f);
           break;
         case "Underwater Forest":
           camera.cutTo(underwaterForest, 6f, new Vector3(0f, -10f, -140f));
+          managePlayer(6f);
           break;
         case "Initial Barrier":
-          camera.cutTo(initialBarrier.gameObject, 7f, new Vector3(0f, 0f, 10f));
+          camera.cutTo(initialBarrier.gameObject, 8f, new Vector3(0f, 0f, 10f));
+          managePlayer(8f);
           break;
         case "Abort Barrier":
-          camera.cutTo(initialBarrier.gameObject, 11f, new Vector3(0f, 0f, 10f));
+          camera.cutTo(initialBarrier.gameObject, 12f, new Vector3(0f, 0f, 10f));
+          managePlayer(12f);
           break;
       }
     }
@@ -59,7 +64,14 @@ public class CutSceneManager : MonoBehaviour {
   }
 
   public void cutTo(GameObject aGameObject, float duration, Vector3 offsetVector){
-    if (!disabled) camera.cutTo(aGameObject, duration, offsetVector);
+    if (!disabled){
+      camera.cutTo(aGameObject, duration, offsetVector);
+      managePlayer(duration);
+    }
+  }
+
+  private void managePlayer(float duration){
+    turtleController.FreezePlayer(duration);
   }
 
   private void RemindPlayerToVisitForest(){

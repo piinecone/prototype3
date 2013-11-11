@@ -17,8 +17,6 @@ public class ThirdPersonCamera : MonoBehaviour {
   [SerializeField]
   private float targetingTime = 0.5f;
   [SerializeField]
-  private TurtleState turtleState;
-  [SerializeField]
   private float maxDistanceAway;
   [SerializeField]
   private float minDistanceAway;
@@ -70,6 +68,7 @@ public class ThirdPersonCamera : MonoBehaviour {
       lookDir.y = 0;
       lookDir.Normalize();
       targetPosition = offset + cutSceneTarget.transform.up * 0f - lookDir * 0f;
+      CompensateForWalls(offset, ref targetPosition);
       this.transform.position = Vector3.Lerp(this.transform.position, targetPosition, .5f * Time.deltaTime);
       //this.transform.position = Vector3.SmoothDamp(this.transform.position, targetPosition, ref velocityCamSmooth, 1f);
       transform.LookAt(cutSceneTarget.transform);

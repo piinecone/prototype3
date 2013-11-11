@@ -75,7 +75,9 @@ public class FollowingFish : MonoBehaviour {
       fish.rushBarrier(targetedBarriers[index % targetedBarriers.Count], rendezvousPoint, force);
       index++;
     }
+    if (!force) turtleController.GetComponentInChildren<AudioSource>().Play();
   }
+
 
   public void abortRushAttempt(bool special=false){
     List<FishMovement> fishToRemoveFromFollowers = new List<FishMovement>();

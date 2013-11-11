@@ -26,7 +26,7 @@ public class CutSceneManager : MonoBehaviour {
 
   public void startReminders(){
     InvokeRepeating("RemindPlayerToVisitForest", underwaterForestReminderInterval, underwaterForestReminderInterval);
-    InvokeRepeating("ShowPlayerWhichBarrierToVisit", 5, 45);
+    InvokeRepeating("ShowPlayerWhichBarrierToVisit", 5, 40);
   }
 
   public void playCutSceneFor(string sceneName){
@@ -48,12 +48,12 @@ public class CutSceneManager : MonoBehaviour {
           managePlayer(6f);
           break;
         case "Initial Barrier":
-          camera.cutTo(initialBarrier.gameObject, 7f, new Vector3(0f, 0f, 10f));
-          managePlayer(7f);
+          camera.cutTo(initialBarrier.gameObject, 8f, new Vector3(0f, 0f, 10f));
+          managePlayer(8f);
           break;
         case "Abort Barrier":
-          camera.cutTo(initialBarrier.gameObject, 11f, new Vector3(0f, 0f, 10f));
-          managePlayer(11f);
+          camera.cutTo(initialBarrier.gameObject, 12f, new Vector3(0f, 0f, 10f));
+          managePlayer(12f);
           break;
       }
     }

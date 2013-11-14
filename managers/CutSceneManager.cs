@@ -19,6 +19,40 @@ public class CutSceneManager : MonoBehaviour {
   private Barrier initialBarrier;
   [SerializeField]
   private bool disabled = false;
+  [SerializeField]
+  private AudioSource openingLoop;
+  [SerializeField]
+  private AudioSource aboveWaterMusic;
+  [SerializeField]
+  private AudioSource underWaterMusic;
+
+  private bool musicCanPlay = true;
+  private bool hasBeenUnderwaterAlready = false;
+  private bool playerIsUnderwater = false;
+
+  private bool musicPaused = false;
+  private bool musicFading = false;
+  private float volumeOn = .35f;
+  private float volumeOff= 0f;
+  private float targetVolume = 1f;
+  private float errorMargin = .005f;
+
+  void Start(){
+    openingLoop.volume = volumeOn;
+    openingLoop.Play();
+  }
+
+  void LateUpdate(){
+    if (musicFading && musicCanPlay){
+      Debug.Log("music is fading to " + targetVolume);
+      if (underWaterMusic.volume <= (targetVolume - errorMargin) || underWaterMusic.volume >= (targetVolume + errorMargin)){
+        underWaterMusic.volume = Mathf.SmoothStep(underWaterMusic.volume, targetVolume, 2.2f * Time.deltaTime);
+      } else {
+        musicFading = false;
+        underWaterMusic.volume = targetVolume;
+      }
+    }
+  }
 
   public Barrier InitialBarrier(){
     return initialBarrier;
@@ -91,5 +125,103 @@ public class CutSceneManager : MonoBehaviour {
     return !initialBarrier.isDestroyed() &&
       turtleController.numberOfFollowingFish() >= initialBarrier.Strength() &&
       Vector3.Distance(turtleController.transform.position, initialBarrier.transform.position) > 100f;
+  }
+
+  public void PlayerIsUnderwater(bool value=true){
+    playerIsUnderwater = value;
+    if (!musicCanPlay) return;
+
+    if (playerIsUnderwater){
+      adjustMusicVolumeForUnderWater();
+      if (!hasBeenUnderwaterAlready){
+        hasBeenUnderwaterAlready = true;
+        underWaterMusic.Play();
+        aboveWaterMusic.Play();
+        openingLoop.Stop();
+      }
+    } else {
+      adjustMusicVolumeForAboveWater();
+    }
+  }
+
+  private void adjustMusicVolumeForAboveWater(){
+    if (!musicCanPlay) return;
+
+    if (!musicPaused && !musicFading){
+      if (underWaterMusic.volume != volumeOff) underWaterMusic.volume = volumeOff;
+      if (aboveWaterMusic.volume != volumeOn) aboveWaterMusic.volume = volumeOn;
+    }
+  }
+
+  private void adjustMusicVolumeForUnderWater(){
+    if (!musicCanPlay) return;
+
+    if (!musicPaused && !musicFading){
+      if (underWaterMusic.volume != volumeOn) underWaterMusic.volume = volumeOn;
+      if (aboveWaterMusic.volume != volumeOff) aboveWaterMusic.volume = volumeOff;
+    }
+  }
+
+  private void turnOffMusic(){
+    if (underWaterMusic.volume != volumeOff || aboveWaterMusic.volume != volumeOff){
+      underWaterMusic.volume = volumeOff;
+      aboveWaterMusic.volume = volumeOff;
+    }
+  }
+
+  public void ResumeLevelMusic(){
+    if (!musicCanPlay) return;
+
+    musicPaused = false;
+    musicFading = true;
+    FadeInMusic();
+  }
+
+  public void PauseLevelMusic(){
+    if (!musicCanPlay) return;
+
+    musicPaused = true;
+    musicFading = true;
+    //if (underWaterMusic.volume == 1f)
+    FadeOutMusic();
+  }
+
+  IEnumerator fadeInMusic(){
+    float step = 0f;
+    while (step < 1f) {
+      step += Time.deltaTime / 15f;
+      underWaterMusic.volume = Mathf.SmoothStep(0f, 1f, step);
+      yield return true;
+    }
+  }
+
+  IEnumerator fadeOutMusic(){
+    float step = 0f;
+    while (musicPaused = true && step > 0f) {
+      step += Time.deltaTime / 15f;
+      underWaterMusic.volume = Mathf.SmoothStep(1f, 0f, step);
+      yield return true;
+    }
+    Debug.Log(underWaterMusic.volume);
+  }
+
+  public void FadeInMusic(){
+    Debug.Log("fading music to " + volumeOn);
+    targetVolume = volumeOn;
+    //StartCoroutine(fadeInMusic());
+  }
+
+  public void FadeOutMusic(){
+    targetVolume = volumeOff;
+    //StartCoroutine(fadeOutMusic());
+  }
+
+  public void StopLevelMusic(){
+    FadeOutMusic();
+    Invoke("disableMusic", 5f);
+  }
+
+  private void disableMusic(){
+    musicCanPlay = false;
   }
 }

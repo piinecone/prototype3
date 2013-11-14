@@ -60,6 +60,7 @@ public class TurtleController : MonoBehaviour {
   private bool playerIsFrozen = false;
 
   // audio
+  private bool firstTimeNearRendezvousPoint = true;
   [SerializeField]
   private AudioSource bubbleSound;
   [SerializeField]
@@ -244,7 +245,7 @@ public class TurtleController : MonoBehaviour {
       // FIXME fix bug with fish rushing the wrong barrier and causing aborts
       } else {
         followingFish.abortRushAttempt(special: true);
-        resetBarriers(theBarrier);
+        resetBarriers();
       }
     }
   }
@@ -297,8 +298,12 @@ public class TurtleController : MonoBehaviour {
   }
 
   private void setNextBarrier(GameObject currentBarrier){
+    if (!nextBarrierInstance.isDestroyed()) return;
+
     schoolsMayLeave = false;
     acceptRendezvousPointCutSceneReminder = true;
+    firstTimeNearRendezvousPoint = true;
+    endCurrentChase();
 
     foreach(GameObject barrierGameObject in sequentialBarriers){
       Barrier barrier = barrierController.getBarrierInstanceFromBarrierGameObject(barrierGameObject);
@@ -309,6 +314,18 @@ public class TurtleController : MonoBehaviour {
         break;
       }
     }
+  }
+
+  private void endCurrentChase(){
+    manager.ResumeLevelMusic();
+    ChaseBoundary currentChaseBoundary = nextBarrierInstance.getChaseBoundary();
+    currentChaseBoundary.EndChase();
+  }
+
+  private void beginChase(){
+    manager.PauseLevelMusic();
+    ChaseBoundary currentChaseBoundary = nextBarrierInstance.getChaseBoundary();
+    currentChaseBoundary.StartChase();
   }
 
   private void forceRushOfNextBarrier(){
@@ -340,35 +357,15 @@ public class TurtleController : MonoBehaviour {
   // trap all sequential fish, even if they were freed before, so the player
   // has to complete everything sequentially
   // TODO: LERP camera to cue player
-  private void resetBarriers(GameObject abortedBarrier){
+  private void resetBarriers(){
     nextBarrier = sequentialBarriers[0];
     nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
     foreach(GameObject barrier in sequentialBarriers)
       barrierController.resurrectBarrier(barrier);
     willShowPlayerInitialBarrier = true;
+    firstTimeNearRendezvousPoint = true;
     PlayFailSound();
-  }
-
-  private int indexOfBarrier(GameObject aBarrier){
-    for (int i = 0; i < sequentialBarriers.Count; i++){
-      if (aBarrier != null){
-        // super blargh :/
-        if (sequentialBarriers[i].transform.parent.gameObject != null){
-          GameObject den = sequentialBarriers[i].transform.parent.gameObject;
-          if (aBarrier.transform.parent.gameObject != null){
-            GameObject currentBarrier = aBarrier.transform.parent.gameObject;
-            if (den == currentBarrier) return i;
-
-            // vomit
-            if (currentBarrier != null && currentBarrier.transform.parent != null){
-              if (den == currentBarrier.transform.parent.gameObject) return i;
-            }
-          }
-        }
-      }
-    }
-
-    return sequentialBarriers.Count;
+    ResumeLevelMusic();
   }
 
   public int numberOfFollowingFish(){
@@ -415,6 +412,7 @@ public class TurtleController : MonoBehaviour {
     foreach(SchoolOfFishMovement school in nextBarrierInstance.requiredSchools)
       school.RushBarrier();
     nextBarrierInstance.rendezvousPoint.GetComponentInChildren<AudioSource>().Play();
+    //nextBarrierInstance.getChaseBoundary().StartChase();
   }
 
   public void playerIsNearTheSurface(bool state=true){
@@ -448,5 +446,17 @@ public class TurtleController : MonoBehaviour {
 
   public void PlayFailSound(){
     failureSound.Play();
+  }
+
+  public void AbortChase(){
+    resetBarriers();
+  }
+
+  public void ResumeLevelMusic(){
+    manager.ResumeLevelMusic();
+  }
+
+  public void PauseLevelMusic(){
+    manager.PauseLevelMusic();
   }
 }

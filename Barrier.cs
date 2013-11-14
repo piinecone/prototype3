@@ -19,6 +19,8 @@ public class Barrier : MonoBehaviour {
   public List<SchoolOfFishMovement> requiredSchools = new List<SchoolOfFishMovement>();
   [SerializeField]
   public GameObject rendezvousPoint;
+  [SerializeField]
+  public ChaseBoundary chaseBoundary;
 
   private List<Rigidbody> barrierComponents = new List<Rigidbody>();
   private Rigidbody[] barrierComponentsArray;
@@ -112,5 +114,9 @@ public class Barrier : MonoBehaviour {
 
   public int Strength(){
     return strength;
+  }
+
+  public ChaseBoundary getChaseBoundary(){
+    return chaseBoundary;
   }
 }

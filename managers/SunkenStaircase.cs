@@ -62,8 +62,8 @@ public class SunkenStaircase : MonoBehaviour {
   }
 
   public void scheduleRaise(){
-    music.Play();
     readyToRaise = true;
+    music.Play();
     timeLeftUntilRaise = 15f;
   }
 

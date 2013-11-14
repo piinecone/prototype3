@@ -259,7 +259,12 @@ public class FishMovement : MonoBehaviour {
   private void shoalAroundShoalPoint(){
     Vector3 targetPosition = shoalPoint.position;
     float distance = Vector3.Distance(transform.position, targetPosition);
-    Vector3 direction = directionAfterAvoidingObstacles(targetPosition, 200f, 1f, 1f);
+    Vector3 direction = Vector3.zero;
+    if (isAborting){
+      direction = directionAfterAvoidingObstacles(targetPosition);
+    } else {
+      direction = directionAfterAvoidingObstacles(targetPosition, 200f, 1f, 1f);
+    }
     Quaternion rotation = Quaternion.LookRotation(direction);
     transform.rotation = Quaternion.Slerp(transform.rotation, rotation, shoalingRotationSpeed * Time.deltaTime);
     float speed = distance >= 20f ? forwardSpeed : shoalingSpeed;

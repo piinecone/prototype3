@@ -82,8 +82,7 @@ public class TurtleController : MonoBehaviour {
     nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
   }
 
-  void FixedUpdate ()
-  {
+  void FixedUpdate () {
      float h = Input.GetAxis("Horizontal");
      float v = Input.GetAxis("Vertical");
      anim.SetFloat("Speed", v);
@@ -97,20 +96,30 @@ public class TurtleController : MonoBehaviour {
     previousPosition = transform.position;
     if (isUnderwater()){
       swim();
-      anim.SetBool("Underwater", true); 
+      anim.SetBool("Underwater", true);
+      manager.PlayerIsUnderwater(true);
     } else if (isEmerging()){
       walk(slope: 120f, normalRay: Vector3.forward);
-      anim.SetBool("Underwater", false); 
+      anim.SetBool("Underwater", false);
+      manager.PlayerIsUnderwater(false);
     } else {
       walk(slope: 90f, normalRay: Vector3.down);
-      anim.SetBool("Underwater", false); 
+      anim.SetBool("Underwater", false);
+      manager.PlayerIsUnderwater(false);
+    }
+
+    if (firstTimeNearRendezvousPoint && nextBarrierInstance != null && nextBarrierInstance.rendezvousPoint != null && nextBarrierInstance.getChaseBoundary() != null){
+      if (Vector3.Distance(transform.position, nextBarrierInstance.rendezvousPoint.transform.position) < 50f){
+        firstTimeNearRendezvousPoint = false;
+        beginChase();
+      }
     }
   }
 
   void walk(float slope, Vector3 normalRay){
     if (slope != null) controller.slopeLimit = slope;
     RaycastHit hit;
-    float distance = 4f;
+    float distance = 6f;
     Vector3 downRay = transform.TransformDirection(normalRay);
     Vector3 normal = transform.TransformDirection(Vector3.up);
     Vector3 lookDirection = transform.forward + transform.TransformDirection(new Vector3(Input.GetAxis("Horizontal"), 0, 0));
@@ -160,7 +169,7 @@ public class TurtleController : MonoBehaviour {
   private bool isTouchingTerrainFromSurface(){
     if (transform.position.y < (surfaceLevel - 2f)) return false;
 
-    float distance = 10f;
+    float distance = 6f;
     RaycastHit hit;
     Vector3 forwardRay = transform.forward * distance;
     Debug.DrawRay(transform.position, forwardRay, Color.red);
@@ -336,6 +345,7 @@ public class TurtleController : MonoBehaviour {
     if (!sunkenStaircase.isReadyToRaise() && allSequentialBarriersDestroyed()) {
       staircaseHasBeenRaised = true;
       followingFish.beginOrbiting(sunkenStaircase.getFocalPoint());
+      manager.StopLevelMusic();
       sunkenStaircase.scheduleRaise();
       manager.cutTo(sunkenStaircase.getFocalPoint(), 40f, new Vector3(-10f, 10f, -50f));
     }

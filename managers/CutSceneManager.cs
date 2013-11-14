@@ -44,7 +44,6 @@ public class CutSceneManager : MonoBehaviour {
 
   void LateUpdate(){
     if (musicFading && musicCanPlay){
-      Debug.Log("music is fading to " + targetVolume);
       if (underWaterMusic.volume <= (targetVolume - errorMargin) || underWaterMusic.volume >= (targetVolume + errorMargin)){
         underWaterMusic.volume = Mathf.SmoothStep(underWaterMusic.volume, targetVolume, 2.2f * Time.deltaTime);
       } else {
@@ -202,11 +201,9 @@ public class CutSceneManager : MonoBehaviour {
       underWaterMusic.volume = Mathf.SmoothStep(1f, 0f, step);
       yield return true;
     }
-    Debug.Log(underWaterMusic.volume);
   }
 
   public void FadeInMusic(){
-    Debug.Log("fading music to " + volumeOn);
     targetVolume = volumeOn;
     //StartCoroutine(fadeInMusic());
   }
@@ -218,10 +215,12 @@ public class CutSceneManager : MonoBehaviour {
 
   public void StopLevelMusic(){
     FadeOutMusic();
-    Invoke("disableMusic", 5f);
+    Invoke("disableMusic", 7f);
   }
 
   private void disableMusic(){
     musicCanPlay = false;
+    underWaterMusic.Stop();
+    aboveWaterMusic.Stop();
   }
 }

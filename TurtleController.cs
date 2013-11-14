@@ -92,20 +92,22 @@ public class TurtleController : MonoBehaviour {
   }
   
   void Update () {
-    calculateSpeedInMedium();
-    previousPosition = transform.position;
-    if (isUnderwater()){
-      swim();
-      anim.SetBool("Underwater", true);
-      manager.PlayerIsUnderwater(true);
-    } else if (isEmerging()){
-      walk(slope: 120f, normalRay: Vector3.forward);
-      anim.SetBool("Underwater", false);
-      manager.PlayerIsUnderwater(false);
-    } else {
-      walk(slope: 90f, normalRay: Vector3.down);
-      anim.SetBool("Underwater", false);
-      manager.PlayerIsUnderwater(false);
+    if (!playerIsFrozen){
+      calculateSpeedInMedium();
+      previousPosition = transform.position;
+      if (isUnderwater()){
+        swim();
+        anim.SetBool("Underwater", true);
+        manager.PlayerIsUnderwater(true);
+      } else if (isEmerging()){
+        walk(slope: 120f, normalRay: Vector3.forward);
+        anim.SetBool("Underwater", false);
+        manager.PlayerIsUnderwater(false);
+      } else {
+        walk(slope: 90f, normalRay: Vector3.down);
+        anim.SetBool("Underwater", false);
+        manager.PlayerIsUnderwater(false);
+      }
     }
 
     if (firstTimeNearRendezvousPoint && nextBarrierInstance != null && nextBarrierInstance.rendezvousPoint != null && nextBarrierInstance.getChaseBoundary() != null){
@@ -438,11 +440,13 @@ public class TurtleController : MonoBehaviour {
   }
 
   public void FreezePlayer(float duration){
+    rigidbody.constraints = RigidbodyConstraints.FreezeAll;
     playerIsFrozen = true;
     Invoke("ReleasePlayer", duration);
   }
 
   public void ReleasePlayer(){
+    rigidbody.constraints = RigidbodyConstraints.None;
     playerIsFrozen = false;
   }
 

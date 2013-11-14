@@ -23,7 +23,7 @@ public class BarrierController : MonoBehaviour {
   }
 
   private bool playerIsCloseToBarrierOrSibling(Barrier barrier, Vector3 playerPosition){
-    float maxDistance = 75f;
+    float maxDistance = 100f;
     return (Vector3.Distance(barrier.transform.position, playerPosition) < maxDistance ||
               (barrier.sibling != null && Vector3.Distance(barrier.sibling.transform.position, playerPosition) < maxDistance));
   }

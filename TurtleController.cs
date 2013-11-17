@@ -23,6 +23,8 @@ public class TurtleController : MonoBehaviour {
   private CutSceneManager manager;
   [SerializeField]
   private SunkenStaircase sunkenStaircase;
+  [SerializeField]
+  private bool invertedYAxis = false;
 
   private float speedInMedium = 8f;
   private Vector3 moveDirection = Vector3.zero;
@@ -149,7 +151,9 @@ public class TurtleController : MonoBehaviour {
     moveDirection *= speedInMedium;
 
     // apply mouselook
-    Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+    Vector3 mousePosition = Input.mousePosition;
+    if (invertedYAxis) mousePosition.y = Screen.height - mousePosition.y;
+    Ray mouseRay = Camera.main.ScreenPointToRay(mousePosition);
     Vector3 lookPos = mouseRay.direction;// - transform.position;
     lookPos.y *= currentYAxisMultiplier();
 

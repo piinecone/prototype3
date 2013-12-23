@@ -69,8 +69,8 @@ public class TurtleController : MonoBehaviour {
   private AudioSource failureSound;
 
   void Start () {
-    anim = GetComponent<Animator>();               
-    col = GetComponent<CapsuleCollider>();          
+    anim = GetComponent<Animator>();
+    col = GetComponent<CapsuleCollider>();
     controller = GetComponent<CharacterController>();
     followingFish = GetComponent<FollowingFish>();
     barrierController = GetComponent<BarrierController>();

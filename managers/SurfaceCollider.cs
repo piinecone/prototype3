@@ -1,30 +1,25 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof (TurtleStateController))]
+
 public class SurfaceCollider : MonoBehaviour {
 
   [SerializeField]
-  private MediumManager mediumManager;
-
-  void Start(){
-
-  }
+  private TurtleStateController stateController;
 
   void OnTriggerEnter(Collider collider){
-    if (collider.gameObject.tag == "Player"){
-      mediumManager.playerIsNearTheSurface(true);
-    }
+    if (collider.gameObject.tag == "Player")
+      stateController.PlayerIsNearSurface(true);
   }
 
   void OnTriggerStay(Collider collider){
-    if (collider.gameObject.tag == "Player"){
-      mediumManager.playerIsNearTheSurface(true);
-    }
+    if (collider.gameObject.tag == "Player")
+      stateController.PlayerIsNearSurface(true);
   }
 
   void OnTriggerExit(Collider collider){
-    if (collider.gameObject.tag == "Player"){
-      mediumManager.playerIsNearTheSurface(false);
-    }
+    if (collider.gameObject.tag == "Player")
+      stateController.PlayerIsNearSurface(false);
   }
 }

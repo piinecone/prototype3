@@ -94,30 +94,30 @@ public class TurtleController : MonoBehaviour {
   }
   
   void Update () {
-    if (!playerIsFrozen){
-      calculateSpeedInMedium();
-      previousPosition = transform.position;
-      if (isUnderwater()){
-        swim();
-        anim.SetBool("Underwater", true);
-        manager.PlayerIsUnderwater(true);
-      } else if (isEmerging()){
-        walk(slope: 120f, normalRay: Vector3.forward);
-        anim.SetBool("Underwater", false);
-        manager.PlayerIsUnderwater(false);
-      } else {
-        walk(slope: 90f, normalRay: Vector3.down);
-        anim.SetBool("Underwater", false);
-        manager.PlayerIsUnderwater(false);
-      }
-    }
+    //if (!playerIsFrozen){
+    //  calculateSpeedInMedium();
+    //  previousPosition = transform.position;
+    //  if (isUnderwater()){
+    //    swim();
+    //    anim.SetBool("Underwater", true);
+    //    manager.PlayerIsUnderwater(true);
+    //  } else if (isEmerging()){
+    //    walk(slope: 120f, normalRay: Vector3.forward);
+    //    anim.SetBool("Underwater", false);
+    //    manager.PlayerIsUnderwater(false);
+    //  } else {
+    //    walk(slope: 90f, normalRay: Vector3.down);
+    //    anim.SetBool("Underwater", false);
+    //    manager.PlayerIsUnderwater(false);
+    //  }
+    //}
 
-    if (firstTimeNearRendezvousPoint && nextBarrierInstance != null && nextBarrierInstance.rendezvousPoint != null && nextBarrierInstance.getChaseBoundary() != null){
-      if (Vector3.Distance(transform.position, nextBarrierInstance.rendezvousPoint.transform.position) < 50f){
-        firstTimeNearRendezvousPoint = false;
-        beginChase();
-      }
-    }
+    //if (firstTimeNearRendezvousPoint && nextBarrierInstance != null && nextBarrierInstance.rendezvousPoint != null && nextBarrierInstance.getChaseBoundary() != null){
+    //  if (Vector3.Distance(transform.position, nextBarrierInstance.rendezvousPoint.transform.position) < 50f){
+    //    firstTimeNearRendezvousPoint = false;
+    //    beginChase();
+    //  }
+    //}
   }
 
   void walk(float slope, Vector3 normalRay){

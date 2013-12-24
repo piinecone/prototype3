@@ -24,11 +24,19 @@ public class TurtleMovementController : MonoBehaviour {
   private float currentYValueOfLookPosition = 0f;
 
   // swim
+  private float forwardAccelerationUnderwater = 1.1f;
+  private float maximumForwardAccelerationUnderwater = 1.4f;
+  private float maximumForwardSwimmingSpeed = 11f;
+  private Vector3 underwaterMovementVectorInWorldSpace = Vector3.zero;
+  private float maximumDragCoefficientInWater = .965f;
+  private float minimumDragCoefficientInWater = .9f;
 
   // walk
   Vector3 defaultTerrainRay = Vector3.down;
   float defaultSlope = 90f;
   private Vector3 moveDirection = Vector3.zero;
+  [SerializeField]
+  private float walkSpeedMultiplier = 5f;
 
   // input
   private Vector3 mouseInput;
@@ -63,10 +71,9 @@ public class TurtleMovementController : MonoBehaviour {
 
     // keyboard input
     Vector3 rawKeyboardInput = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-    keyboardInput = transform.TransformDirection(rawKeyboardInput);
 
-    rawForwardValue = keyboardInput.y;       // forward thrust
-    rawHorizontalValue = keyboardInput.x;    // lateral thrust
+    rawForwardValue = rawKeyboardInput.z;    // forward thrust
+    rawHorizontalValue = rawKeyboardInput.x; // lateral thrust
     rawPitchValue = mouseInput.y;            // pitch
     rawRollValue = keyboardInput.x;          // roll
     rawYawValue = mouseInput.x;              // yaw
@@ -117,6 +124,7 @@ public class TurtleMovementController : MonoBehaviour {
 
     if (stateController.PlayerIsNearSurface())
       if (transform.position.y > waterSurfaceLevel) transform.position = new Vector3(transform.position.x, waterSurfaceLevel, transform.position.z);
+
     currentYValueOfLookPosition = transform.forward.y;
   }
 

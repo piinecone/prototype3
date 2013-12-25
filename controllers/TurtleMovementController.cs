@@ -24,12 +24,13 @@ public class TurtleMovementController : MonoBehaviour {
   private float currentYValueOfLookPosition = 0f;
 
   // swim
-  private float forwardAccelerationUnderwater = 1.1f;
-  private float maximumForwardAccelerationUnderwater = 1.4f;
-  private float maximumForwardSwimmingSpeed = 11f;
+  private float forwardAccelerationUnderwater = 1.00f;
+  private float maximumForwardAccelerationUnderwater = 1.05f;
+  private float swimSpeedMultiplier = .65f;
+  private float maximumForwardSwimmingSpeed = 10f;
   private Vector3 underwaterMovementVectorInWorldSpace = Vector3.zero;
-  private float maximumDragCoefficientInWater = .965f;
-  private float minimumDragCoefficientInWater = .9f;
+  private float lowSpeedDragCoefficientInWater = .99f;
+  private float highSpeedDragCoefficientInWater = .96f;
 
   // walk
   Vector3 defaultTerrainRay = Vector3.down;
@@ -120,16 +121,18 @@ public class TurtleMovementController : MonoBehaviour {
     underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater();
     Debug.DrawRay(transform.position, underwaterMovementVectorInWorldSpace * 50f, Color.magenta);
     float acceleration = calculateForwardAccelerationUnderwater();
-    underwaterMovementVectorInWorldSpace += transform.forward * acceleration * Time.deltaTime;
+    underwaterMovementVectorInWorldSpace += transform.forward * acceleration * Time.deltaTime * swimSpeedMultiplier;
     Debug.DrawRay(transform.position, underwaterMovementVectorInWorldSpace * 50f, Color.red);
-    underwaterMovementVectorInWorldSpace = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumForwardSwimmingSpeed);
+    //underwaterMovementVectorInWorldSpace = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumForwardSwimmingSpeed);
 
     return underwaterMovementVectorInWorldSpace;
   }
 
   private float calculateForwardAccelerationUnderwater(){
-    if (rawForwardValue > 0)
-      forwardAccelerationUnderwater = Mathf.SmoothStep(forwardAccelerationUnderwater, maximumForwardAccelerationUnderwater, Time.deltaTime * 3f);
+    if (rawForwardValue > .95f)
+      return maximumForwardAccelerationUnderwater;
+    else if (rawForwardValue >= .5f)
+      forwardAccelerationUnderwater = Mathf.SmoothStep(forwardAccelerationUnderwater, maximumForwardAccelerationUnderwater, Time.deltaTime * 2f);
     else
       forwardAccelerationUnderwater = 0f;
 
@@ -137,11 +140,18 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private float currentDragCoefficientInWater(){
-    float accelerationPercentile = forwardAccelerationUnderwater / maximumForwardAccelerationUnderwater;
-    float dragOffset = (1f - accelerationPercentile) * (maximumDragCoefficientInWater - minimumDragCoefficientInWater);
-    float dragCoefficient = minimumDragCoefficientInWater + dragOffset;
+    if (rawForwardValue > .75f)
+      return highSpeedDragCoefficientInWater;
+    else if (rawForwardValue > .35f)
+      return (highSpeedDragCoefficientInWater + lowSpeedDragCoefficientInWater) / 2f;
+    else
+      return lowSpeedDragCoefficientInWater;
 
-    return dragCoefficient;
+    //float accelerationPercentile = forwardAccelerationUnderwater / maximumForwardAccelerationUnderwater;
+    //float dragOffset = (1f - accelerationPercentile) * (maximumDragCoefficientInWater - minimumDragCoefficientInWater);
+    //float dragCoefficient = minimumDragCoefficientInWater + dragOffset;
+
+    //return dragCoefficient;
   }
 
   private void updatePositionInWater_legacy(){

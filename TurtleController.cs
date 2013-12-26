@@ -69,8 +69,8 @@ public class TurtleController : MonoBehaviour {
   private AudioSource failureSound;
 
   void Start () {
-    anim = GetComponent<Animator>();               
-    col = GetComponent<CapsuleCollider>();          
+    anim = GetComponent<Animator>();
+    col = GetComponent<CapsuleCollider>();
     controller = GetComponent<CharacterController>();
     followingFish = GetComponent<FollowingFish>();
     barrierController = GetComponent<BarrierController>();
@@ -83,41 +83,32 @@ public class TurtleController : MonoBehaviour {
     nextBarrier = sequentialBarriers[0];
     nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
   }
-
-  void FixedUpdate () {
-     float h = Input.GetAxis("Horizontal");
-     float v = Input.GetAxis("Vertical");
-     anim.SetFloat("Speed", v);
-     anim.SetFloat("Direction", h);
-     anim.speed = animSpeed;
-     currentBaseState = anim.GetCurrentAnimatorStateInfo(0);
-  }
   
   void Update () {
-    if (!playerIsFrozen){
-      calculateSpeedInMedium();
-      previousPosition = transform.position;
-      if (isUnderwater()){
-        swim();
-        anim.SetBool("Underwater", true);
-        manager.PlayerIsUnderwater(true);
-      } else if (isEmerging()){
-        walk(slope: 120f, normalRay: Vector3.forward);
-        anim.SetBool("Underwater", false);
-        manager.PlayerIsUnderwater(false);
-      } else {
-        walk(slope: 90f, normalRay: Vector3.down);
-        anim.SetBool("Underwater", false);
-        manager.PlayerIsUnderwater(false);
-      }
-    }
+    //if (!playerIsFrozen){
+    //  calculateSpeedInMedium();
+    //  previousPosition = transform.position;
+    //  if (isUnderwater()){
+    //    swim();
+    //    anim.SetBool("Underwater", true);
+    //    manager.PlayerIsUnderwater(true);
+    //  } else if (isEmerging()){
+    //    walk(slope: 120f, normalRay: Vector3.forward);
+    //    anim.SetBool("Underwater", false);
+    //    manager.PlayerIsUnderwater(false);
+    //  } else {
+    //    walk(slope: 90f, normalRay: Vector3.down);
+    //    anim.SetBool("Underwater", false);
+    //    manager.PlayerIsUnderwater(false);
+    //  }
+    //}
 
-    if (firstTimeNearRendezvousPoint && nextBarrierInstance != null && nextBarrierInstance.rendezvousPoint != null && nextBarrierInstance.getChaseBoundary() != null){
-      if (Vector3.Distance(transform.position, nextBarrierInstance.rendezvousPoint.transform.position) < 50f){
-        firstTimeNearRendezvousPoint = false;
-        beginChase();
-      }
-    }
+    //if (firstTimeNearRendezvousPoint && nextBarrierInstance != null && nextBarrierInstance.rendezvousPoint != null && nextBarrierInstance.getChaseBoundary() != null){
+    //  if (Vector3.Distance(transform.position, nextBarrierInstance.rendezvousPoint.transform.position) < 50f){
+    //    firstTimeNearRendezvousPoint = false;
+    //    beginChase();
+    //  }
+    //}
   }
 
   void walk(float slope, Vector3 normalRay){

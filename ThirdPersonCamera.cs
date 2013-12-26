@@ -43,13 +43,20 @@ public class ThirdPersonCamera : MonoBehaviour {
 
   public enum CamStates {
     Behind,
-    Target
+    Target,
+    Banking
   }
+
+  // state-specific configuration
+  private float defaultBankingCameraYDivisor = 2f;
+  private float bankingCameraYDivisor;
+  private float rawHorizontalInputValue = 0f;
 
   void Start () {
     follow = GameObject.FindWithTag("Player").transform;
     lookDir = follow.forward;
     minDistanceAway = distanceAway;
+    bankingCameraYDivisor = defaultBankingCameraYDivisor;
   }
 
   void LateUpdate() {
@@ -78,6 +85,7 @@ public class ThirdPersonCamera : MonoBehaviour {
   }
 
   private void performNormalCameraMovement(){
+    captureInputValues();
     calculateDesiredDistanceAwayBasedOnFollowers();
     Vector3 characterOffset = follow.position + new Vector3(0f, distanceUp, 0f);
 
@@ -85,6 +93,8 @@ public class ThirdPersonCamera : MonoBehaviour {
     if (Input.GetAxis("Jump") > 0.01f){
       //barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, widescreen, targetingTime);
       camState = CamStates.Target;
+    } else if (rawHorizontalInputValue != 0f || (int)bankingCameraYDivisor != defaultBankingCameraYDivisor){
+      camState = CamStates.Banking;
     } else {
       //barEffect.coverage = Mathf.SmoothStep(barEffect.coverage, 0f, targetingTime);
       camState = CamStates.Behind;
@@ -103,6 +113,12 @@ public class ThirdPersonCamera : MonoBehaviour {
       case CamStates.Target:
         lookDir = follow.forward;
         break;
+      case CamStates.Banking:
+        calculateBankingDivisor();
+        lookDir = follow.forward;
+        lookDir.y = lookDir.y / bankingCameraYDivisor;
+        lookDir.Normalize();
+        break;
     }
 
     targetPosition = characterOffset + follow.up * distanceUp - lookDir * distanceAway;
@@ -110,6 +126,19 @@ public class ThirdPersonCamera : MonoBehaviour {
     CompensateForWalls(characterOffset, ref targetPosition);
     smoothPosition(this.transform.position, targetPosition);
     transform.LookAt(follow);
+  }
+
+  private void captureInputValues(){
+    rawHorizontalInputValue = Input.GetAxis("Horizontal");
+  }
+
+  private void calculateBankingDivisor(){
+    float forwardStep = Time.deltaTime * 1.5f;
+    float backwardStep = Time.deltaTime * 4f;
+    if (rawHorizontalInputValue != 0f)
+      bankingCameraYDivisor = Mathf.SmoothStep(bankingCameraYDivisor, defaultBankingCameraYDivisor + Mathf.Abs(rawHorizontalInputValue), forwardStep);
+    else
+      bankingCameraYDivisor = Mathf.SmoothStep(bankingCameraYDivisor, defaultBankingCameraYDivisor, backwardStep);
   }
 
   private void AdjustYValue(ref Vector3 toTarget){
@@ -162,6 +191,8 @@ public class ThirdPersonCamera : MonoBehaviour {
         return "Behind";
       case CamStates.Target:
         return "Target";
+      case CamStates.Banking:
+        return "Banking";
       default:
         return "Behind";
     }

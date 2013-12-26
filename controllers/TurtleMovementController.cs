@@ -125,8 +125,8 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateAppliedRollValue(){
-    float forwardStep = Time.deltaTime * 6.5f;
-    float backwardStep = Time.deltaTime * 2f;
+    float forwardStep = Time.deltaTime * 5f;
+    float backwardStep = Time.deltaTime * 3f;
     if (rawRollValue != 0f) {
       // to allow corkscrewing, multiply the max by the active time elapsed
       // appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle * rawRollInputTimeElapsed, step * 1.5f);
@@ -252,10 +252,10 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private float currentRotateSpeed(){
-    return 150.0f;
+    return 75.0f;
   }
 
   private float currentYAxisMultiplier(){
-    return 1.5f;
+    return 1.25f;
   }
 }

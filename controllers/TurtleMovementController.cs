@@ -19,20 +19,23 @@ public class TurtleMovementController : MonoBehaviour {
   private float waterSurfaceLevel = 160f;
   [SerializeField]
   private float gravity = 15f;
+  [SerializeField]
+  private float animationRate = 1.5f;
 
   // stabilize the look position when the avatar is partially submerged
   private float currentYValueOfLookPosition = 0f;
 
   // swim
   private float forwardAccelerationUnderwater = 1.00f;
-  private float maximumForwardAccelerationUnderwater = 1.06f;
+  private float maximumForwardAccelerationUnderwater = 1.09f;
   private float swimSpeedMultiplier = .65f;
   private float maximumForwardSwimmingSpeed = 10f;
   private Vector3 underwaterMovementVectorInWorldSpace = Vector3.zero;
   private float lowSpeedDragCoefficientInWater = .99f;
   private float highSpeedDragCoefficientInWater = .96f;
   private float appliedRollValue = 0f;
-  private float maxRollRotationAngle = 95f;
+  private float maxRollRotationAngle = 52.5f;
+  private float bankThresholdInSeconds = 1.35f;
 
   // walk
   Vector3 defaultTerrainRay = Vector3.down;
@@ -51,7 +54,7 @@ public class TurtleMovementController : MonoBehaviour {
   private float rawRollValue = 0f;
 
   // timing
-  private float rawRollInputTimeElapsed = 1f;
+  private float rawRollInputTimeElapsed = 0f;
 
   void Start () {
     animator = GetComponent<Animator>();
@@ -70,13 +73,17 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void mapInputParameters(){
+    float horizontalValue = Input.GetAxis("Horizontal");
+    float verticalValue = Input.GetAxis("Vertical");
+
     // mouse input
     Vector3 mousePosition = Input.mousePosition;
     Ray mouseRay = Camera.main.ScreenPointToRay(mousePosition);
     mouseInput = mouseRay.direction;
 
     // keyboard input
-    Vector3 rawKeyboardInput = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+    // FIXME no need for a vector3 here, right?
+    Vector3 rawKeyboardInput = new Vector3(horizontalValue, 0, verticalValue);
 
     rawForwardValue = rawKeyboardInput.z;    // forward thrust
     rawHorizontalValue = rawKeyboardInput.x; // lateral thrust
@@ -85,7 +92,26 @@ public class TurtleMovementController : MonoBehaviour {
     rawYawValue = mouseInput.x;              // yaw
 
     rawRollInputTimeElapsed += Time.deltaTime;
-    if (rawRollValue == 0) rawRollInputTimeElapsed = 1f;
+    if (rawRollValue == 0 || bankingForMoreThan(2f * bankThresholdInSeconds)) rawRollInputTimeElapsed = 0f;
+
+    if (bankingForMoreThan(bankThresholdInSeconds) && bankingForLessThan(2f * bankThresholdInSeconds) && rawForwardValue > .5f)
+      rawForwardValue = Mathf.Max(rawForwardValue - Mathf.Abs(rawHorizontalValue/1.5f), .3f);
+
+    animator.SetFloat("Speed", rawForwardValue);
+    animator.SetFloat("Direction", horizontalValue);
+
+    if (rawForwardValue > .4f)
+      animator.speed = Mathf.Max(5f * (1 - rawForwardValue), 1.6f);
+    else
+      animator.speed = 1.2f;
+  }
+
+  private bool bankingForMoreThan(float seconds){
+    return (rawRollInputTimeElapsed >= seconds);
+  }
+
+  private bool bankingForLessThan(float seconds){
+    return (rawRollInputTimeElapsed <= seconds);
   }
 
   private void handleMovementInWater(){
@@ -125,11 +151,11 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateAppliedRollValue(){
-    float forwardStep = Time.deltaTime * 5f;
+    float forwardStep = Time.deltaTime * 6f;
     float backwardStep = Time.deltaTime * 3f;
     if (rawRollValue != 0f) {
       // to allow corkscrewing, multiply the max by the active time elapsed
-      // appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle * rawRollInputTimeElapsed, step * 1.5f);
+      // appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle * rawRollInputTimeElapsed (this is often zero), step * 1.5f);
       appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle, forwardStep);
     } else {
       // to undo a corkscrew: instead of stepping to 0f, step to the next lowest upright rotation (modulo 2pi probably)
@@ -159,22 +185,19 @@ public class TurtleMovementController : MonoBehaviour {
 
   private Vector3 underwaterThrustVector(){
     underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater();
-    float acceleration = calculateForwardAccelerationUnderwater();
-    underwaterMovementVectorInWorldSpace += transform.forward * acceleration * Time.deltaTime * swimSpeedMultiplier;
-    //underwaterMovementVectorInWorldSpace = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumForwardSwimmingSpeed);
+    calculateForwardAccelerationUnderwater();
+    underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater * Time.deltaTime * swimSpeedMultiplier;
 
     return underwaterMovementVectorInWorldSpace;
   }
 
-  private float calculateForwardAccelerationUnderwater(){
+  private void calculateForwardAccelerationUnderwater(){
     if (rawForwardValue > .95f)
-      return maximumForwardAccelerationUnderwater;
+      forwardAccelerationUnderwater = maximumForwardAccelerationUnderwater;
     else if (rawForwardValue >= .5f)
       forwardAccelerationUnderwater = Mathf.SmoothStep(forwardAccelerationUnderwater, maximumForwardAccelerationUnderwater, Time.deltaTime * 2f);
     else
       forwardAccelerationUnderwater = 0f;
-
-    return forwardAccelerationUnderwater;
   }
 
   private float currentDragCoefficientInWater(){

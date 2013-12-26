@@ -83,15 +83,6 @@ public class TurtleController : MonoBehaviour {
     nextBarrier = sequentialBarriers[0];
     nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
   }
-
-  void FixedUpdate () {
-     float h = Input.GetAxis("Horizontal");
-     float v = Input.GetAxis("Vertical");
-     anim.SetFloat("Speed", v);
-     anim.SetFloat("Direction", h);
-     anim.speed = animSpeed;
-     currentBaseState = anim.GetCurrentAnimatorStateInfo(0);
-  }
   
   void Update () {
     //if (!playerIsFrozen){

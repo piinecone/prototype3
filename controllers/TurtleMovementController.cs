@@ -31,6 +31,8 @@ public class TurtleMovementController : MonoBehaviour {
   private Vector3 underwaterMovementVectorInWorldSpace = Vector3.zero;
   private float lowSpeedDragCoefficientInWater = .99f;
   private float highSpeedDragCoefficientInWater = .96f;
+  private float appliedRollValue = 0f;
+  private float maxRollRotationAngle = 95f;
 
   // walk
   Vector3 defaultTerrainRay = Vector3.down;
@@ -47,6 +49,9 @@ public class TurtleMovementController : MonoBehaviour {
   private float rawPitchValue = 0f;
   private float rawYawValue = 0f;
   private float rawRollValue = 0f;
+
+  // timing
+  private float rawRollInputTimeElapsed = 1f;
 
   void Start () {
     animator = GetComponent<Animator>();
@@ -76,8 +81,11 @@ public class TurtleMovementController : MonoBehaviour {
     rawForwardValue = rawKeyboardInput.z;    // forward thrust
     rawHorizontalValue = rawKeyboardInput.x; // lateral thrust
     rawPitchValue = mouseInput.y;            // pitch
-    rawRollValue = keyboardInput.x;          // roll
+    rawRollValue = rawKeyboardInput.x;       // roll
     rawYawValue = mouseInput.x;              // yaw
+
+    rawRollInputTimeElapsed += Time.deltaTime;
+    if (rawRollValue == 0) rawRollInputTimeElapsed = 1f;
   }
 
   private void handleMovementInWater(){
@@ -93,8 +101,40 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void updateRotationInWater(){
-    Quaternion targetRotation = determineUnderwaterRotationFromInput();
+    Quaternion targetRotation = determineUnderwaterRotationFromInput_();
     transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInWater());
+  }
+
+  private Quaternion determineUnderwaterRotationFromInput_(){
+    Quaternion rotation = Quaternion.identity;
+    calculateAppliedRollValue();
+    Quaternion lookRotation = currentLookRotation();
+    rotation.eulerAngles = new Vector3(lookRotation.eulerAngles.x, lookRotation.eulerAngles.y, appliedRollValue);
+
+    return rotation;
+  }
+
+  private Quaternion currentLookRotation(){
+    Vector3 mousePosition = Input.mousePosition;
+    Ray mouseRay = Camera.main.ScreenPointToRay(mousePosition);
+    Debug.DrawRay(transform.position, mouseRay.direction * 10f, Color.red);
+    Vector3 lookDirection = mouseRay.direction;
+    lookDirection.y *= currentYAxisMultiplier();
+
+    return Quaternion.LookRotation(lookDirection);
+  }
+
+  private void calculateAppliedRollValue(){
+    float forwardStep = Time.deltaTime * 6.5f;
+    float backwardStep = Time.deltaTime * 2f;
+    if (rawRollValue != 0f) {
+      // to allow corkscrewing, multiply the max by the active time elapsed
+      // appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle * rawRollInputTimeElapsed, step * 1.5f);
+      appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle, forwardStep);
+    } else {
+      // to undo a corkscrew: instead of stepping to 0f, step to the next lowest upright rotation (modulo 2pi probably)
+      appliedRollValue = Mathf.SmoothStep(appliedRollValue, 0f, backwardStep);
+    }
   }
 
   private Quaternion determineUnderwaterRotationFromInput(){
@@ -119,10 +159,8 @@ public class TurtleMovementController : MonoBehaviour {
 
   private Vector3 underwaterThrustVector(){
     underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater();
-    Debug.DrawRay(transform.position, underwaterMovementVectorInWorldSpace * 50f, Color.magenta);
     float acceleration = calculateForwardAccelerationUnderwater();
     underwaterMovementVectorInWorldSpace += transform.forward * acceleration * Time.deltaTime * swimSpeedMultiplier;
-    Debug.DrawRay(transform.position, underwaterMovementVectorInWorldSpace * 50f, Color.red);
     //underwaterMovementVectorInWorldSpace = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumForwardSwimmingSpeed);
 
     return underwaterMovementVectorInWorldSpace;
@@ -214,10 +252,10 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private float currentRotateSpeed(){
-    return 50.0f;
+    return 150.0f;
   }
 
   private float currentYAxisMultiplier(){
-    return 1.0f;
+    return 1.5f;
   }
 }

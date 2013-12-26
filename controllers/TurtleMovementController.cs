@@ -25,7 +25,7 @@ public class TurtleMovementController : MonoBehaviour {
 
   // swim
   private float forwardAccelerationUnderwater = 1.00f;
-  private float maximumForwardAccelerationUnderwater = 1.05f;
+  private float maximumForwardAccelerationUnderwater = 1.06f;
   private float swimSpeedMultiplier = .65f;
   private float maximumForwardSwimmingSpeed = 10f;
   private Vector3 underwaterMovementVectorInWorldSpace = Vector3.zero;

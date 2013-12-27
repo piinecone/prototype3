@@ -16,9 +16,9 @@ public class TurtleMovementController : MonoBehaviour {
   [SerializeField]
   private bool invertedYAxis = false;
   [SerializeField]
-  private float waterSurfaceLevel = 160f;
+  private float waterSurfaceLevel = 177.5f;
   [SerializeField]
-  private float gravity = 15f;
+  private float gravity = 20f;
   [SerializeField]
   private float animationRate = 1.5f;
 
@@ -32,7 +32,7 @@ public class TurtleMovementController : MonoBehaviour {
   private float maximumForwardSwimmingSpeed = 10f;
   private Vector3 underwaterMovementVectorInWorldSpace = Vector3.zero;
   private float lowSpeedDragCoefficientInWater = .99f;
-  private float highSpeedDragCoefficientInWater = .96f;
+  private float highSpeedDragCoefficientInWater = .97f;
   private float appliedRollValue = 0f;
   private float maxRollRotationAngle = 52.5f;
   private float bankThresholdInSeconds = 1.35f;

@@ -25,14 +25,17 @@ public class TurtleMovementController : MonoBehaviour {
   // stabilize the look position when the avatar is partially submerged
   private float currentYValueOfLookPosition = 0f;
 
+  // movement
+  private Vector3 positionVector;
+  private Quaternion targetRotation;
+
   // swim
-  private float forwardAccelerationUnderwater = 1.00f;
-  private float maximumForwardAccelerationUnderwater = 1.09f;
-  private float swimSpeedMultiplier = .65f;
-  private float maximumForwardSwimmingSpeed = 10f;
+  private float maximumSwimSpeed = 16.5f;
+  private float forwardAccelerationUnderwater = 0f;
   private Vector3 underwaterMovementVectorInWorldSpace = Vector3.zero;
-  private float lowSpeedDragCoefficientInWater = .99f;
-  private float highSpeedDragCoefficientInWater = .97f;
+  private float currentDragCoefficientInWater = 1f;
+  private float highSpeedDragCoefficientInWater = .98f;
+  private float lowSpeedDragCoefficientInWater = .97f;
   private float appliedRollValue = 0f;
   private float maxRollRotationAngle = 52.5f;
   private float bankThresholdInSeconds = 1.35f;
@@ -63,13 +66,22 @@ public class TurtleMovementController : MonoBehaviour {
     stateController = GetComponent<TurtleStateController>();
   }
 
-  void Update () {
+  void FixedUpdate(){
     mapInputParameters();
 
     if (stateController.PlayerIsInWater())
       handleMovementInWater();
     else if (stateController.PlayerIsOnLand())
       walk(slope: defaultSlope, terrainRay: defaultTerrainRay);
+  }
+
+  void Update() {
+    UpdateTransformPositionAndRotation();
+  }
+
+  private void UpdateTransformPositionAndRotation(){
+    characterController.Move(positionVector * Time.deltaTime);
+    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInWater());
   }
 
   private void mapInputParameters(){
@@ -95,7 +107,7 @@ public class TurtleMovementController : MonoBehaviour {
     if (rawRollValue == 0 || bankingForMoreThan(2f * bankThresholdInSeconds)) rawRollInputTimeElapsed = 0f;
 
     if (bankingForMoreThan(bankThresholdInSeconds) && bankingForLessThan(2f * bankThresholdInSeconds) && rawForwardValue > .5f)
-      rawForwardValue = Mathf.Max(rawForwardValue - Mathf.Abs(rawHorizontalValue/1.5f), .3f);
+      rawForwardValue = 0f;
 
     animator.SetFloat("Speed", rawForwardValue);
     animator.SetFloat("Direction", horizontalValue);
@@ -122,16 +134,15 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void swim(){
-    updateRotationInWater();
-    updatePositionInWater();
+    calculateRotationInWater();
+    calculatePositionInWater();
   }
 
-  private void updateRotationInWater(){
-    Quaternion targetRotation = determineUnderwaterRotationFromInput_();
-    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInWater());
+  private void calculateRotationInWater(){
+    targetRotation = determineUnderwaterRotationFromInput();
   }
 
-  private Quaternion determineUnderwaterRotationFromInput_(){
+  private Quaternion determineUnderwaterRotationFromInput(){
     Quaternion rotation = Quaternion.identity;
     calculateAppliedRollValue();
     Quaternion lookRotation = currentLookRotation();
@@ -143,7 +154,6 @@ public class TurtleMovementController : MonoBehaviour {
   private Quaternion currentLookRotation(){
     Vector3 mousePosition = Input.mousePosition;
     Ray mouseRay = Camera.main.ScreenPointToRay(mousePosition);
-    Debug.DrawRay(transform.position, mouseRay.direction * 10f, Color.red);
     Vector3 lookDirection = mouseRay.direction;
     lookDirection.y *= currentYAxisMultiplier();
 
@@ -163,73 +173,29 @@ public class TurtleMovementController : MonoBehaviour {
     }
   }
 
-  private Quaternion determineUnderwaterRotationFromInput(){
-    Vector3 mousePosition = Input.mousePosition;
-    if (invertedYAxis) mousePosition.y = Screen.height - mousePosition.y;
-    Ray mouseRay = Camera.main.ScreenPointToRay(mousePosition);
-    Vector3 lookPos = mouseRay.direction;// - transform.position;
-    lookPos.y *= currentYAxisMultiplier();
-
-    if (transform.position.y >= waterSurfaceLevel && lookPos.y >= 0f){
-      lookPos.y = currentYValueOfLookPosition;
-      lookPos = Vector3.Lerp(lookPos, new Vector3(lookPos.x, 0f, lookPos.z), 10f * Time.deltaTime);
-    }
-
-    return Quaternion.LookRotation(lookPos);
-  }
-
-  private void updatePositionInWater(){
-    Vector3 positionVector = underwaterThrustVector();
-    characterController.Move(positionVector);
+  private void calculatePositionInWater(){
+    positionVector = underwaterThrustVector();
   }
 
   private Vector3 underwaterThrustVector(){
-    underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater();
+    calculateCurrentDragCoefficientInWater();
+    underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater;
     calculateForwardAccelerationUnderwater();
-    underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater * Time.deltaTime * swimSpeedMultiplier;
+    underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;// * Time.deltaTime;
 
-    return underwaterMovementVectorInWorldSpace;
+    return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed);
+  }
+
+  private void calculateCurrentDragCoefficientInWater(){
+    float step = Time.deltaTime * 5f;
+    if (rawForwardValue > 0.01f)
+      currentDragCoefficientInWater = Mathf.SmoothStep(currentDragCoefficientInWater, highSpeedDragCoefficientInWater, step);
+    else
+      currentDragCoefficientInWater = Mathf.SmoothStep(currentDragCoefficientInWater, lowSpeedDragCoefficientInWater, step);
   }
 
   private void calculateForwardAccelerationUnderwater(){
-    if (rawForwardValue > .95f)
-      forwardAccelerationUnderwater = maximumForwardAccelerationUnderwater;
-    else if (rawForwardValue >= .5f)
-      forwardAccelerationUnderwater = Mathf.SmoothStep(forwardAccelerationUnderwater, maximumForwardAccelerationUnderwater, Time.deltaTime * 2f);
-    else
-      forwardAccelerationUnderwater = 0f;
-  }
-
-  private float currentDragCoefficientInWater(){
-    if (rawForwardValue > .75f)
-      return highSpeedDragCoefficientInWater;
-    else if (rawForwardValue > .35f)
-      return (highSpeedDragCoefficientInWater + lowSpeedDragCoefficientInWater) / 2f;
-    else
-      return lowSpeedDragCoefficientInWater;
-
-    //float accelerationPercentile = forwardAccelerationUnderwater / maximumForwardAccelerationUnderwater;
-    //float dragOffset = (1f - accelerationPercentile) * (maximumDragCoefficientInWater - minimumDragCoefficientInWater);
-    //float dragCoefficient = minimumDragCoefficientInWater + dragOffset;
-
-    //return dragCoefficient;
-  }
-
-  private void updatePositionInWater_legacy(){
-    gravity = 15f;
-
-    moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-    if (moveDirection.z < 0f) moveDirection.z = 0f;
-    moveDirection = transform.TransformDirection(moveDirection);
-    //moveDirection *= speedInMedium;
-
-    if (!stateController.PlayerIsNearSurface()) moveDirection.y -= gravity * Time.deltaTime;
-    characterController.Move(moveDirection * Time.deltaTime);
-
-    if (stateController.PlayerIsNearSurface())
-      if (transform.position.y > waterSurfaceLevel) transform.position = new Vector3(transform.position.x, waterSurfaceLevel, transform.position.z);
-
-    currentYValueOfLookPosition = transform.forward.y;
+    forwardAccelerationUnderwater = rawForwardValue * 10f;
   }
 
   private void walk(float slope, Vector3 terrainRay){
@@ -249,7 +215,6 @@ public class TurtleMovementController : MonoBehaviour {
     gravity = 80f;
     moveDirection = new Vector3(0, 0, Input.GetAxis("Vertical"));
     moveDirection = transform.TransformDirection(moveDirection);
-    //moveDirection *= speedInMedium;
     moveDirection.y -= gravity * Time.deltaTime;
     characterController.Move(moveDirection * Time.deltaTime);
   }
@@ -275,10 +240,10 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private float currentRotateSpeed(){
-    return 75.0f;
+    return 20f;
   }
 
   private float currentYAxisMultiplier(){
-    return 1.25f;
+    return 1.2f;
   }
 }

@@ -26,6 +26,7 @@ public class TurtleMovementController : MonoBehaviour {
   private float currentYValueOfLookPosition = 0f;
 
   // movement
+  private Vector3 lastKnownPosition;
   private Vector3 positionVector;
   private Quaternion targetRotation;
 
@@ -82,6 +83,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   void Update() {
+    lastKnownPosition = transform.position;
     UpdateTransformPositionAndRotation();
   }
 
@@ -272,5 +274,9 @@ public class TurtleMovementController : MonoBehaviour {
 
   private float currentYAxisMultiplier(){
     return 1.2f;
+  }
+
+  public float Velocity(){
+    return Vector3.Distance(transform.position, lastKnownPosition) / Time.deltaTime;
   }
 }

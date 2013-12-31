@@ -263,7 +263,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void movePlayerOnLand(){
-    gravity = 80f;
+    gravity = 80f; // FIXME this is weird!
     moveDirection = new Vector3(0, 0, Input.GetAxis("Vertical"));
     moveDirection = transform.TransformDirection(moveDirection);
     moveDirection.y -= gravity * Time.deltaTime;

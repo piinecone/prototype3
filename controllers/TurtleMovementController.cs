@@ -62,6 +62,7 @@ public class TurtleMovementController : MonoBehaviour {
   private float rawPitchValue = 0f;
   private float rawYawValue = 0f;
   private float rawRollValue = 0f;
+  private float previousRollValue = 0f;
 
   // barrel roll
   private float barrelRollCaptureTimeLeft = 0f;
@@ -123,6 +124,7 @@ public class TurtleMovementController : MonoBehaviour {
     // FIXME no need for a vector3 here, right?
     Vector3 rawKeyboardInput = new Vector3(horizontalValue, 0, verticalValue);
 
+    previousRollValue = rawRollValue;        // store roll value slope
     rawForwardValue = rawKeyboardInput.z;    // forward thrust
     rawHorizontalValue = rawKeyboardInput.x; // lateral thrust
     rawPitchValue = mouseInput.y;            // pitch
@@ -157,17 +159,14 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void captureBarrelRoll(){
-    if (performingBarrelRoll){
-      barrelRollArmed = false;
-      return;
-    }
+    if (performingBarrelRoll) return;
 
-    if (Mathf.Abs(rawRollValue) > 0f){
+    if (Mathf.Abs(rawRollValue) > Mathf.Abs(previousRollValue)){
       if (barrelRollCaptureTimeLeft > 0f && barrelRollArmed && rollDirectionFromInput() == barrelRollDirection)
         performBarrelRoll();
       else
-        armBarrelRoll();
-    } else if (barrelRollCaptureTimeLeft > 0f && rawRollValue < .7f){
+        primeBarrelRoll();
+    } else if (barrelRollCaptureTimeLeft > 0f && Mathf.Abs(rawRollValue) < Mathf.Abs(previousRollValue)){
       barrelRollArmed = true;
     }
 
@@ -181,10 +180,11 @@ public class TurtleMovementController : MonoBehaviour {
   private void performBarrelRoll(){
     performingBarrelRoll = true;
     barrelRollArmed = false;
+    barrelRollCaptureTimeLeft = barrelRollCaptureTime;
     rollRotationOffset = Mathf.Abs(appliedRollValue);
   }
 
-  private void armBarrelRoll(){
+  private void primeBarrelRoll(){
     barrelRollDirection = rollDirectionFromInput();
     barrelRollCaptureTimeLeft = barrelRollCaptureTime;
     barrelRollArmed = false;

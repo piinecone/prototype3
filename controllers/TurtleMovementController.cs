@@ -33,9 +33,12 @@ public class TurtleMovementController : MonoBehaviour {
   private float maximumSwimSpeed = 16.5f;
   private float forwardAccelerationUnderwater = 0f;
   private Vector3 underwaterMovementVectorInWorldSpace = Vector3.zero;
-  private float currentDragCoefficientInWater = 1f;
+  private float currentDragCoefficientInWater;
   private float highSpeedDragCoefficientInWater = .98f;
   private float lowSpeedDragCoefficientInWater = .97f;
+  private float dragDampener;
+  private float maximumDragDampener = 1f;
+  private float minimumDragDampener = .7f;
   private float appliedRollValue = 0f;
   private float maxRollRotationAngle = 52.5f;
   private float bankThresholdInSeconds = 1.35f;
@@ -58,12 +61,15 @@ public class TurtleMovementController : MonoBehaviour {
 
   // timing
   private float rawRollInputTimeElapsed = 0f;
+  private float rawForwardInputTimeElapsed = 0f;
 
   void Start () {
     animator = GetComponent<Animator>();
     capsuleCollider = GetComponent<CapsuleCollider>();
     characterController = GetComponent<CharacterController>();
     stateController = GetComponent<TurtleStateController>();
+    currentDragCoefficientInWater = lowSpeedDragCoefficientInWater;
+    dragDampener = minimumDragDampener;
   }
 
   void FixedUpdate(){
@@ -103,14 +109,25 @@ public class TurtleMovementController : MonoBehaviour {
     rawRollValue = rawKeyboardInput.x;       // roll
     rawYawValue = mouseInput.x;              // yaw
 
+    adjustRawInputValues();
+    updateAnimatorStates();
+  }
+
+  private void adjustRawInputValues(){
+    rawForwardInputTimeElapsed += Time.deltaTime;
+    if (rawForwardValue == 0f)
+      rawForwardInputTimeElapsed = Mathf.SmoothStep(rawForwardInputTimeElapsed, 0f, Time.deltaTime);
+
     rawRollInputTimeElapsed += Time.deltaTime;
     if (rawRollValue == 0 || bankingForMoreThan(2f * bankThresholdInSeconds)) rawRollInputTimeElapsed = 0f;
 
     if (bankingForMoreThan(bankThresholdInSeconds) && bankingForLessThan(2f * bankThresholdInSeconds) && rawForwardValue > .5f)
       rawForwardValue = 0f;
+  }
 
+  private void updateAnimatorStates(){
     animator.SetFloat("Speed", rawForwardValue);
-    animator.SetFloat("Direction", horizontalValue);
+    animator.SetFloat("Direction", rawHorizontalValue);
 
     if (rawForwardValue > .4f)
       animator.speed = Mathf.Max(5f * (1 - rawForwardValue), 1.6f);
@@ -134,6 +151,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void swim(){
+    animator.SetBool("Underwater", true);
     calculateRotationInWater();
     calculatePositionInWater();
   }
@@ -179,9 +197,10 @@ public class TurtleMovementController : MonoBehaviour {
 
   private Vector3 underwaterThrustVector(){
     calculateCurrentDragCoefficientInWater();
-    underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater;
+    calculateDragDampener();
+    underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater * dragDampener;
     calculateForwardAccelerationUnderwater();
-    underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;// * Time.deltaTime;
+    underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
 
     return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed);
   }
@@ -194,11 +213,19 @@ public class TurtleMovementController : MonoBehaviour {
       currentDragCoefficientInWater = Mathf.SmoothStep(currentDragCoefficientInWater, lowSpeedDragCoefficientInWater, step);
   }
 
+  private void calculateDragDampener(){
+    if (rawForwardValue > 0.01f)
+      dragDampener = Mathf.SmoothStep(dragDampener, maximumDragDampener, Time.deltaTime * 5f);
+    else
+      dragDampener = Mathf.SmoothStep(dragDampener, minimumDragDampener, Time.deltaTime * 1f);
+  }
+
   private void calculateForwardAccelerationUnderwater(){
-    forwardAccelerationUnderwater = rawForwardValue * 10f;
+    forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * 10f;
   }
 
   private void walk(float slope, Vector3 terrainRay){
+    animator.SetBool("Underwater", false);
     slope = slope == null ? 90f : slope;
     terrainRay = terrainRay == null ? Vector3.down : terrainRay;
     characterController.slopeLimit = slope;

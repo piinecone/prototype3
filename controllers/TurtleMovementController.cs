@@ -51,6 +51,9 @@ public class TurtleMovementController : MonoBehaviour {
   [SerializeField]
   private float walkSpeedMultiplier = 5f;
 
+  // surfacing
+  float lastLookDirectionYValue = 0f;
+
   // input
   private Vector3 mouseInput;
   private Vector3 keyboardInput;
@@ -89,7 +92,14 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void UpdateTransformPositionAndRotation(){
     characterController.Move(positionVector * Time.deltaTime);
+    adjustPlayerPositionNearWaterSurface();
     transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInWater());
+    lastLookDirectionYValue = transform.forward.y;
+  }
+
+  private void adjustPlayerPositionNearWaterSurface(){
+    if (isNearSurface() && transform.position.y > waterSurfaceLevel)
+      transform.position = new Vector3(transform.position.x, waterSurfaceLevel, transform.position.z);
   }
 
   private void mapInputParameters(){
@@ -176,8 +186,19 @@ public class TurtleMovementController : MonoBehaviour {
     Ray mouseRay = Camera.main.ScreenPointToRay(mousePosition);
     Vector3 lookDirection = mouseRay.direction;
     lookDirection.y *= currentYAxisMultiplier();
+    lookDirection = adjustedLookDirectionNearWaterSurface(lookDirection);
 
     return Quaternion.LookRotation(lookDirection);
+  }
+
+  private Vector3 adjustedLookDirectionNearWaterSurface(Vector3 lookDirection){
+    if (transform.position.y >= waterSurfaceLevel && lookDirection.y >= 0f){
+      lookDirection.y = lastLookDirectionYValue;
+      Vector3 adjustedLookDirection = new Vector3(lookDirection.x, 0f, lookDirection.z);
+      lookDirection = Vector3.Lerp(lookDirection, adjustedLookDirection, 10f * Time.deltaTime);
+    }
+
+    return lookDirection;
   }
 
   private void calculateAppliedRollValue(){
@@ -195,6 +216,7 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void calculatePositionInWater(){
     positionVector = underwaterThrustVector();
+    if (!isNearSurface()) positionVector.y -= gravity * Time.deltaTime;
   }
 
   private Vector3 underwaterThrustVector(){
@@ -278,5 +300,9 @@ public class TurtleMovementController : MonoBehaviour {
 
   public float Velocity(){
     return Vector3.Distance(transform.position, lastKnownPosition) / Time.deltaTime;
+  }
+
+  public bool isNearSurface(){
+    return (stateController.IsPlayerNearSurface());
   }
 }

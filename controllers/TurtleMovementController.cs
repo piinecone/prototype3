@@ -71,6 +71,7 @@ public class TurtleMovementController : MonoBehaviour {
   private bool barrelRollArmed = false;
   private bool performingBarrelRoll = false;
   private float rollRotationOffset = 0f;
+  private Vector3 rollPositionVector = Vector3.zero;
 
   // timing
   private float rawRollInputTimeElapsed = 0f;
@@ -182,6 +183,7 @@ public class TurtleMovementController : MonoBehaviour {
     barrelRollArmed = false;
     barrelRollCaptureTimeLeft = barrelRollCaptureTime;
     rollRotationOffset = Mathf.Abs(appliedRollValue);
+    rollPositionVector = transform.right * barrelRollDirection * 8f;
   }
 
   private void primeBarrelRoll(){
@@ -281,6 +283,7 @@ public class TurtleMovementController : MonoBehaviour {
     underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater * dragDampener;
     calculateForwardAccelerationUnderwater();
     underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
+    if (performingBarrelRoll) underwaterMovementVectorInWorldSpace += rollPositionVector;
 
     return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed);
   }

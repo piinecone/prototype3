@@ -40,9 +40,11 @@ public class TurtleStateController : MonoBehaviour {
     return (transform.position.y > waterSurfaceLevel);
   }
 
-  public bool PlayerIsNearSurface(bool value=false){
-    if (value != null) isNearSurface = value;
+  public void PlayerIsNearSurface(bool value=true){
+    isNearSurface = value;
+  }
 
+  public bool IsPlayerNearSurface(){
     return isNearSurface;
   }
 

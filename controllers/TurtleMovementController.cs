@@ -62,6 +62,16 @@ public class TurtleMovementController : MonoBehaviour {
   private float rawPitchValue = 0f;
   private float rawYawValue = 0f;
   private float rawRollValue = 0f;
+  private float previousRollValue = 0f;
+
+  // barrel roll
+  private float barrelRollCaptureTimeLeft = 0f;
+  private float barrelRollCaptureTime = .5f;
+  private int barrelRollDirection = 0;
+  private bool barrelRollArmed = false;
+  private bool performingBarrelRoll = false;
+  private float rollRotationOffset = 0f;
+  private Vector3 rollPositionVector = Vector3.zero;
 
   // timing
   private float rawRollInputTimeElapsed = 0f;
@@ -115,6 +125,7 @@ public class TurtleMovementController : MonoBehaviour {
     // FIXME no need for a vector3 here, right?
     Vector3 rawKeyboardInput = new Vector3(horizontalValue, 0, verticalValue);
 
+    previousRollValue = rawRollValue;        // store roll value slope
     rawForwardValue = rawKeyboardInput.z;    // forward thrust
     rawHorizontalValue = rawKeyboardInput.x; // lateral thrust
     rawPitchValue = mouseInput.y;            // pitch
@@ -123,6 +134,7 @@ public class TurtleMovementController : MonoBehaviour {
 
     adjustRawInputValues();
     updateAnimatorStates();
+    captureBarrelRoll();
   }
 
   private void adjustRawInputValues(){
@@ -145,6 +157,40 @@ public class TurtleMovementController : MonoBehaviour {
       animator.speed = Mathf.Max(5f * (1 - rawForwardValue), 1.6f);
     else
       animator.speed = 1.2f;
+  }
+
+  private void captureBarrelRoll(){
+    if (performingBarrelRoll) return;
+
+    if (Mathf.Abs(rawRollValue) > Mathf.Abs(previousRollValue)){
+      if (barrelRollCaptureTimeLeft > 0f && barrelRollArmed && rollDirectionFromInput() == barrelRollDirection)
+        performBarrelRoll();
+      else
+        primeBarrelRoll();
+    } else if (barrelRollCaptureTimeLeft > 0f && Mathf.Abs(rawRollValue) < Mathf.Abs(previousRollValue)){
+      barrelRollArmed = true;
+    }
+
+    barrelRollCaptureTimeLeft -= Time.deltaTime;
+  }
+
+  private int rollDirectionFromInput(){
+    return (rawRollValue > 0f ? 1 : -1);
+  }
+
+  private void performBarrelRoll(){
+    performingBarrelRoll = true;
+    barrelRollArmed = false;
+    barrelRollCaptureTimeLeft = barrelRollCaptureTime;
+    rollRotationOffset = Mathf.Abs(appliedRollValue);
+    rollPositionVector = transform.right * barrelRollDirection * 8f;
+  }
+
+  private void primeBarrelRoll(){
+    barrelRollDirection = rollDirectionFromInput();
+    barrelRollCaptureTimeLeft = barrelRollCaptureTime;
+    barrelRollArmed = false;
+    performingBarrelRoll = false;
   }
 
   private bool bankingForMoreThan(float seconds){
@@ -202,16 +248,28 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateAppliedRollValue(){
+    if (performingBarrelRoll)
+      calculateAppliedRollValueForBarrelRoll();
+    else
+      calculateAppliedRollValueForBanking();
+  }
+
+  private void calculateAppliedRollValueForBarrelRoll(){
+    if (Mathf.Abs(appliedRollValue) < (360f + rollRotationOffset)){
+      appliedRollValue -= (barrelRollDirection * 10f);
+    } else if (Mathf.Abs(appliedRollValue) >= (360f + rollRotationOffset)){
+      appliedRollValue -= (appliedRollValue + (barrelRollDirection * rollRotationOffset));
+      performingBarrelRoll = false;
+    }
+  }
+
+  private void calculateAppliedRollValueForBanking(){
     float forwardStep = Time.deltaTime * 6f;
     float backwardStep = Time.deltaTime * 3f;
-    if (rawRollValue != 0f) {
-      // to allow corkscrewing, multiply the max by the active time elapsed
-      // appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle * rawRollInputTimeElapsed (this is often zero), step * 1.5f);
+    if (rawRollValue != 0f)
       appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle, forwardStep);
-    } else {
-      // to undo a corkscrew: instead of stepping to 0f, step to the next lowest upright rotation (modulo 2pi probably)
+    else
       appliedRollValue = Mathf.SmoothStep(appliedRollValue, 0f, backwardStep);
-    }
   }
 
   private void calculatePositionInWater(){
@@ -225,6 +283,7 @@ public class TurtleMovementController : MonoBehaviour {
     underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater * dragDampener;
     calculateForwardAccelerationUnderwater();
     underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
+    if (performingBarrelRoll) underwaterMovementVectorInWorldSpace += rollPositionVector;
 
     return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed);
   }

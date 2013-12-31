@@ -63,6 +63,14 @@ public class TurtleMovementController : MonoBehaviour {
   private float rawYawValue = 0f;
   private float rawRollValue = 0f;
 
+  // barrel roll
+  private float barrelRollCaptureTimeLeft = 0f;
+  private float barrelRollCaptureTime = .5f;
+  private int barrelRollDirection = 0;
+  private bool barrelRollArmed = false;
+  private bool performingBarrelRoll = false;
+  private float rollRotationOffset = 0f;
+
   // timing
   private float rawRollInputTimeElapsed = 0f;
   private float rawForwardInputTimeElapsed = 0f;
@@ -123,6 +131,7 @@ public class TurtleMovementController : MonoBehaviour {
 
     adjustRawInputValues();
     updateAnimatorStates();
+    captureBarrelRoll();
   }
 
   private void adjustRawInputValues(){
@@ -145,6 +154,41 @@ public class TurtleMovementController : MonoBehaviour {
       animator.speed = Mathf.Max(5f * (1 - rawForwardValue), 1.6f);
     else
       animator.speed = 1.2f;
+  }
+
+  private void captureBarrelRoll(){
+    if (performingBarrelRoll){
+      barrelRollArmed = false;
+      return;
+    }
+
+    if (Mathf.Abs(rawRollValue) > 0f){
+      if (barrelRollCaptureTimeLeft > 0f && barrelRollArmed && rollDirectionFromInput() == barrelRollDirection)
+        performBarrelRoll();
+      else
+        armBarrelRoll();
+    } else if (barrelRollCaptureTimeLeft > 0f && rawRollValue < .7f){
+      barrelRollArmed = true;
+    }
+
+    barrelRollCaptureTimeLeft -= Time.deltaTime;
+  }
+
+  private int rollDirectionFromInput(){
+    return (rawRollValue > 0f ? 1 : -1);
+  }
+
+  private void performBarrelRoll(){
+    performingBarrelRoll = true;
+    barrelRollArmed = false;
+    rollRotationOffset = Mathf.Abs(appliedRollValue);
+  }
+
+  private void armBarrelRoll(){
+    barrelRollDirection = rollDirectionFromInput();
+    barrelRollCaptureTimeLeft = barrelRollCaptureTime;
+    barrelRollArmed = false;
+    performingBarrelRoll = false;
   }
 
   private bool bankingForMoreThan(float seconds){
@@ -202,16 +246,28 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateAppliedRollValue(){
+    if (performingBarrelRoll)
+      calculateAppliedRollValueForBarrelRoll();
+    else
+      calculateAppliedRollValueForBanking();
+  }
+
+  private void calculateAppliedRollValueForBarrelRoll(){
+    if (Mathf.Abs(appliedRollValue) < (360f + rollRotationOffset)){
+      appliedRollValue -= (barrelRollDirection * 10f);
+    } else if (Mathf.Abs(appliedRollValue) >= (360f + rollRotationOffset)){
+      appliedRollValue -= (appliedRollValue + (barrelRollDirection * rollRotationOffset));
+      performingBarrelRoll = false;
+    }
+  }
+
+  private void calculateAppliedRollValueForBanking(){
     float forwardStep = Time.deltaTime * 6f;
     float backwardStep = Time.deltaTime * 3f;
-    if (rawRollValue != 0f) {
-      // to allow corkscrewing, multiply the max by the active time elapsed
-      // appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle * rawRollInputTimeElapsed (this is often zero), step * 1.5f);
+    if (rawRollValue != 0f)
       appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle, forwardStep);
-    } else {
-      // to undo a corkscrew: instead of stepping to 0f, step to the next lowest upright rotation (modulo 2pi probably)
+    else
       appliedRollValue = Mathf.SmoothStep(appliedRollValue, 0f, backwardStep);
-    }
   }
 
   private void calculatePositionInWater(){

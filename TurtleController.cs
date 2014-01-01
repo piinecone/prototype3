@@ -34,6 +34,7 @@ public class TurtleController : MonoBehaviour {
   private AnimatorStateInfo currentBaseState;
   private Vector3 previousPosition;
   private BarrierController barrierController;
+  private TurtleStateController stateController;
 
   // physics
   private bool isNearSurface = false;
@@ -74,6 +75,7 @@ public class TurtleController : MonoBehaviour {
     controller = GetComponent<CharacterController>();
     followingFish = GetComponent<FollowingFish>();
     barrierController = GetComponent<BarrierController>();
+    stateController = GetComponent<TurtleStateController>();
     speedInMedium = 16.5f;
     minSpeedInMedium = 16.5f;
     maxSpeedInMedium = 20f;
@@ -228,6 +230,7 @@ public class TurtleController : MonoBehaviour {
   // FIXME this is just a wrapper for followingFish :/
   public void addFish(FishMovement fish){
     followingFish.addFish(fish);
+    stateController.AddFollowingFish(fish);
     if (!fish.isSpecial()) thirdPersonCamera.addObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
     updateMinimumSpeed();
     if (fish.isTheLeadFish() && fish.parentSchool().isGameWinner())
@@ -236,6 +239,7 @@ public class TurtleController : MonoBehaviour {
 
   public void removeFish(FishMovement fish){
     followingFish.removeFish(fish);
+    stateController.RemoveFollowingFish(fish);
     if (!fish.isSpecial()) thirdPersonCamera.removeObjectThatMustAlwaysRemainInFieldOfView(fish.transform.gameObject);
     updateMinimumSpeed();
   }

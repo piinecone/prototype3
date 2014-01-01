@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof (CapsuleCollider))]
 [RequireComponent(typeof (Rigidbody))]
@@ -8,6 +9,8 @@ public class TurtleStateController : MonoBehaviour {
 
   [SerializeField]
   private float waterSurfaceLevel = 160f;
+  [SerializeField]
+  private List<FishMovement> followingFish; // FIXME these should be FishControllers
 
   private bool isNearSurface = false;
   private CapsuleCollider capsuleCollider;
@@ -58,5 +61,23 @@ public class TurtleStateController : MonoBehaviour {
       return (hit.normal.y > .3);
     else
       return false;
+  }
+
+  public bool PlayerHasFollowingFish(){
+    return (followingFish.Count > 0);
+  }
+
+  public int NumberOfFollowingFish(){
+    return followingFish.Count;
+  }
+
+  // FIXME replace FishMovement with FishController
+  public void AddFollowingFish(FishMovement fish){
+    followingFish.Add(fish);
+  }
+
+  // FIXME replace FishMovement with FishController
+  public void RemoveFollowingFish(FishMovement fish){
+    followingFish.Remove(fish);
   }
 }

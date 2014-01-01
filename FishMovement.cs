@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof (TurtleController))]
 public class FishMovement : MonoBehaviour {
+  private bool debugging = true;
+
   [SerializeField]
   private List<GameObject> waypoints;
   [SerializeField]
@@ -117,9 +119,12 @@ public class FishMovement : MonoBehaviour {
   
   //void Update () {
   void LateUpdate () {
-    // for debug purposes only
-    //if (Time.time > 5f && Time.time < 5.5f)
-    //  if (isSpecial()) turtleController.addFish(this);
+    patienceLeft = 200f;
+    if (debugging){
+      if (Time.time > 5f && Time.time < 5.5f && turtleController.followingFish.numberOfFollowingFish() < 10){
+        turtleController.addFish(this);
+      }
+    }
 
     if (orbitingUntilReleased){
       orbitAroundOrbitPoint();

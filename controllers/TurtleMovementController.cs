@@ -72,6 +72,13 @@ public class TurtleMovementController : MonoBehaviour {
   private bool performingBarrelRoll = false;
   private float rollRotationOffset = 0f;
   private Vector3 rollPositionVector = Vector3.zero;
+  private float barrelRollSpeed = 10f;
+
+  // corkscrew launch
+  private Vector3 corkscrewVector = Vector3.zero;
+  private int corkscrewDirection = 0;
+  private float corkscrewTimeLeft = 0;
+  private float corkscrewDuration = 6f;
 
   // timing
   private float rawRollInputTimeElapsed = 0f;
@@ -98,6 +105,24 @@ public class TurtleMovementController : MonoBehaviour {
   void Update() {
     lastKnownPosition = transform.position;
     UpdateTransformPositionAndRotation();
+
+    if (corkscrewTimeLeft > 0) drawCorkscrewVector();
+  }
+
+  private void drawCorkscrewVector(){
+    float speed = 10f;
+    float radius = 2f;
+    corkscrewVector.z = transform.forward.z + (corkscrewDuration - corkscrewTimeLeft) * 1.5f;
+    if (corkscrewDirection == 1){
+      corkscrewVector.x = Mathf.Sin(Time.time * speed) * radius;
+      corkscrewVector.y = Mathf.Cos(Time.time * speed) * radius;
+    } else {
+      corkscrewVector.x = Mathf.Cos(Time.time * speed) * radius;
+      corkscrewVector.y = Mathf.Sin(Time.time * speed) * radius;
+    }
+    corkscrewVector = transform.TransformDirection(corkscrewVector);
+    Debug.DrawRay(transform.position, corkscrewVector * 3f, Color.magenta);
+    corkscrewTimeLeft -= Time.deltaTime;
   }
 
   private void UpdateTransformPositionAndRotation(){
@@ -184,6 +209,11 @@ public class TurtleMovementController : MonoBehaviour {
     barrelRollCaptureTimeLeft = barrelRollCaptureTime;
     rollRotationOffset = Mathf.Abs(appliedRollValue);
     rollPositionVector = transform.right * barrelRollDirection * 8f;
+
+    // corkscrew
+    corkscrewVector = transform.forward;
+    corkscrewDirection = barrelRollDirection;
+    corkscrewTimeLeft = corkscrewDuration;
   }
 
   private void primeBarrelRoll(){
@@ -256,7 +286,7 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void calculateAppliedRollValueForBarrelRoll(){
     if (Mathf.Abs(appliedRollValue) < (360f + rollRotationOffset)){
-      appliedRollValue -= (barrelRollDirection * 10f);
+      appliedRollValue -= (barrelRollDirection * barrelRollSpeed);
     } else if (Mathf.Abs(appliedRollValue) >= (360f + rollRotationOffset)){
       appliedRollValue -= (appliedRollValue + (barrelRollDirection * rollRotationOffset));
       performingBarrelRoll = false;

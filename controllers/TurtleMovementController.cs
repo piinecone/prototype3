@@ -29,6 +29,7 @@ public class TurtleMovementController : MonoBehaviour {
   private Vector3 lastKnownPosition;
   private Vector3 positionVector;
   private Quaternion targetRotation;
+  private string lastRecordedState;
 
   // swim
   private float maximumSwimSpeed;
@@ -89,6 +90,9 @@ public class TurtleMovementController : MonoBehaviour {
   private float corkscrewResidualSpeedDuration = 4f;
   private float corkscrewCompletionRollSpeed = 10f;
 
+  // splash
+  private bool didJustSplashIntoWater = false;
+
   // timing
   private float rawRollInputTimeElapsed = 0f;
   private float rawForwardInputTimeElapsed = 0f;
@@ -105,6 +109,7 @@ public class TurtleMovementController : MonoBehaviour {
 
   void FixedUpdate(){
     mapInputParameters();
+    handleStateChange();
 
     if (stateController.PlayerIsInWater())
       handleMovementInWater();
@@ -414,7 +419,16 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateForwardAccelerationUnderwater(){
-    forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * 10f;
+    if (didJustSplashIntoWater){
+      forwardAccelerationUnderwater = 0f;
+      stateController.EmitSplashTrail(positionVector * -1f);
+      if (positionVector.magnitude < 2f){
+        didJustSplashIntoWater = false;
+        stateController.StopSplashTrailEmission();
+      }
+    } else {
+      forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * 10f;
+    }
   }
 
   private void walk(float slope, Vector3 terrainRay){
@@ -508,5 +522,12 @@ public class TurtleMovementController : MonoBehaviour {
 
   private bool isSwimming(){
     return (stateController.PlayerIsInWater());
+  }
+
+  private void handleStateChange(){
+    string previousState = lastRecordedState;
+    lastRecordedState = stateController.LastRecordedState();
+    if (lastRecordedState == "underwater" && previousState == "airborne")
+      didJustSplashIntoWater = true;
   }
 }

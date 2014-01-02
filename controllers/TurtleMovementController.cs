@@ -200,7 +200,7 @@ public class TurtleMovementController : MonoBehaviour {
     barrelRollArmed = false;
     barrelRollCaptureTimeLeft = barrelRollCaptureTime;
     rollRotationOffset = Mathf.Abs(appliedRollValue);
-    rollPositionVector = transform.right * barrelRollDirection * 8f;
+    rollPositionVector = transform.right * barrelRollDirection * 12f;
     attemptCorkscrewLaunch();
   }
 

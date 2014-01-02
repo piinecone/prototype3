@@ -80,4 +80,9 @@ public class TurtleStateController : MonoBehaviour {
   public void RemoveFollowingFish(FishMovement fish){
     followingFish.Remove(fish);
   }
+
+  public void PerformCorkscrewLaunch(int direction, float duration){
+    foreach (FishMovement fish in followingFish)
+      fish.PerformCorkscrewManeuver(direction, duration);
+  }
 }

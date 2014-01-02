@@ -31,7 +31,8 @@ public class TurtleMovementController : MonoBehaviour {
   private Quaternion targetRotation;
 
   // swim
-  private float maximumSwimSpeed = 16.5f;
+  private float maximumSwimSpeed;
+  private float defaultMaximumSwimSpeed = 16.5f;
   private float forwardAccelerationUnderwater = 0f;
   private Vector3 underwaterMovementVectorInWorldSpace = Vector3.zero;
   private float currentDragCoefficientInWater;
@@ -75,10 +76,15 @@ public class TurtleMovementController : MonoBehaviour {
   private float barrelRollSpeed = 10f;
 
   // corkscrew launch
-  private Vector3 corkscrewVector = Vector3.zero;
+  private bool preparingForCorkscrewLaunch = false;
+  private bool performingCorkscrewLaunch = false;
   private int corkscrewDirection = 0;
-  private float corkscrewTimeLeft = 0;
-  private float corkscrewDuration = 6f;
+  private float corkscrewLaunchSpeed = 150f;
+  private float corkscrewPreparationTimeLeft = 0;
+  private float corkscrewPreparationDuration = 2f;
+  private float corkscrewPerformanceTimeLeft = 0;
+  private float corkscrewPerformanceDuration = .1f;
+  private float corkscrewResidualSpeedDuration = 4f;
 
   // timing
   private float rawRollInputTimeElapsed = 0f;
@@ -91,6 +97,7 @@ public class TurtleMovementController : MonoBehaviour {
     stateController = GetComponent<TurtleStateController>();
     currentDragCoefficientInWater = lowSpeedDragCoefficientInWater;
     dragDampener = minimumDragDampener;
+    maximumSwimSpeed = defaultMaximumSwimSpeed;
   }
 
   void FixedUpdate(){
@@ -104,28 +111,10 @@ public class TurtleMovementController : MonoBehaviour {
 
   void Update() {
     lastKnownPosition = transform.position;
-    UpdateTransformPositionAndRotation();
-
-    if (corkscrewTimeLeft > 0) drawCorkscrewVector();
+    updateTransformPositionAndRotation();
   }
 
-  private void drawCorkscrewVector(){
-    float speed = 10f;
-    float radius = 2f;
-    corkscrewVector.z = transform.forward.z + (corkscrewDuration - corkscrewTimeLeft) * 1.5f;
-    if (corkscrewDirection == 1){
-      corkscrewVector.x = Mathf.Sin(Time.time * speed) * radius;
-      corkscrewVector.y = Mathf.Cos(Time.time * speed) * radius;
-    } else {
-      corkscrewVector.x = Mathf.Cos(Time.time * speed) * radius;
-      corkscrewVector.y = Mathf.Sin(Time.time * speed) * radius;
-    }
-    corkscrewVector = transform.TransformDirection(corkscrewVector);
-    Debug.DrawRay(transform.position, corkscrewVector * 3f, Color.magenta);
-    corkscrewTimeLeft -= Time.deltaTime;
-  }
-
-  private void UpdateTransformPositionAndRotation(){
+  private void updateTransformPositionAndRotation(){
     characterController.Move(positionVector * Time.deltaTime);
     adjustPlayerPositionNearWaterSurface();
     transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInWater());
@@ -209,11 +198,7 @@ public class TurtleMovementController : MonoBehaviour {
     barrelRollCaptureTimeLeft = barrelRollCaptureTime;
     rollRotationOffset = Mathf.Abs(appliedRollValue);
     rollPositionVector = transform.right * barrelRollDirection * 8f;
-
-    // corkscrew
-    corkscrewVector = transform.forward;
-    corkscrewDirection = barrelRollDirection;
-    corkscrewTimeLeft = corkscrewDuration;
+    attemptCorkscrewLaunch();
   }
 
   private void primeBarrelRoll(){
@@ -313,9 +298,47 @@ public class TurtleMovementController : MonoBehaviour {
     underwaterMovementVectorInWorldSpace *= currentDragCoefficientInWater * dragDampener;
     calculateForwardAccelerationUnderwater();
     underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
-    if (performingBarrelRoll) underwaterMovementVectorInWorldSpace += rollPositionVector;
+    accountForSpecialMoves();
 
     return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed);
+  }
+
+  private void accountForSpecialMoves(){
+    if (performingBarrelRoll && !preparingForCorkscrewLaunch) underwaterMovementVectorInWorldSpace += rollPositionVector;
+    if (preparingForCorkscrewLaunch || performingCorkscrewLaunch) performCorkscrewLaunch();
+  }
+
+  private void performCorkscrewLaunch(){
+    if (preparingForCorkscrewLaunch){
+      if (corkscrewPreparationTimeLeft <= 0f){
+        performingCorkscrewLaunch = true;
+        preparingForCorkscrewLaunch = false;
+        maximumSwimSpeed = corkscrewLaunchSpeed;
+        corkscrewPerformanceTimeLeft = corkscrewPerformanceDuration;
+      } else {
+        corkscrewPreparationTimeLeft -= Time.deltaTime;
+      }
+    }
+
+    if (performingCorkscrewLaunch){
+      if (corkscrewPerformanceTimeLeft <= 0f){
+        StartCoroutine(returnMaximumSwimSpeedToNormal(corkscrewResidualSpeedDuration));
+        performingCorkscrewLaunch = false;
+      } else {
+        Mathf.SmoothStep(maximumSwimSpeed, defaultMaximumSwimSpeed, Time.deltaTime * 5f);
+        underwaterMovementVectorInWorldSpace += (transform.forward).normalized * 500f;
+        corkscrewPerformanceTimeLeft -= Time.deltaTime;
+      }
+    }
+  }
+
+  IEnumerator returnMaximumSwimSpeedToNormal(float duration){
+    float step = 0f;
+    while (step <= 1f) {
+      step += Time.deltaTime / duration;
+      maximumSwimSpeed = Mathf.SmoothStep(maximumSwimSpeed, defaultMaximumSwimSpeed, Mathf.SmoothStep(0f, 1f, step));
+      yield return true;
+    }
   }
 
   private void calculateCurrentDragCoefficientInWater(){
@@ -393,5 +416,14 @@ public class TurtleMovementController : MonoBehaviour {
 
   public bool isNearSurface(){
     return (stateController.IsPlayerNearSurface());
+  }
+
+  private void attemptCorkscrewLaunch(){
+    if (stateController.PlayerHasFollowingFish()){
+      corkscrewDirection = barrelRollDirection;
+      stateController.PerformCorkscrewLaunch(corkscrewDirection, corkscrewPreparationDuration);
+      preparingForCorkscrewLaunch = true;
+      corkscrewPreparationTimeLeft = corkscrewPreparationDuration;
+    }
   }
 }

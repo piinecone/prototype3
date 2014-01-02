@@ -85,4 +85,11 @@ public class TurtleStateController : MonoBehaviour {
     foreach (FishMovement fish in followingFish)
       fish.PerformCorkscrewManeuver(direction, duration);
   }
+
+  public bool FollowingFishAreNearby(){
+    float meanDistance = 0f;
+    foreach (FishMovement fish in followingFish)
+      meanDistance += Vector3.Distance(transform.position, fish.transform.position);
+    return ((meanDistance / followingFish.Count) < 30f);
+  }
 }

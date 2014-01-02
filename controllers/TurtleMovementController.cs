@@ -419,7 +419,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void attemptCorkscrewLaunch(){
-    if (stateController.PlayerHasFollowingFish()){
+    if (stateController.PlayerHasFollowingFish() && stateController.FollowingFishAreNearby()){
       corkscrewDirection = barrelRollDirection;
       stateController.PerformCorkscrewLaunch(corkscrewDirection, corkscrewPreparationDuration);
       preparingForCorkscrewLaunch = true;

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof (TurtleController))]
 public class FishMovement : MonoBehaviour {
+  private bool debugging = true;
+
   [SerializeField]
   private List<GameObject> waypoints;
   [SerializeField]
@@ -88,6 +90,15 @@ public class FishMovement : MonoBehaviour {
   private bool orbitingUntilReleased = false;
   private GameObject orbitPoint;
 
+  // corkscrew
+  private bool isPerformingCorkscrew = false;
+  private Vector3 corkscrewVector = Vector3.zero;
+  private int corkscrewDirection = 0;
+  private float corkscrewTimeLeft = 0f;
+  private float corkscrewDuration = 0f;
+  private float corkscrewOffset = 0f;
+  private float corkscrewOffsetZ = 0f;
+
   // performance
   private bool shouldDoCalculations = false;
   private bool playerIsNearby = false;
@@ -117,9 +128,14 @@ public class FishMovement : MonoBehaviour {
   
   //void Update () {
   void LateUpdate () {
-    // for debug purposes only
-    //if (Time.time > 5f && Time.time < 5.5f)
-    //  if (isSpecial()) turtleController.addFish(this);
+    if (debugging){
+      patienceLeft = 200f;
+      if (Time.time > 2f && Time.time < 4.5f && turtleController.followingFish.numberOfFollowingFish() < 10){
+        turtleController.addFish(this);
+        transform.position = player.transform.position;
+        currentlyFollowingPlayer = true;
+      }
+    }
 
     if (orbitingUntilReleased){
       orbitAroundOrbitPoint();
@@ -130,7 +146,9 @@ public class FishMovement : MonoBehaviour {
     } else if (currentlyMovingTowardRendezvousPoint) {
       moveTowardRendezvousPoint();
     } else if (currentlyFollowingPlayer){
-      if (boredByPlayer()){
+      if (isPerformingCorkscrew){
+        performCorkscrew();
+      } else if (boredByPlayer()){
         stopFollowingPlayer();
       } else {
         moveTowardPlayer();
@@ -571,5 +589,43 @@ public class FishMovement : MonoBehaviour {
 
   public void playerIsClose(bool state=true){
     playerIsNearby = state;
+  }
+
+  public void PerformCorkscrewManeuver(int direction, float duration){
+    corkscrewDirection = direction;
+    corkscrewVector = transform.forward;
+    corkscrewOffset = Random.Range(0f,2f);
+    corkscrewOffsetZ = Random.Range(-15f,-5f);
+    isPerformingCorkscrew = true;
+    corkscrewDuration = duration;
+    corkscrewTimeLeft = corkscrewDuration;
+    InvokeRepeating("emitBubbleTrail", Random.Range(0f, 1f), Random.Range(.6f, 1f));
+  }
+
+  private void performCorkscrew(){
+    if (corkscrewTimeLeft > 0f){
+      float speed = 20f;
+      float radius = 5f;
+      float seed = Time.time + corkscrewOffset;
+      float zOffset = corkscrewOffsetZ + (corkscrewDuration - corkscrewTimeLeft) * 10f;
+      corkscrewVector.z = player.transform.forward.z + zOffset;
+      if (corkscrewDirection == 1){
+        corkscrewVector.x = Mathf.Sin(seed * speed) * radius;
+        corkscrewVector.y = Mathf.Cos(seed * speed) * radius;
+      } else {
+        corkscrewVector.x = Mathf.Cos(seed * speed) * radius;
+        corkscrewVector.y = Mathf.Sin(seed * speed) * radius;
+      }
+      corkscrewVector = player.transform.TransformDirection(corkscrewVector);
+      Vector3 targetPosition = player.transform.position + corkscrewVector;
+      Vector3 direction = (targetPosition - transform.position).normalized;
+      Quaternion rotation = Quaternion.LookRotation(direction);
+      transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 30f * Time.deltaTime);
+      transform.position += direction * 45f * Time.deltaTime;
+      corkscrewTimeLeft -= Time.deltaTime;
+    } else {
+      CancelInvoke("emitBubbleTrail");
+      isPerformingCorkscrew = false;
+    }
   }
 }

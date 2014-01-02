@@ -8,17 +8,19 @@ using System.Collections.Generic;
 public class TurtleStateController : MonoBehaviour {
 
   [SerializeField]
-  private float waterSurfaceLevel = 160f;
+  private float waterSurfaceLevel;
   [SerializeField]
   private List<FishMovement> followingFish; // FIXME these should be FishControllers
 
   private bool isNearSurface = false;
   private CapsuleCollider capsuleCollider;
   private ParticleSystem particleEmitter;
+  private CharacterController characterController;
 
   void Start () {
     capsuleCollider = GetComponent<CapsuleCollider>();
     particleEmitter = GetComponent<ParticleSystem>();
+    characterController = GetComponent<CharacterController>();
   }
 
   void Update () {
@@ -36,13 +38,17 @@ public class TurtleStateController : MonoBehaviour {
 
   public bool PlayerIsInWater(){ // the player is at least partially submerged
     // y = y - the distance to the turtle's underside / limbs
-    return (transform.position.y <= waterSurfaceLevel);
+    return (transform.position.y - .6f <= waterSurfaceLevel);
   }
 
   public bool PlayerIsOnLand(){ // the player is completely on land
     // y = y - the distance to the turtle's underside / limbs
     // and player is "above" terrain, not water
-    return (transform.position.y > waterSurfaceLevel);
+    return (characterController.isGrounded && transform.position.y > waterSurfaceLevel);
+  }
+
+  public bool PlayerIsAirborne(){
+    return (!characterController.isGrounded && transform.position.y > waterSurfaceLevel);
   }
 
   public void PlayerIsNearSurface(bool value=true){

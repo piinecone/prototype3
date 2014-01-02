@@ -110,6 +110,8 @@ public class TurtleMovementController : MonoBehaviour {
       handleMovementInWater();
     else if (stateController.PlayerIsOnLand())
       walk(slope: defaultSlope, terrainRay: defaultTerrainRay);
+    else if (stateController.PlayerIsAirborne())
+      fall();
   }
 
   void Update() {
@@ -119,14 +121,16 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void updateTransformPositionAndRotation(){
     characterController.Move(positionVector * Time.deltaTime);
-    adjustPlayerPositionNearWaterSurface();
-    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInWater());
+    if (isSwimming()) adjustPlayerPositionNearWaterSurface();
+    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInMedium()); // FIXME in medium
     lastLookDirectionYValue = transform.forward.y;
   }
 
   private void adjustPlayerPositionNearWaterSurface(){
-    if (isNearSurface() && transform.position.y > waterSurfaceLevel)
-      transform.position = new Vector3(transform.position.x, waterSurfaceLevel, transform.position.z);
+    float angle = Vector3.Angle(positionVector, Vector3.up);
+    float magnitude = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed).magnitude;
+    if (isNearSurface() && (transform.position.y + .5f) >= waterSurfaceLevel && angle <= 90f && magnitude <= defaultMaximumSwimSpeed)
+      transform.position = new Vector3(transform.position.x, waterSurfaceLevel - .5f, transform.position.z);
   }
 
   private void mapInputParameters(){
@@ -245,6 +249,17 @@ public class TurtleMovementController : MonoBehaviour {
     return rotation;
   }
 
+  private Quaternion determineAirborneRotation(){
+    Quaternion rotation = Quaternion.identity;
+    calculateAppliedRollValue();
+    Quaternion lookRotation = Quaternion.LookRotation(Vector3.down);
+    float x = transform.rotation.eulerAngles.x + 2f;
+    if (x < 90f && x > 45f) x = 45f;
+    rotation.eulerAngles = new Vector3(x, transform.rotation.eulerAngles.y, appliedRollValue);
+
+    return rotation;
+  }
+
   private Quaternion currentLookRotation(){
     Vector3 mousePosition = Input.mousePosition;
     Ray mouseRay = Camera.main.ScreenPointToRay(mousePosition);
@@ -256,9 +271,9 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private Vector3 adjustedLookDirectionNearWaterSurface(Vector3 lookDirection){
-    if (transform.position.y >= waterSurfaceLevel && lookDirection.y >= 0f){
+    if (transform.position.y + .6f >= waterSurfaceLevel && lookDirection.y >= 0f){
       lookDirection.y = lastLookDirectionYValue;
-      Vector3 adjustedLookDirection = new Vector3(lookDirection.x, 0f, lookDirection.z);
+      Vector3 adjustedLookDirection = new Vector3(lookDirection.x, .125f, lookDirection.z);
       lookDirection = Vector3.Lerp(lookDirection, adjustedLookDirection, 10f * Time.deltaTime);
     }
 
@@ -436,12 +451,31 @@ public class TurtleMovementController : MonoBehaviour {
     return (rotation * Quaternion.LookRotation(lookDirection));
   }
 
+  private void fall(){
+    animator.SetBool("Underwater", false);
+    gravity = 80f;
+    positionVector.y -= gravity * Time.deltaTime;
+    underwaterMovementVectorInWorldSpace = positionVector;
+    targetRotation = determineAirborneRotation();
+  }
+
   private float terrainAlignmentRotationSpeed(){
     return (currentRotateSpeed() * .05f * Time.deltaTime);
   }
 
+  private float rotationSpeedInMedium(){
+    if (isSwimming()) return rotationSpeedInWater();
+    if (stateController.PlayerIsAirborne()) return rotationSpeedInAir();
+    // FIXME on land
+    return 5f;
+  }
+
   private float rotationSpeedInWater(){
     return currentRotateSpeed() * Time.deltaTime;
+  }
+
+  private float rotationSpeedInAir(){
+    return 20f * Time.deltaTime;
   }
 
   private float currentRotateSpeed(){
@@ -470,5 +504,9 @@ public class TurtleMovementController : MonoBehaviour {
       performingCorkscrewLaunch = false;
       finishingACorkscrewLaunch = false;
     }
+  }
+
+  private bool isSwimming(){
+    return (stateController.PlayerIsInWater());
   }
 }

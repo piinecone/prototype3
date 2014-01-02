@@ -288,19 +288,19 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateAppliedRollValueForCorkscrewPreparation(){
-    appliedRollValue -= (barrelRollDirection * barrelRollSpeed * 1.5f);
+    appliedRollValue -= (corkscrewDirection * barrelRollSpeed * 1.5f);
   }
 
   private void calculateAppliedRollValueForCorkscrewPerformance(){
-    appliedRollValue -= (barrelRollDirection * corkscrewPerformanceRollSpeed);
+    appliedRollValue -= (corkscrewDirection * corkscrewPerformanceRollSpeed);
   }
 
   private void calculateAppliedRollValueForCorkscrewCompletion(){
-    float maximumRotation = 6f * 360f;
+    float maximumRotation = 5f * 360f;
     if (Mathf.Abs(appliedRollValue) < (maximumRotation + rollRotationOffset)){
-      appliedRollValue -= (barrelRollDirection * corkscrewCompletionRollSpeed);
+      appliedRollValue -= (corkscrewDirection * corkscrewCompletionRollSpeed);
     } else if (Mathf.Abs(appliedRollValue) >= (maximumRotation + rollRotationOffset)){
-      appliedRollValue -= (appliedRollValue + (barrelRollDirection * rollRotationOffset));
+      appliedRollValue -= (appliedRollValue + (corkscrewDirection * rollRotationOffset));
       finishingACorkscrewLaunch = false;
       StopCoroutine("decreaseCorkscrewCompletionRollSpeed");
     }

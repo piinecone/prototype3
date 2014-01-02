@@ -128,10 +128,12 @@ public class FishMovement : MonoBehaviour {
   
   //void Update () {
   void LateUpdate () {
-    patienceLeft = 200f;
     if (debugging){
-      if (Time.time > 5f && Time.time < 5.5f && turtleController.followingFish.numberOfFollowingFish() < 10){
+      patienceLeft = 200f;
+      if (Time.time > 2f && Time.time < 4.5f && turtleController.followingFish.numberOfFollowingFish() < 10){
         turtleController.addFish(this);
+        transform.position = player.transform.position;
+        currentlyFollowingPlayer = true;
       }
     }
 

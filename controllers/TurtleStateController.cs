@@ -14,9 +14,11 @@ public class TurtleStateController : MonoBehaviour {
 
   private bool isNearSurface = false;
   private CapsuleCollider capsuleCollider;
+  private ParticleSystem particleEmitter;
 
   void Start () {
     capsuleCollider = GetComponent<CapsuleCollider>();
+    particleEmitter = GetComponent<ParticleSystem>();
   }
 
   void Update () {
@@ -91,5 +93,9 @@ public class TurtleStateController : MonoBehaviour {
     foreach (FishMovement fish in followingFish)
       meanDistance += Vector3.Distance(transform.position, fish.transform.position);
     return ((meanDistance / followingFish.Count) < 30f);
+  }
+
+  public void EmitBubbleTrail(){
+    particleEmitter.Play();
   }
 }

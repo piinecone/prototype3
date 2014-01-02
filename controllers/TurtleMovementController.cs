@@ -338,6 +338,7 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void performCorkscrewLaunch(){
     if (preparingForCorkscrewLaunch){
+      stateController.EmitBubbleTrail();
       if (corkscrewPreparationTimeLeft <= 0f){
         performingCorkscrewLaunch = true;
         preparingForCorkscrewLaunch = false;

@@ -78,13 +78,16 @@ public class TurtleMovementController : MonoBehaviour {
   // corkscrew launch
   private bool preparingForCorkscrewLaunch = false;
   private bool performingCorkscrewLaunch = false;
+  private bool finishingACorkscrewLaunch = false;
   private int corkscrewDirection = 0;
   private float corkscrewLaunchSpeed = 150f;
+  private float corkscrewPerformanceRollSpeed = 30f;
   private float corkscrewPreparationTimeLeft = 0;
   private float corkscrewPreparationDuration = 2f;
   private float corkscrewPerformanceTimeLeft = 0;
   private float corkscrewPerformanceDuration = .1f;
   private float corkscrewResidualSpeedDuration = 4f;
+  private float corkscrewCompletionRollSpeed = 10f;
 
   // timing
   private float rawRollInputTimeElapsed = 0f;
@@ -265,6 +268,12 @@ public class TurtleMovementController : MonoBehaviour {
   private void calculateAppliedRollValue(){
     if (performingBarrelRoll)
       calculateAppliedRollValueForBarrelRoll();
+    else if (preparingForCorkscrewLaunch)
+      calculateAppliedRollValueForCorkscrewPreparation();
+    else if (performingCorkscrewLaunch)
+      calculateAppliedRollValueForCorkscrewPerformance();
+    else if (finishingACorkscrewLaunch)
+      calculateAppliedRollValueForCorkscrewCompletion();
     else
       calculateAppliedRollValueForBanking();
   }
@@ -275,6 +284,25 @@ public class TurtleMovementController : MonoBehaviour {
     } else if (Mathf.Abs(appliedRollValue) >= (360f + rollRotationOffset)){
       appliedRollValue -= (appliedRollValue + (barrelRollDirection * rollRotationOffset));
       performingBarrelRoll = false;
+    }
+  }
+
+  private void calculateAppliedRollValueForCorkscrewPreparation(){
+    appliedRollValue -= (barrelRollDirection * barrelRollSpeed * 1.5f);
+  }
+
+  private void calculateAppliedRollValueForCorkscrewPerformance(){
+    appliedRollValue -= (barrelRollDirection * corkscrewPerformanceRollSpeed);
+  }
+
+  private void calculateAppliedRollValueForCorkscrewCompletion(){
+    float maximumRotation = 6f * 360f;
+    if (Mathf.Abs(appliedRollValue) < (maximumRotation + rollRotationOffset)){
+      appliedRollValue -= (barrelRollDirection * corkscrewCompletionRollSpeed);
+    } else if (Mathf.Abs(appliedRollValue) >= (maximumRotation + rollRotationOffset)){
+      appliedRollValue -= (appliedRollValue + (barrelRollDirection * rollRotationOffset));
+      finishingACorkscrewLaunch = false;
+      StopCoroutine("decreaseCorkscrewCompletionRollSpeed");
     }
   }
 
@@ -322,8 +350,11 @@ public class TurtleMovementController : MonoBehaviour {
 
     if (performingCorkscrewLaunch){
       if (corkscrewPerformanceTimeLeft <= 0f){
-        StartCoroutine(returnMaximumSwimSpeedToNormal(corkscrewResidualSpeedDuration));
         performingCorkscrewLaunch = false;
+        finishingACorkscrewLaunch = true;
+        corkscrewCompletionRollSpeed = corkscrewPerformanceRollSpeed / 4f;
+        StartCoroutine(returnMaximumSwimSpeedToNormal(corkscrewResidualSpeedDuration));
+        StartCoroutine("decreaseCorkscrewCompletionRollSpeed");
       } else {
         Mathf.SmoothStep(maximumSwimSpeed, defaultMaximumSwimSpeed, Time.deltaTime * 5f);
         underwaterMovementVectorInWorldSpace += (transform.forward).normalized * 500f;
@@ -337,6 +368,16 @@ public class TurtleMovementController : MonoBehaviour {
     while (step <= 1f) {
       step += Time.deltaTime / duration;
       maximumSwimSpeed = Mathf.SmoothStep(maximumSwimSpeed, defaultMaximumSwimSpeed, Mathf.SmoothStep(0f, 1f, step));
+      yield return true;
+    }
+  }
+
+  IEnumerator decreaseCorkscrewCompletionRollSpeed(){
+    float step = 0f;
+    float duration = corkscrewResidualSpeedDuration * 3f;
+    while (step <= 1f) {
+      step += Time.deltaTime / duration;
+      corkscrewCompletionRollSpeed = Mathf.SmoothStep(corkscrewCompletionRollSpeed, 3f, Mathf.SmoothStep(0f, 1f, step));
       yield return true;
     }
   }
@@ -422,8 +463,11 @@ public class TurtleMovementController : MonoBehaviour {
     if (stateController.PlayerHasFollowingFish() && stateController.FollowingFishAreNearby()){
       corkscrewDirection = barrelRollDirection;
       stateController.PerformCorkscrewLaunch(corkscrewDirection, corkscrewPreparationDuration);
-      preparingForCorkscrewLaunch = true;
       corkscrewPreparationTimeLeft = corkscrewPreparationDuration;
+      StopCoroutine("decreaseCorkscrewCompletionRollSpeed");
+      preparingForCorkscrewLaunch = true;
+      performingCorkscrewLaunch = false;
+      finishingACorkscrewLaunch = false;
     }
   }
 }

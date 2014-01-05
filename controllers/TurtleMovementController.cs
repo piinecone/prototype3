@@ -120,7 +120,7 @@ public class TurtleMovementController : MonoBehaviour {
       swim();
     else if (stateController.PlayerIsOnLand())
       walk(slope: defaultSlope, terrainRay: defaultTerrainRay);
-    else if (stateController.PlayerIsAirborne())
+    else if (isFalling())
       fall();
   }
 
@@ -572,7 +572,11 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private bool isSubmerging(){
-    return (stateController.PlayerIsSubmergingIntoWater());
+    return false; // (stateController.PlayerIsSubmergingIntoWater());
+  }
+
+  private bool isFalling(){
+    return (stateController.PlayerIsAirborne());
   }
 
   private void handleStateChange(){

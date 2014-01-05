@@ -20,6 +20,14 @@ public class TurtleStateController : MonoBehaviour {
   private CharacterController characterController;
   private string lastRecordedState;
 
+  // emerging
+  private bool beganToEmerge = false;
+  private float emergenceBeganAtPositionY = 0f;
+
+  // submerging
+  private bool beganToSubmerge = false;
+  private float submergenceBeganAtPositionY = 0f;
+
   void Start () {
     capsuleCollider = GetComponent<CapsuleCollider>();
     particleEmitter = GetComponent<ParticleSystem>();
@@ -27,7 +35,33 @@ public class TurtleStateController : MonoBehaviour {
     splashEmitter.active = false;
   }
 
-  void Update () {
+  void LateUpdate () {
+    checkForEmergence();
+    //checkForSubmergence();
+  }
+
+  private void checkForEmergence(){
+    if (!beganToEmerge && isTouchingTerrainFromSurface()){
+      beganToEmerge = true;
+      emergenceBeganAtPositionY = transform.position.y;
+    }
+
+    if (beganToEmerge && (transform.position.y + 1f) < waterSurfaceLevel)
+      beganToEmerge = false;
+
+    if (beganToEmerge && (transform.position.y - 2f) > waterSurfaceLevel)
+      beganToEmerge = false;
+  }
+
+  private void checkForSubmergence(){
+    if (!beganToSubmerge && isApproachingWaterSurfaceFromAbove()){
+      beganToSubmerge = true;
+      beganToEmerge = false;
+      submergenceBeganAtPositionY = transform.position.y;
+    }
+
+    if (beganToSubmerge && transform.position.y < waterSurfaceLevel)
+      beganToSubmerge = false;
   }
 
   public string LastRecordedState(){
@@ -35,13 +69,17 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   public bool PlayerIsEmergingFromWater(){
-    return isTouchingTerrainFromSurface();
+    return beganToEmerge;
+  }
+
+  public bool PlayerIsSubmergingIntoWater(){
+    return beganToSubmerge;
   }
 
   public bool PlayerIsUnderwater(){ // the player is completely submerged
     // y = y + the distance to the top of the turtle's shell
     //return (transform.position.y <= waterSurfaceLevel && !isTouchingTerrainFromSurface());
-    if (transform.position.y <= waterSurfaceLevel){
+    if (transform.position.y <= waterSurfaceLevel && !isTouchingTerrainFromSurface()){
       lastRecordedState = "underwater";
       return true;
     }
@@ -60,7 +98,7 @@ public class TurtleStateController : MonoBehaviour {
   public bool PlayerIsOnLand(){ // the player is completely on land
     // y = y - the distance to the turtle's underside / limbs
     // and player is "above" terrain, not water
-    if (characterController.isGrounded && transform.position.y > waterSurfaceLevel){
+    if (playerIsTouchingTerrain() && (transform.position.y - .6f) > waterSurfaceLevel){
       lastRecordedState = "grounded";
       return true;
     }
@@ -68,7 +106,7 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   public bool PlayerIsAirborne(){
-    if (!characterController.isGrounded && transform.position.y > waterSurfaceLevel){
+    if (PlayerIsNotTouchingAnything() && transform.position.y > waterSurfaceLevel){
       lastRecordedState = "airborne";
       return true;
     }
@@ -83,16 +121,78 @@ public class TurtleStateController : MonoBehaviour {
     return isNearSurface;
   }
 
-  private bool isTouchingTerrainFromSurface(){
-    if (transform.position.y < (waterSurfaceLevel - 2f)) return false;
+  public bool PlayerIsNotTouchingAnything(){
+    float distance = 2f; // FIXME may want to scale this back a touch
+    RaycastHit hit;
+    Vector3 downRay = transform.TransformDirection(Vector3.down);
+    if (Physics.Raycast(transform.position, downRay, out hit, distance))
+      return false;
+    return true;
+  }
 
-    float distance = 6f;
+  public bool PlayerIsNotTouchingWater(){
+    float distance = 2f; // FIXME may want to scale this back a touch
+    RaycastHit hit;
+    Vector3 downRay = transform.TransformDirection(Vector3.down);
+    if (Physics.Raycast(transform.position, downRay, out hit, distance))
+      return (hit.transform.gameObject.tag != "Water");
+    return false;
+  }
+
+  private bool isTouchingTerrainFromSurface(){
+    if (transform.position.y < (waterSurfaceLevel - 2f) || transform.position.y > (waterSurfaceLevel + 1f)) return false;
+
+    return (isFacingNearbyTerrain() || isAlignedWithTerrain());
+  }
+
+  private bool isFacingNearbyTerrain(){
+    float distance = 3f;
     RaycastHit hit;
     Vector3 forwardRay = transform.forward * distance;
     if (Physics.Raycast(transform.position, forwardRay, out hit, distance))
       return (hit.normal.y > .3);
     else
       return false;
+  }
+
+  private bool isAlignedWithTerrain(){
+    float distance = 1.5f;
+    RaycastHit[] hits;
+    Vector3 ray = transform.forward * distance;
+    ray.y = 0;
+    hits = Physics.RaycastAll(transform.position, ray, distance);
+    foreach (RaycastHit hit in hits)
+      if (hit.transform.gameObject.tag == "Terrain") return true;
+    return false;
+  }
+
+  private bool playerIsTouchingTerrain(){
+    float distance = 5f;
+    RaycastHit[] hits;
+    Vector3 ray = Vector3.down * distance;
+    hits = Physics.RaycastAll(transform.position, ray, distance);
+    foreach (RaycastHit hit in hits)
+      if (hit.transform.gameObject.tag == "Terrain") return true;
+    return false;
+  }
+
+  private bool isApproachingWaterSurfaceFromAbove(){
+    if (transform.position.y < (waterSurfaceLevel - 1f) || transform.position.y > (waterSurfaceLevel + 1f)) return false;
+
+    return (isFacingNearbyWater() || isAlignedWithNearbyWater());
+  }
+
+  private bool isFacingNearbyWater(){
+    float distance = 6f;
+    RaycastHit hit;
+    Vector3 forwardRay = transform.forward * distance;
+    if (Physics.Raycast(transform.position, forwardRay, out hit, distance))
+      return (hit.transform.gameObject.tag == "Water");
+    return false;
+  }
+
+  private bool isAlignedWithNearbyWater(){
+    return false;
   }
 
   public bool PlayerHasFollowingFish(){

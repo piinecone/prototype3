@@ -437,7 +437,6 @@ public class TurtleMovementController : MonoBehaviour {
     animator.SetBool("Underwater", false);
     characterController.slopeLimit = 120f;
     Vector3 terrainRay = transform.TransformDirection(Vector3.forward);
-    terrainRay.y = 0f;
     alignPlayerWithTerrain(terrainRay: terrainRay);
     constrainPlayerMovementToEmergence();
   }
@@ -447,7 +446,7 @@ public class TurtleMovementController : MonoBehaviour {
     positionVector = new Vector3(0, 0, Input.GetAxis("Vertical"));
     positionVector = transform.TransformDirection(positionVector);
     positionVector *= speedOnLand;
-    if (transform.position.y > waterSurfaceLevel) positionVector.y -= gravity * Time.deltaTime;
+    positionVector.y -= gravity * Time.deltaTime;
   }
 
   private void submerge(){
@@ -497,7 +496,6 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void fall(){
-    Debug.Log("falling");
     animator.SetBool("Underwater", false);
     gravity = 80f;
     positionVector.y -= gravity * Time.deltaTime;
@@ -510,10 +508,15 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private float rotationSpeedInMedium(){
-    if (isSwimming()) return rotationSpeedInWater();
+    if (isEmerging()) return rotationSpeedWhileEmerging();
+    else if (isUnderwater()) return rotationSpeedInWater();
     else if (stateController.PlayerIsOnLand()) return rotationSpeedOnLand();
-    else if (stateController.PlayerIsAirborne()) return rotationSpeedInAir();
+    else if (isFalling()) return rotationSpeedInAir();
     else return 1f;
+  }
+
+  private float rotationSpeedWhileEmerging(){
+    return 2f * Time.deltaTime;
   }
 
   private float rotationSpeedInWater(){

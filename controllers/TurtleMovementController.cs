@@ -447,7 +447,7 @@ public class TurtleMovementController : MonoBehaviour {
     positionVector = new Vector3(0, 0, Input.GetAxis("Vertical"));
     positionVector = transform.TransformDirection(positionVector);
     positionVector *= speedOnLand;
-    positionVector.y -= gravity * Time.deltaTime;
+    if (transform.position.y > waterSurfaceLevel) positionVector.y -= gravity * Time.deltaTime;
   }
 
   private void submerge(){

@@ -112,8 +112,12 @@ public class TurtleMovementController : MonoBehaviour {
     mapInputParameters();
     handleStateChange();
 
-    if (stateController.PlayerIsInWater())
-      handleMovementInWater();
+    if (isEmerging())
+      emerge();
+    else if (isSubmerging())
+      submerge();
+    else if (isUnderwater())
+      swim();
     else if (stateController.PlayerIsOnLand())
       walk(slope: defaultSlope, terrainRay: defaultTerrainRay);
     else if (stateController.PlayerIsAirborne())
@@ -127,7 +131,7 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void updateTransformPositionAndRotation(){
     characterController.Move(positionVector * Time.deltaTime);
-    if (isSwimming()) adjustPlayerPositionNearWaterSurface();
+    if (!isEmerging() && isSwimming()) adjustPlayerPositionNearWaterSurface();
     transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInMedium());
     lastLookDirectionYValue = transform.forward.y;
   }
@@ -231,13 +235,6 @@ public class TurtleMovementController : MonoBehaviour {
 
   private bool bankingForLessThan(float seconds){
     return (rawRollInputTimeElapsed <= seconds);
-  }
-
-  private void handleMovementInWater(){
-    if (stateController.PlayerIsEmergingFromWater())
-      walk(slope: 120f, terrainRay: Vector3.forward);
-    else if (stateController.PlayerIsUnderwater())
-      swim();
   }
 
   private void swim(){
@@ -436,10 +433,41 @@ public class TurtleMovementController : MonoBehaviour {
     }
   }
 
+  private void emerge(){
+    animator.SetBool("Underwater", false);
+    characterController.slopeLimit = 120f;
+    Vector3 terrainRay = transform.TransformDirection(Vector3.forward);
+    terrainRay.y = 0f;
+    alignPlayerWithTerrain(terrainRay: terrainRay);
+    constrainPlayerMovementToEmergence();
+  }
+
+  private void constrainPlayerMovementToEmergence(){
+    gravity = 80f;
+    positionVector = new Vector3(0, 0, Input.GetAxis("Vertical"));
+    positionVector = transform.TransformDirection(positionVector);
+    positionVector *= speedOnLand;
+    positionVector.y -= gravity * Time.deltaTime;
+  }
+
+  private void submerge(){
+    animator.SetBool("Underwater", false);
+    characterController.slopeLimit = 120f;
+    alignPlayerWithTerrain(terrainRay: transform.TransformDirection(Vector3.down));
+    constrainPlayerMovementToSubmergence();
+  }
+
+  private void constrainPlayerMovementToSubmergence(){
+    positionVector = new Vector3(0, 0, Input.GetAxis("Vertical"));
+    positionVector = transform.TransformDirection(positionVector);
+    positionVector *= speedOnLand;
+  }
+
   private void walk(float slope, Vector3 terrainRay){
     animator.SetBool("Underwater", false);
     slope = slope == null ? 90f : slope;
     terrainRay = terrainRay == null ? Vector3.down : terrainRay;
+    terrainRay = transform.TransformDirection(terrainRay);
     characterController.slopeLimit = slope;
     alignPlayerWithTerrain(terrainRay: terrainRay);
     movePlayerOnLand();
@@ -452,23 +480,24 @@ public class TurtleMovementController : MonoBehaviour {
   private void movePlayerOnLand(){
     gravity = 80f; // FIXME this is weird!
     positionVector = new Vector3(0, 0, Input.GetAxis("Vertical"));
-    positionVector = transform.TransformDirection(positionVector) * speedOnLand;
+    positionVector = transform.TransformDirection(positionVector);
     positionVector.y -= gravity * Time.deltaTime;
+    positionVector *= speedOnLand;
   }
 
   private Quaternion rotationForAlignmentWithTerrain(Vector3 terrainRay){
     RaycastHit hit;
     float terrainCheckDistance = 8f;
-    Vector3 terrainCheckRay = transform.TransformDirection(terrainRay);
     Vector3 normal = transform.TransformDirection(Vector3.up);
     Vector3 lookDirection = transform.forward + transform.TransformDirection(new Vector3(Input.GetAxis("Horizontal"), 0, 0));
-    if (Physics.Raycast(transform.position, terrainCheckRay, out hit, terrainCheckDistance))
+    if (Physics.Raycast(transform.position, terrainRay, out hit, terrainCheckDistance))
       normal = hit.normal;
     Quaternion rotation = Quaternion.FromToRotation(transform.up, normal);
     return (rotation * Quaternion.LookRotation(lookDirection));
   }
 
   private void fall(){
+    Debug.Log("falling");
     animator.SetBool("Underwater", false);
     gravity = 80f;
     positionVector.y -= gravity * Time.deltaTime;
@@ -527,8 +556,20 @@ public class TurtleMovementController : MonoBehaviour {
     }
   }
 
+  private bool isUnderwater(){
+    return (stateController.PlayerIsUnderwater());
+  }
+
   private bool isSwimming(){
     return (stateController.PlayerIsInWater());
+  }
+
+  private bool isEmerging(){
+    return (stateController.PlayerIsEmergingFromWater());
+  }
+
+  private bool isSubmerging(){
+    return (stateController.PlayerIsSubmergingIntoWater());
   }
 
   private void handleStateChange(){

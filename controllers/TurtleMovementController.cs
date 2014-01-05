@@ -47,11 +47,12 @@ public class TurtleMovementController : MonoBehaviour {
   private float bankThresholdInSeconds = 1.35f;
 
   // walk
-  Vector3 defaultTerrainRay = Vector3.down;
-  float defaultSlope = 90f;
-  private Vector3 moveDirection = Vector3.zero;
   [SerializeField]
   private float walkSpeedMultiplier = 5f;
+  private Vector3 defaultTerrainRay = Vector3.down;
+  float defaultSlope = 90f;
+  private Vector3 moveDirection = Vector3.zero;
+  private float speedOnLand = 10f;
 
   // surfacing
   float lastLookDirectionYValue = 0f;
@@ -127,7 +128,7 @@ public class TurtleMovementController : MonoBehaviour {
   private void updateTransformPositionAndRotation(){
     characterController.Move(positionVector * Time.deltaTime);
     if (isSwimming()) adjustPlayerPositionNearWaterSurface();
-    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInMedium()); // FIXME in medium
+    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInMedium());
     lastLookDirectionYValue = transform.forward.y;
   }
 
@@ -179,10 +180,14 @@ public class TurtleMovementController : MonoBehaviour {
     animator.SetFloat("Speed", rawForwardValue);
     animator.SetFloat("Direction", rawHorizontalValue);
 
-    if (rawForwardValue > .4f)
-      animator.speed = Mathf.Max(5f * (1 - rawForwardValue), 1.6f);
-    else
-      animator.speed = 1.2f;
+    if (isSwimming()){
+      if (rawForwardValue > .4f)
+        animator.speed = Mathf.Max(5f * (1 - rawForwardValue), 1.6f);
+      else
+        animator.speed = 1.2f;
+    } else {
+      animator.speed = 1.9f;
+    }
   }
 
   private void captureBarrelRoll(){
@@ -441,21 +446,19 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void alignPlayerWithTerrain(Vector3 terrainRay){
-    Quaternion targetRotation = rotationForAlignmentWithTerrain(terrainRay: terrainRay);
-    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, terrainAlignmentRotationSpeed());
+    targetRotation = rotationForAlignmentWithTerrain(terrainRay: terrainRay);
   }
 
   private void movePlayerOnLand(){
     gravity = 80f; // FIXME this is weird!
-    moveDirection = new Vector3(0, 0, Input.GetAxis("Vertical"));
-    moveDirection = transform.TransformDirection(moveDirection);
-    moveDirection.y -= gravity * Time.deltaTime;
-    characterController.Move(moveDirection * Time.deltaTime);
+    positionVector = new Vector3(0, 0, Input.GetAxis("Vertical"));
+    positionVector = transform.TransformDirection(positionVector) * speedOnLand;
+    positionVector.y -= gravity * Time.deltaTime;
   }
 
   private Quaternion rotationForAlignmentWithTerrain(Vector3 terrainRay){
     RaycastHit hit;
-    float terrainCheckDistance = 6f;
+    float terrainCheckDistance = 8f;
     Vector3 terrainCheckRay = transform.TransformDirection(terrainRay);
     Vector3 normal = transform.TransformDirection(Vector3.up);
     Vector3 lookDirection = transform.forward + transform.TransformDirection(new Vector3(Input.GetAxis("Horizontal"), 0, 0));
@@ -479,9 +482,9 @@ public class TurtleMovementController : MonoBehaviour {
 
   private float rotationSpeedInMedium(){
     if (isSwimming()) return rotationSpeedInWater();
-    if (stateController.PlayerIsAirborne()) return rotationSpeedInAir();
-    // FIXME on land
-    return 5f;
+    else if (stateController.PlayerIsOnLand()) return rotationSpeedOnLand();
+    else if (stateController.PlayerIsAirborne()) return rotationSpeedInAir();
+    else return 1f;
   }
 
   private float rotationSpeedInWater(){
@@ -490,6 +493,10 @@ public class TurtleMovementController : MonoBehaviour {
 
   private float rotationSpeedInAir(){
     return 20f * Time.deltaTime;
+  }
+
+  private float rotationSpeedOnLand(){
+    return 4f * Time.deltaTime;
   }
 
   private float currentRotateSpeed(){

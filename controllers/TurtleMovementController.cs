@@ -284,7 +284,7 @@ public class TurtleMovementController : MonoBehaviour {
     if (transform.position.y + .6f >= waterSurfaceLevel && lookDirection.y >= 0f){
       lookDirection.y = lastLookDirectionYValue;
       Vector3 adjustedLookDirection = new Vector3(lookDirection.x, .125f, lookDirection.z);
-      lookDirection = Vector3.Lerp(lookDirection, adjustedLookDirection, 10f * Time.deltaTime);
+      lookDirection = Vector3.Lerp(lookDirection, adjustedLookDirection, 30f * Time.deltaTime);
     }
 
     return lookDirection;

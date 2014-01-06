@@ -55,7 +55,12 @@ public class TurtleMovementController : MonoBehaviour {
   private float speedOnLand = 10f;
 
   // surfacing
-  float lastLookDirectionYValue = 0f;
+  private float lastLookDirectionYValue = 0f;
+
+  // submerging
+  private bool isCurrentlySubmerging = false;
+  private float submergeTimeLeft = 0f;
+  private float submergeDuration = 1f;
 
   // input
   private Vector3 mouseInput;
@@ -112,12 +117,10 @@ public class TurtleMovementController : MonoBehaviour {
     mapInputParameters();
     handleStateChange();
 
-    if (isEmerging())
-      emerge();
-    else if (isSubmerging())
-      submerge();
-    else if (isUnderwater())
+    if (isCurrentlySubmerging || isUnderwater())
       swim();
+    else if (isEmerging())
+      emerge();
     else if (stateController.PlayerIsOnLand())
       walk(slope: defaultSlope, terrainRay: defaultTerrainRay);
     else if (isFalling())
@@ -130,8 +133,9 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void updateTransformPositionAndRotation(){
+    if (isCurrentlySubmerging) adjustPlayerPositionForSubmersion();
     characterController.Move(positionVector * Time.deltaTime);
-    if (!isEmerging() && isSwimming()) adjustPlayerPositionNearWaterSurface();
+    if (!isEmerging() && !isCurrentlySubmerging && isSwimming()) adjustPlayerPositionNearWaterSurface();
     transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeedInMedium());
     lastLookDirectionYValue = transform.forward.y;
   }
@@ -141,6 +145,11 @@ public class TurtleMovementController : MonoBehaviour {
     float magnitude = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed).magnitude;
     if (isNearSurface() && (transform.position.y + .5f) >= waterSurfaceLevel && angle <= 90f && magnitude <= defaultMaximumSwimSpeed)
       transform.position = new Vector3(transform.position.x, waterSurfaceLevel - .5f, transform.position.z);
+  }
+
+  private void adjustPlayerPositionForSubmersion(){
+    positionVector = transform.forward * 20f;
+    positionVector.y = Mathf.Min(waterSurfaceLevel - 2f, positionVector.y - 1f);
   }
 
   private void mapInputParameters(){
@@ -165,7 +174,7 @@ public class TurtleMovementController : MonoBehaviour {
 
     adjustRawInputValues();
     updateAnimatorStates();
-    captureBarrelRoll();
+    if (isUnderwater()) captureBarrelRoll();
   }
 
   private void adjustRawInputValues(){
@@ -259,7 +268,7 @@ public class TurtleMovementController : MonoBehaviour {
   private Quaternion determineAirborneRotation(){
     Quaternion rotation = Quaternion.identity;
     calculateAppliedRollValue();
-    Quaternion lookRotation = Quaternion.LookRotation(Vector3.down);
+    Quaternion lookRotation = Quaternion.LookRotation(transform.TransformDirection(Vector3.down));
     float x = transform.rotation.eulerAngles.x + 2f;
     if (x < 90f && x > 45f) x = 45f;
     rotation.eulerAngles = new Vector3(x, transform.rotation.eulerAngles.y, appliedRollValue);
@@ -273,6 +282,7 @@ public class TurtleMovementController : MonoBehaviour {
     Vector3 lookDirection = mouseRay.direction;
     lookDirection.y *= currentYAxisMultiplier();
     lookDirection = adjustedLookDirectionNearWaterSurface(lookDirection);
+    lookDirection = adjustedLookDirectionDuringSubmersion(lookDirection);
 
     return Quaternion.LookRotation(lookDirection);
   }
@@ -284,6 +294,12 @@ public class TurtleMovementController : MonoBehaviour {
       lookDirection = Vector3.Lerp(lookDirection, adjustedLookDirection, 30f * Time.deltaTime);
     }
 
+    return lookDirection;
+  }
+
+  private Vector3 adjustedLookDirectionDuringSubmersion(Vector3 lookDirection){
+    if (isCurrentlySubmerging)
+      return new Vector3(lookDirection.x, -.125f, lookDirection.z);
     return lookDirection;
   }
 
@@ -354,8 +370,16 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void accountForSpecialMoves(){
+    if (isCurrentlySubmerging) continueSubmersion();
     if (performingBarrelRoll && !preparingForCorkscrewLaunch) underwaterMovementVectorInWorldSpace += rollPositionVector;
     if (preparingForCorkscrewLaunch || performingCorkscrewLaunch) performCorkscrewLaunch();
+  }
+
+  private void continueSubmersion(){
+    if (submergeTimeLeft > 0f)
+      submergeTimeLeft -= Time.deltaTime;
+    else
+      isCurrentlySubmerging = false;
   }
 
   private void performCorkscrewLaunch(){
@@ -434,6 +458,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void emerge(){
+    appliedRollValue = 0f;
     animator.SetBool("Underwater", false);
     characterController.slopeLimit = 120f;
     Vector3 terrainRay = transform.TransformDirection(Vector3.forward);
@@ -463,6 +488,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void walk(float slope, Vector3 terrainRay){
+    appliedRollValue = 0f;
     animator.SetBool("Underwater", false);
     slope = slope == null ? 90f : slope;
     terrainRay = terrainRay == null ? Vector3.down : terrainRay;
@@ -504,7 +530,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private float terrainAlignmentRotationSpeed(){
-    return (currentRotateSpeed() * .05f * Time.deltaTime);
+    return (20f * .05f * Time.deltaTime);
   }
 
   private float rotationSpeedInMedium(){
@@ -515,12 +541,13 @@ public class TurtleMovementController : MonoBehaviour {
     else return 1f;
   }
 
+  // FIXME parameterize the following values
   private float rotationSpeedWhileEmerging(){
     return 2f * Time.deltaTime;
   }
 
   private float rotationSpeedInWater(){
-    return currentRotateSpeed() * Time.deltaTime;
+    return 20f * Time.deltaTime;
   }
 
   private float rotationSpeedInAir(){
@@ -529,10 +556,6 @@ public class TurtleMovementController : MonoBehaviour {
 
   private float rotationSpeedOnLand(){
     return 4f * Time.deltaTime;
-  }
-
-  private float currentRotateSpeed(){
-    return 20f;
   }
 
   private float currentYAxisMultiplier(){
@@ -584,5 +607,9 @@ public class TurtleMovementController : MonoBehaviour {
     lastRecordedState = stateController.LastRecordedState();
     if (lastRecordedState == "underwater" && previousState == "airborne")
       didJustSplashIntoWater = true;
+    if (lastRecordedState == "underwater" && previousState == "grounded"){
+      isCurrentlySubmerging = true;
+      submergeTimeLeft = submergeDuration;
+    }
   }
 }

@@ -27,20 +27,21 @@ public class TurtleStateController : MonoBehaviour {
     splashEmitter.active = false;
   }
 
-  void LateUpdate () {
-  }
-
   public string LastRecordedState(){
     return lastRecordedState;
   }
 
   public bool PlayerIsEmergingFromWater(){
-    return (isApproachingTerrainNearTheSurface());
+    if (isApproachingTerrainNearTheSurface() && !isApproachingWater()){
+      lastRecordedState = "grounded";
+      return true;
+    }
+    return false;
   }
 
   public bool PlayerIsUnderwater(){ // the player is completely submerged
     // y = y + the distance to the top of the turtle's shell
-    if (transform.position.y <= waterSurfaceLevel && !isApproachingTerrainNearTheSurface()){
+    if (transform.position.y - .6f <= waterSurfaceLevel && !isApproachingTerrainNearTheSurface()){
       lastRecordedState = "underwater";
       return true;
     }
@@ -110,13 +111,37 @@ public class TurtleStateController : MonoBehaviour {
     return false;
   }
 
+  private bool isApproachingWater(){
+    //if (transform.position.y + 1.5f < waterSurfaceLevel || transform.position.y - 1.5f > waterSurfaceLevel) return false;
+    return (lookingDownAndNotFacingTerrain());
+  }
+
+  private bool lookingDownAndNotFacingTerrain(){
+    float distance = 4f;
+    bool hitRecorded = false;
+    RaycastHit hit;
+    Vector3 ray = transform.forward * distance;
+    Debug.DrawRay(transform.position, ray, Color.red);
+    hitRecorded = Physics.Raycast(transform.position, ray, out hit, distance);
+    return (ray.z < 0f && (hitRecorded == false || (hit.transform.gameObject.tag == "Water" || hit.transform.gameObject.tag == "SurfaceCollider")));
+  }
+
+  private bool facingAndTouchingWater(){
+    float distance = 5f;
+    RaycastHit hit;
+    Vector3 ray = transform.forward * distance;
+    Debug.DrawRay(transform.position, ray, Color.red);
+    return (ray.z < 0f && Physics.Raycast(transform.position, ray, out hit, distance));
+  }
+
   private bool isApproachingTerrainNearTheSurface(){
-    // return if fully submerged or emerged
-    if (transform.position.y + 2f < waterSurfaceLevel || transform.position.y - 2f > waterSurfaceLevel) return false;
+    // fully submerged / emerged
+    if (transform.position.y + 1f < waterSurfaceLevel || transform.position.y - 1f > waterSurfaceLevel) return false;
 
     return (touchingNearbyTerrain());
   }
 
+  // FIXME make this generic and reusable
   private bool touchingNearbyTerrain(){
     float distance = 4f;
     int hitCount = 0;
@@ -139,7 +164,7 @@ public class TurtleStateController : MonoBehaviour {
     foreach (RaycastHit hit in downHits)
       if (hit.transform.gameObject.tag == "Terrain") hitCount++;
 
-    return (hitCount >= 1);
+    return (hitCount >= 2);
   }
 
   private bool isAlignedWithNearbyWater(){

@@ -61,6 +61,7 @@ public class TurtleMovementController : MonoBehaviour {
   private bool isCurrentlySubmerging = false;
   private float submergeTimeLeft = 0f;
   private float submergeDuration = 1f;
+  private float submersionDirection = 1f;
 
   // input
   private Vector3 mouseInput;
@@ -148,7 +149,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void adjustPlayerPositionForSubmersion(){
-    positionVector = transform.forward * 20f;
+    positionVector = transform.forward * 20f * submersionDirection;
     positionVector.y = Mathf.Min(waterSurfaceLevel - 2f, positionVector.y - 1f);
   }
 
@@ -610,6 +611,8 @@ public class TurtleMovementController : MonoBehaviour {
     if (lastRecordedState == "underwater" && previousState == "grounded"){
       isCurrentlySubmerging = true;
       submergeTimeLeft = submergeDuration;
+      float angle = Vector3.Angle(transform.forward, Vector3.up);
+      submersionDirection = angle <= 90f ? -1f : 1f;
     }
   }
 }

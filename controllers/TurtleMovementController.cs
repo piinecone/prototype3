@@ -449,7 +449,7 @@ public class TurtleMovementController : MonoBehaviour {
     if (didJustSplashIntoWater){
       forwardAccelerationUnderwater = 0f;
       stateController.EmitSplashTrail(positionVector * -1f);
-      if (positionVector.magnitude < 2f){
+      if (positionVector.magnitude < 5f){
         didJustSplashIntoWater = false;
         stateController.StopSplashTrailEmission();
       }

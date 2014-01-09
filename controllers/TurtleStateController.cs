@@ -10,17 +10,28 @@ public class TurtleStateController : MonoBehaviour {
   [SerializeField]
   private float waterSurfaceLevel;
   [SerializeField]
+  private UnderWater environment;
+  [SerializeField]
   private List<FishMovement> followingFish; // FIXME these should be FishControllers
   [SerializeField]
   private ParticleSystem splashEmitter;
 
-  private bool isNearSurface = false;
   private CapsuleCollider capsuleCollider;
   private ParticleSystem particleEmitter;
   private CharacterController characterController;
   private string lastRecordedState;
 
-  void Start () {
+  // surfacing
+  private bool isNearSurface = false;
+  private bool isCollidingWithBodyOfWater = false;
+  private bool shouldLockVerticalPosition = false;
+  private float verticalPositionMaximum = 0f;
+
+  // environmental forces
+  private bool shouldApplyEnvironmentalForce = false;
+  private Vector3 environmentalForceVector = Vector3.zero;
+
+  void Start() {
     capsuleCollider = GetComponent<CapsuleCollider>();
     particleEmitter = GetComponent<ParticleSystem>();
     characterController = GetComponent<CharacterController>();
@@ -205,6 +216,19 @@ public class TurtleStateController : MonoBehaviour {
 
   public float VerticalPositionMaximum(){
     return verticalPositionMaximum;
+  }
+
+  public void ApplyEnvironmentalForce(bool state, Vector3 forceVector){
+    shouldApplyEnvironmentalForce = state;
+    environmentalForceVector = forceVector;
+  }
+
+  public bool ShouldApplyEnvironmentalForce(){
+    return shouldApplyEnvironmentalForce;
+  }
+
+  public Vector3 EnvironmentalForceVector(){
+    return environmentalForceVector;
   }
 
   // FIXME replace FishMovement with FishController

@@ -370,8 +370,21 @@ public class TurtleMovementController : MonoBehaviour {
     calculateForwardAccelerationUnderwater();
     underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
     accountForSpecialMoves();
+    Vector3 thrustVector = clampUnderwaterMovementVector();
+    thrustVector = applyEnvironmentalForces(thrustVector);
 
+    return thrustVector;
+  }
+
+  private Vector3 clampUnderwaterMovementVector(){
     return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed);
+  }
+
+  private Vector3 applyEnvironmentalForces(Vector3 thrustVector){
+    if (stateController.ShouldApplyEnvironmentalForce())
+      return (thrustVector + stateController.EnvironmentalForceVector());
+    else
+      return thrustVector;
   }
 
   private void accountForSpecialMoves(){

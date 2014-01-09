@@ -40,8 +40,7 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   public bool PlayerIsUnderwater(){ // the player is completely submerged
-    // y = y + the distance to the top of the turtle's shell
-    if (transform.position.y - .6f <= waterSurfaceLevel && !isApproachingTerrainNearTheSurface()){
+    if (playerIsPartiallySubmerged() && !isApproachingTerrainNearTheSurface()){
       lastRecordedState = "underwater";
       return true;
     }
@@ -50,7 +49,7 @@ public class TurtleStateController : MonoBehaviour {
 
   public bool PlayerIsInWater(){ // the player is at least partially submerged
     // y = y - the distance to the turtle's underside / limbs
-    if (transform.position.y - .6f <= waterSurfaceLevel){
+    if (playerIsPartiallySubmerged()){
       lastRecordedState = "underwater";
       return true;
     }
@@ -60,7 +59,7 @@ public class TurtleStateController : MonoBehaviour {
   public bool PlayerIsOnLand(){ // the player is completely on land
     // y = y - the distance to the turtle's underside / limbs
     // and player is "above" terrain, not water
-    if (playerIsTouchingTerrain() && (transform.position.y - .6f) > waterSurfaceLevel){
+    if (playerIsTouchingTerrain() && playerHasCompletelyEmerged(range: .6f)){
       lastRecordedState = "grounded";
       return true;
     }
@@ -68,19 +67,27 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   public bool PlayerIsAirborne(){
-    if (PlayerIsNotTouchingAnything() && transform.position.y > waterSurfaceLevel){
+    if (PlayerIsNotTouchingAnything() && playerHasCompletelyEmerged(range: 0f)){
       lastRecordedState = "airborne";
       return true;
     }
     return false;
   }
 
-  public void PlayerIsNearSurface(bool value=true){
-    isNearSurface = value;
-  }
-
   public bool IsPlayerNearSurface(){
     return isNearSurface;
+  }
+
+  private bool playerIsCompletelySubmerged(float range){
+    return (transform.position.y + range <= waterSurfaceLevel);
+  }
+
+  private bool playerHasCompletelyEmerged(float range){
+    return (transform.position.y - range > waterSurfaceLevel);
+  }
+
+  private bool playerIsPartiallySubmerged(){
+    return (isCollidingWithBodyOfWater || transform.position.y - .6f <= waterSurfaceLevel);
   }
 
   public bool PlayerIsNotTouchingAnything(){
@@ -112,7 +119,6 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   private bool isApproachingWater(){
-    //if (transform.position.y + 1.5f < waterSurfaceLevel || transform.position.y - 1.5f > waterSurfaceLevel) return false;
     return (lookingDownAndNotFacingTerrain());
   }
 
@@ -136,7 +142,7 @@ public class TurtleStateController : MonoBehaviour {
 
   private bool isApproachingTerrainNearTheSurface(){
     // fully submerged / emerged
-    if (transform.position.y + 1f < waterSurfaceLevel || transform.position.y - 1f > waterSurfaceLevel) return false;
+    if (playerIsCompletelySubmerged(range: 1f) || playerHasCompletelyEmerged(range: 1f)) return false;
 
     return (touchingNearbyTerrain());
   }
@@ -167,16 +173,38 @@ public class TurtleStateController : MonoBehaviour {
     return (hitCount >= 2);
   }
 
-  private bool isAlignedWithNearbyWater(){
-    return false;
-  }
-
   public bool PlayerHasFollowingFish(){
     return (followingFish.Count > 0);
   }
 
   public int NumberOfFollowingFish(){
     return followingFish.Count;
+  }
+
+  public void PlayerIsNearSurface(bool value=true){
+    isNearSurface = value;
+  }
+
+  public void PlayerIsCollidingWithBodyOfWater(bool value=true){
+    isCollidingWithBodyOfWater = value;
+
+    if (isCollidingWithBodyOfWater)
+      environment.SwitchToUnderwaterEnvironment();
+    else
+      environment.SwitchToAboveWaterEnvironment();
+  }
+
+  public void LockVerticalPosition(bool value=true, float position=0f){
+    shouldLockVerticalPosition = value;
+    verticalPositionMaximum = position;
+  }
+
+  public bool ShouldLockVerticalPosition(){
+    return shouldLockVerticalPosition;
+  }
+
+  public float VerticalPositionMaximum(){
+    return verticalPositionMaximum;
   }
 
   // FIXME replace FishMovement with FishController

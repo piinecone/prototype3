@@ -142,10 +142,14 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void adjustPlayerPositionNearWaterSurface(){
-    float angle = Vector3.Angle(positionVector, Vector3.up);
-    float magnitude = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed).magnitude;
-    if (isNearSurface() && (transform.position.y + .5f) >= waterSurfaceLevel && angle <= 90f && magnitude <= defaultMaximumSwimSpeed)
-      transform.position = new Vector3(transform.position.x, waterSurfaceLevel - .5f, transform.position.z);
+    if (stateController.ShouldLockVerticalPosition()){
+      transform.position = new Vector3(transform.position.x, Mathf.Min(transform.position.y, stateController.VerticalPositionMaximum()), transform.position.z);
+    } else {
+      float angle = Vector3.Angle(positionVector, Vector3.up);
+      float magnitude = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed).magnitude;
+      if (isNearSurface() && (transform.position.y + .5f) >= waterSurfaceLevel && angle <= 90f && magnitude <= defaultMaximumSwimSpeed)
+        transform.position = new Vector3(transform.position.x, waterSurfaceLevel - .5f, transform.position.z);
+    }
   }
 
   private void adjustPlayerPositionForSubmersion(){

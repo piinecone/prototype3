@@ -20,7 +20,7 @@ public class RiverBehavior : MonoBehaviour {
 
   void Start () {
     forceVector = transform.forward.normalized * force;
-    forceVector.y = 5f;
+    forceVector.y = 4f;
   }
 
   void FixedUpdate(){
@@ -90,10 +90,6 @@ public class RiverBehavior : MonoBehaviour {
   void OnTriggerExit(Collider collider){
     if (collider.gameObject.tag == "Player")
       colliding = false;
-  }
-
-  public int LegName(){
-    return legNumber;
   }
 
   private void setAsRelevantBodyOfWater(){

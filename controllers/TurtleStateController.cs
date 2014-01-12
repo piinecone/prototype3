@@ -99,7 +99,7 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   private bool playerHasCompletelyEmerged(float range){
-    return (transform.position.y - range > waterSurfaceLevel);
+    return (transform.position.y - range > waterSurfaceLevel && !isCollidingWithBodyOfWater);
   }
 
   private bool playerIsPartiallySubmerged(){

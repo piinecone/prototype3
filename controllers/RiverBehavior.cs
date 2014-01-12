@@ -34,7 +34,7 @@ public class RiverBehavior : MonoBehaviour {
 
   private void determineIfAreaIsRelevant(){
     areaIsRelevant = false;
-    float distance = 50f;
+    float distance = 100f;
     Vector3 ray = Vector3.down * distance;
     RaycastHit[] hits;
     Vector3 raycastFrom = playerStateController.transform.position;

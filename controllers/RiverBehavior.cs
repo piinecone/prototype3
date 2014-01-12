@@ -25,14 +25,11 @@ public class RiverBehavior : MonoBehaviour {
 
   void FixedUpdate(){
     if (!colliding){
-      Debug.Log("Checking " + gameObject);
       determineIfAreaIsRelevant();
-      Debug.Log(gameObject + " is relevant: " + areaIsRelevant);
       if (areaIsRelevant) determineIfPlayerShouldLockVerticalPosition();
     } else {
       playerStateController.ApplyEnvironmentalForce(true, forceVector);
     }
-    Debug.Log("==============================================");
   }
 
   private void determineIfAreaIsRelevant(){
@@ -62,9 +59,7 @@ public class RiverBehavior : MonoBehaviour {
     if (hasAlreadyCollidedWithPlayer && Physics.Raycast(playerStateController.transform.position, ray, out hit, distance)){
       playerStateController.LockVerticalPosition(true, position: (playerStateController.transform.position.y - hit.distance + 1f));
       playerStateController.ApplyEnvironmentalForce(true, forceVector);
-      Debug.Log(gameObject + "did lock vertical position");
     } else { // allow player to fall
-      Debug.Log(gameObject + "allowing player to fall");
       playerStateController.LockVerticalPosition(false);
       playerStateController.PlayerIsCollidingWithBodyOfWater(false);
       playerStateController.ApplyEnvironmentalForce(false, Vector3.zero);
@@ -78,7 +73,6 @@ public class RiverBehavior : MonoBehaviour {
       hasAlreadyCollidedWithPlayer = true;
       playerStateController.PlayerIsCollidingWithBodyOfWater(true);
       setAsRelevantBodyOfWater();
-      Debug.Log("did enter " + gameObject);
     }
   }
 
@@ -90,15 +84,12 @@ public class RiverBehavior : MonoBehaviour {
       playerStateController.LockVerticalPosition(false);
       playerStateController.PlayerIsCollidingWithBodyOfWater(true);
       setAsRelevantBodyOfWater();
-      Debug.Log("colliding with " + gameObject);
     }
   }
 
   void OnTriggerExit(Collider collider){
-    if (collider.gameObject.tag == "Player"){
+    if (collider.gameObject.tag == "Player")
       colliding = false;
-      Debug.Log("exiting river leg");
-    }
   }
 
   public int LegName(){

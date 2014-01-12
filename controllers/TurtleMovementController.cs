@@ -99,6 +99,7 @@ public class TurtleMovementController : MonoBehaviour {
 
   // splash
   private bool didJustSplashIntoWater = false;
+  private float splashTimeLeft = 0f;
 
   // timing
   private float rawRollInputTimeElapsed = 0f;
@@ -142,10 +143,14 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void adjustPlayerPositionNearWaterSurface(){
-    float angle = Vector3.Angle(positionVector, Vector3.up);
-    float magnitude = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed).magnitude;
-    if (isNearSurface() && (transform.position.y + .5f) >= waterSurfaceLevel && angle <= 90f && magnitude <= defaultMaximumSwimSpeed)
-      transform.position = new Vector3(transform.position.x, waterSurfaceLevel - .5f, transform.position.z);
+    if (stateController.ShouldLockVerticalPosition()){
+      transform.position = new Vector3(transform.position.x, Mathf.Min(transform.position.y, stateController.VerticalPositionMaximum()), transform.position.z);
+    } else {
+      float angle = Vector3.Angle(positionVector, Vector3.up);
+      float magnitude = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed).magnitude;
+      if (isNearSurface() && (transform.position.y + .5f) >= waterSurfaceLevel && angle <= 90f && magnitude <= defaultMaximumSwimSpeed)
+        transform.position = new Vector3(transform.position.x, waterSurfaceLevel - .5f, transform.position.z);
+    }
   }
 
   private void adjustPlayerPositionForSubmersion(){
@@ -366,8 +371,21 @@ public class TurtleMovementController : MonoBehaviour {
     calculateForwardAccelerationUnderwater();
     underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
     accountForSpecialMoves();
+    Vector3 thrustVector = clampUnderwaterMovementVector();
+    thrustVector = applyEnvironmentalForces(thrustVector);
 
+    return thrustVector;
+  }
+
+  private Vector3 clampUnderwaterMovementVector(){
     return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed);
+  }
+
+  private Vector3 applyEnvironmentalForces(Vector3 thrustVector){
+    if (stateController.ShouldApplyEnvironmentalForce())
+      return (thrustVector + stateController.EnvironmentalForceVector());
+    else
+      return thrustVector;
   }
 
   private void accountForSpecialMoves(){
@@ -447,12 +465,13 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void calculateForwardAccelerationUnderwater(){
     if (didJustSplashIntoWater){
-      forwardAccelerationUnderwater = 0f;
+      forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f);
       stateController.EmitSplashTrail(positionVector * -1f);
-      if (positionVector.magnitude < 5f){
+      if (splashTimeLeft <= 0f){
         didJustSplashIntoWater = false;
         stateController.StopSplashTrailEmission();
       }
+      splashTimeLeft -= Time.deltaTime;
     } else {
       forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * 10f;
     }
@@ -606,8 +625,10 @@ public class TurtleMovementController : MonoBehaviour {
   private void handleStateChange(){
     string previousState = lastRecordedState;
     lastRecordedState = stateController.LastRecordedState();
-    if (lastRecordedState == "underwater" && previousState == "airborne")
+    if (lastRecordedState == "underwater" && previousState == "airborne" && positionVector.y <= -5f){
       didJustSplashIntoWater = true;
+      splashTimeLeft = Mathf.Abs(positionVector.y / 50f);
+    }
     if (lastRecordedState == "underwater" && previousState == "grounded"){
       isCurrentlySubmerging = true;
       submergeTimeLeft = submergeDuration;

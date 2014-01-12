@@ -24,6 +24,20 @@ public class UnderWater : MonoBehaviour {
     }
   }
 
+  public void SwitchToUnderwaterEnvironment(){
+    if (!isUnderwater){
+      isUnderwater = true;
+      setUnderwater();
+    }
+  }
+
+  public void SwitchToAboveWaterEnvironment(){
+    if (isUnderwater){
+      isUnderwater = false;
+      setAboveWater();
+    }
+  }
+
   private void setUnderwater(){
     RenderSettings.fogColor = underwaterColor;
     RenderSettings.fogDensity = waterVisibility;

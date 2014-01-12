@@ -10,21 +10,37 @@ public class TurtleStateController : MonoBehaviour {
   [SerializeField]
   private float waterSurfaceLevel;
   [SerializeField]
+  private UnderWater environment;
+  [SerializeField]
   private List<FishMovement> followingFish; // FIXME these should be FishControllers
   [SerializeField]
   private ParticleSystem splashEmitter;
 
-  private bool isNearSurface = false;
   private CapsuleCollider capsuleCollider;
   private ParticleSystem particleEmitter;
   private CharacterController characterController;
   private string lastRecordedState;
 
-  void Start () {
+  // surfacing
+  private bool isNearSurface = false;
+  private bool isCollidingWithBodyOfWater = false;
+  private bool shouldLockVerticalPosition = false;
+  private float verticalPositionMaximum = 0f;
+  private GameObject currentRelevantBodyOfWater;
+
+  // environmental forces
+  private bool shouldApplyEnvironmentalForce = false;
+  private Vector3 environmentalForceVector = Vector3.zero;
+
+  void Start() {
     capsuleCollider = GetComponent<CapsuleCollider>();
     particleEmitter = GetComponent<ParticleSystem>();
     characterController = GetComponent<CharacterController>();
     splashEmitter.active = false;
+  }
+
+  void Update(){
+    Debug.DrawRay(transform.position, environmentalForceVector * 10f, Color.red);
   }
 
   public string LastRecordedState(){
@@ -40,8 +56,7 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   public bool PlayerIsUnderwater(){ // the player is completely submerged
-    // y = y + the distance to the top of the turtle's shell
-    if (transform.position.y - .6f <= waterSurfaceLevel && !isApproachingTerrainNearTheSurface()){
+    if (playerIsPartiallySubmerged() && !isApproachingTerrainNearTheSurface()){
       lastRecordedState = "underwater";
       return true;
     }
@@ -50,7 +65,7 @@ public class TurtleStateController : MonoBehaviour {
 
   public bool PlayerIsInWater(){ // the player is at least partially submerged
     // y = y - the distance to the turtle's underside / limbs
-    if (transform.position.y - .6f <= waterSurfaceLevel){
+    if (playerIsPartiallySubmerged()){
       lastRecordedState = "underwater";
       return true;
     }
@@ -60,7 +75,7 @@ public class TurtleStateController : MonoBehaviour {
   public bool PlayerIsOnLand(){ // the player is completely on land
     // y = y - the distance to the turtle's underside / limbs
     // and player is "above" terrain, not water
-    if (playerIsTouchingTerrain() && (transform.position.y - .6f) > waterSurfaceLevel){
+    if (playerIsTouchingTerrain() && playerHasCompletelyEmerged(range: .6f)){
       lastRecordedState = "grounded";
       return true;
     }
@@ -68,19 +83,27 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   public bool PlayerIsAirborne(){
-    if (PlayerIsNotTouchingAnything() && transform.position.y > waterSurfaceLevel){
+    if (PlayerIsNotTouchingAnything() && playerHasCompletelyEmerged(range: 0f)){
       lastRecordedState = "airborne";
       return true;
     }
     return false;
   }
 
-  public void PlayerIsNearSurface(bool value=true){
-    isNearSurface = value;
-  }
-
   public bool IsPlayerNearSurface(){
     return isNearSurface;
+  }
+
+  private bool playerIsCompletelySubmerged(float range){
+    return (transform.position.y + range <= waterSurfaceLevel);
+  }
+
+  private bool playerHasCompletelyEmerged(float range){
+    return (transform.position.y - range > waterSurfaceLevel && !isCollidingWithBodyOfWater);
+  }
+
+  private bool playerIsPartiallySubmerged(){
+    return (isCollidingWithBodyOfWater || transform.position.y - .6f <= waterSurfaceLevel);
   }
 
   public bool PlayerIsNotTouchingAnything(){
@@ -90,6 +113,15 @@ public class TurtleStateController : MonoBehaviour {
     if (Physics.Raycast(transform.position, downRay, out hit, distance))
       return false;
     return true;
+  }
+
+  public void WaterBodyGameObjectIsRelevant(GameObject waterBody, bool relevant=true){
+    if (relevant){
+      currentRelevantBodyOfWater = waterBody;
+    } else if (!relevant && currentRelevantBodyOfWater == waterBody){
+      isCollidingWithBodyOfWater = false;
+      currentRelevantBodyOfWater = null;
+    }
   }
 
   private bool playerIsTouchingTerrain(){
@@ -112,7 +144,6 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   private bool isApproachingWater(){
-    //if (transform.position.y + 1.5f < waterSurfaceLevel || transform.position.y - 1.5f > waterSurfaceLevel) return false;
     return (lookingDownAndNotFacingTerrain());
   }
 
@@ -136,7 +167,7 @@ public class TurtleStateController : MonoBehaviour {
 
   private bool isApproachingTerrainNearTheSurface(){
     // fully submerged / emerged
-    if (transform.position.y + 1f < waterSurfaceLevel || transform.position.y - 1f > waterSurfaceLevel) return false;
+    if (playerIsCompletelySubmerged(range: 1f) || playerHasCompletelyEmerged(range: 1f)) return false;
 
     return (touchingNearbyTerrain());
   }
@@ -167,16 +198,52 @@ public class TurtleStateController : MonoBehaviour {
     return (hitCount >= 2);
   }
 
-  private bool isAlignedWithNearbyWater(){
-    return false;
-  }
-
   public bool PlayerHasFollowingFish(){
     return (followingFish.Count > 0);
   }
 
   public int NumberOfFollowingFish(){
     return followingFish.Count;
+  }
+
+  public void PlayerIsNearSurface(bool value=true){
+    isNearSurface = value;
+  }
+
+  public void PlayerIsCollidingWithBodyOfWater(bool value=true){
+    isCollidingWithBodyOfWater = value;
+
+    if (isCollidingWithBodyOfWater)
+      environment.SwitchToUnderwaterEnvironment();
+    else
+      environment.SwitchToAboveWaterEnvironment();
+  }
+
+  public void LockVerticalPosition(bool value=true, float position=0f){
+    shouldLockVerticalPosition = value;
+    verticalPositionMaximum = position;
+    PlayerIsNearSurface(value);
+  }
+
+  public bool ShouldLockVerticalPosition(){
+    return shouldLockVerticalPosition;
+  }
+
+  public float VerticalPositionMaximum(){
+    return verticalPositionMaximum;
+  }
+
+  public void ApplyEnvironmentalForce(bool state, Vector3 forceVector){
+    shouldApplyEnvironmentalForce = state;
+    environmentalForceVector = forceVector;
+  }
+
+  public bool ShouldApplyEnvironmentalForce(){
+    return shouldApplyEnvironmentalForce;
+  }
+
+  public Vector3 EnvironmentalForceVector(){
+    return environmentalForceVector;
   }
 
   // FIXME replace FishMovement with FishController

@@ -26,6 +26,7 @@ public class TurtleStateController : MonoBehaviour {
   private bool isCollidingWithBodyOfWater = false;
   private bool shouldLockVerticalPosition = false;
   private float verticalPositionMaximum = 0f;
+  private GameObject currentRelevantBodyOfWater;
 
   // environmental forces
   private bool shouldApplyEnvironmentalForce = false;
@@ -36,6 +37,10 @@ public class TurtleStateController : MonoBehaviour {
     particleEmitter = GetComponent<ParticleSystem>();
     characterController = GetComponent<CharacterController>();
     splashEmitter.active = false;
+  }
+
+  void Update(){
+    Debug.DrawRay(transform.position, environmentalForceVector * 10f, Color.red);
   }
 
   public string LastRecordedState(){
@@ -108,6 +113,15 @@ public class TurtleStateController : MonoBehaviour {
     if (Physics.Raycast(transform.position, downRay, out hit, distance))
       return false;
     return true;
+  }
+
+  public void WaterBodyGameObjectIsRelevant(GameObject waterBody, bool relevant=true){
+    if (relevant){
+      currentRelevantBodyOfWater = waterBody;
+    } else if (!relevant && currentRelevantBodyOfWater == waterBody){
+      isCollidingWithBodyOfWater = false;
+      currentRelevantBodyOfWater = null;
+    }
   }
 
   private bool playerIsTouchingTerrain(){
@@ -208,6 +222,7 @@ public class TurtleStateController : MonoBehaviour {
   public void LockVerticalPosition(bool value=true, float position=0f){
     shouldLockVerticalPosition = value;
     verticalPositionMaximum = position;
+    PlayerIsNearSurface(value);
   }
 
   public bool ShouldLockVerticalPosition(){

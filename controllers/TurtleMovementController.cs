@@ -115,7 +115,7 @@ public class TurtleMovementController : MonoBehaviour {
     maximumSwimSpeed = defaultMaximumSwimSpeed;
   }
 
-  void FixedUpdate(){
+  void Update() {
     mapInputParameters();
     handleStateChange();
 
@@ -127,9 +127,7 @@ public class TurtleMovementController : MonoBehaviour {
       walk(slope: defaultSlope, terrainRay: defaultTerrainRay);
     else if (isFalling())
       fall();
-  }
 
-  void Update() {
     lastKnownPosition = transform.position;
     updateTransformPositionAndRotation();
   }

@@ -81,7 +81,7 @@ public class TurtleMovementController : MonoBehaviour {
   private bool performingBarrelRoll = false;
   private float rollRotationOffset = 0f;
   private Vector3 rollPositionVector = Vector3.zero;
-  private float barrelRollSpeed = 10f;
+  private float barrelRollSpeed = 17f;
 
   // corkscrew launch
   private bool preparingForCorkscrewLaunch = false;
@@ -347,8 +347,8 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateAppliedRollValueForBanking(){
-    float forwardStep = Time.deltaTime * 6f;
-    float backwardStep = Time.deltaTime * 3f;
+    float forwardStep = Time.deltaTime * 10f;
+    float backwardStep = Time.deltaTime * 5f;
     if (rawRollValue != 0f)
       appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle, forwardStep);
     else

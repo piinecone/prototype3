@@ -121,6 +121,7 @@ public class TurtleStateController : MonoBehaviour {
     } else if (!relevant && currentRelevantBodyOfWater == waterBody){
       isCollidingWithBodyOfWater = false;
       currentRelevantBodyOfWater = null;
+      shouldApplyEnvironmentalForce = false;
     }
   }
 
@@ -217,20 +218,6 @@ public class TurtleStateController : MonoBehaviour {
       environment.SwitchToUnderwaterEnvironment();
     else
       environment.SwitchToAboveWaterEnvironment();
-  }
-
-  public void LockVerticalPosition(bool value=true, float position=0f){
-    shouldLockVerticalPosition = value;
-    verticalPositionMaximum = position;
-    PlayerIsNearSurface(value);
-  }
-
-  public bool ShouldLockVerticalPosition(){
-    return shouldLockVerticalPosition;
-  }
-
-  public float VerticalPositionMaximum(){
-    return verticalPositionMaximum;
   }
 
   public void ApplyEnvironmentalForce(bool state, Vector3 forceVector){

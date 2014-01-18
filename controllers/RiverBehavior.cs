@@ -23,10 +23,10 @@ public class RiverBehavior : MonoBehaviour {
     forceVector.y = 4f;
   }
 
-  void FixedUpdate(){
+  void Update(){
     if (!colliding){
       determineIfAreaIsRelevant();
-      if (areaIsRelevant) determineIfPlayerShouldLockVerticalPosition();
+      if (areaIsRelevant) fallTowardSurface();
     } else {
       playerStateController.ApplyEnvironmentalForce(true, forceVector);
     }
@@ -34,7 +34,7 @@ public class RiverBehavior : MonoBehaviour {
 
   private void determineIfAreaIsRelevant(){
     areaIsRelevant = false;
-    float distance = 100f;
+    float distance = 300f;
     Vector3 ray = Vector3.down * distance;
     RaycastHit[] hits;
     Vector3 raycastFrom = playerStateController.transform.position;
@@ -52,18 +52,10 @@ public class RiverBehavior : MonoBehaviour {
     playerStateController.WaterBodyGameObjectIsRelevant(gameObject, areaIsRelevant);
   }
 
-  private void determineIfPlayerShouldLockVerticalPosition(){
-    float distance = 5f;
-    Vector3 ray = Vector3.down * 5f;
-    RaycastHit hit;
-    if (hasAlreadyCollidedWithPlayer && Physics.Raycast(playerStateController.transform.position, ray, out hit, distance)){
-      playerStateController.LockVerticalPosition(true, position: (playerStateController.transform.position.y - hit.distance + 1f));
-      playerStateController.ApplyEnvironmentalForce(true, forceVector);
-    } else { // allow player to fall
-      playerStateController.LockVerticalPosition(false);
-      playerStateController.PlayerIsCollidingWithBodyOfWater(false);
-      playerStateController.ApplyEnvironmentalForce(false, Vector3.zero);
-    }
+  private void fallTowardSurface(){
+    playerStateController.PlayerIsNearSurface(false);
+    playerStateController.PlayerIsCollidingWithBodyOfWater(false);
+    playerStateController.ApplyEnvironmentalForce(false, Vector3.zero);
   }
 
   void OnTriggerEnter(Collider collider){
@@ -71,6 +63,7 @@ public class RiverBehavior : MonoBehaviour {
       colliding = true;
       areaIsRelevant = true;
       hasAlreadyCollidedWithPlayer = true;
+      playerStateController.PlayerIsNearSurface(false);
       playerStateController.PlayerIsCollidingWithBodyOfWater(true);
       setAsRelevantBodyOfWater();
     }
@@ -81,15 +74,17 @@ public class RiverBehavior : MonoBehaviour {
       colliding = true;
       areaIsRelevant = true;
       hasAlreadyCollidedWithPlayer = true;
-      playerStateController.LockVerticalPosition(false);
+      playerStateController.PlayerIsNearSurface(false);
       playerStateController.PlayerIsCollidingWithBodyOfWater(true);
       setAsRelevantBodyOfWater();
     }
   }
 
   void OnTriggerExit(Collider collider){
-    if (collider.gameObject.tag == "Player")
+    if (collider.gameObject.tag == "Player"){
       colliding = false;
+      fallTowardSurface();
+    }
   }
 
   private void setAsRelevantBodyOfWater(){

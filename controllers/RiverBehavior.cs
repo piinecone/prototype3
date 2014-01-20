@@ -12,15 +12,14 @@ public class RiverBehavior : MonoBehaviour {
   [SerializeField]
   private TurtleStateController playerStateController;
 
+  private Vector3 forceVector = Vector3.zero;
   private bool hasAlreadyCollidedWithPlayer = false;
   private bool colliding = false;
   private bool areaIsRelevant = false;
   private bool areaIsActive = true;
-  private Vector3 forceVector;
 
   void Start () {
-    forceVector = transform.forward.normalized * force;
-    forceVector.y = 4f;
+    forceVector = transform.up * 15f;
   }
 
   void Update(){

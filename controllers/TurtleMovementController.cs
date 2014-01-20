@@ -356,6 +356,16 @@ public class TurtleMovementController : MonoBehaviour {
   private void calculatePositionInWater(){
     positionVector = underwaterThrustVector();
     if (!isNearSurface()) positionVector.y -= gravity * Time.deltaTime;
+    if (didJustSplashIntoWater) renderSplash();
+  }
+
+  private void renderSplash(){
+    stateController.EmitSplashTrail(positionVector * -1f);
+    if (splashTimeLeft <= 0f){// || positionVector.magnitude < 5f){
+      didJustSplashIntoWater = false;
+      stateController.StopSplashTrailEmission();
+    }
+    splashTimeLeft -= Time.deltaTime;
   }
 
   private Vector3 underwaterThrustVector(){
@@ -459,14 +469,8 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateForwardAccelerationUnderwater(){
-    if (didJustSplashIntoWater){
+    if (didJustSplashIntoWater && !stateController.ShouldApplyForwardVelocityOverride()){
       forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f);
-      stateController.EmitSplashTrail(positionVector * -1f);
-      if (splashTimeLeft <= 0f){
-        didJustSplashIntoWater = false;
-        stateController.StopSplashTrailEmission();
-      }
-      splashTimeLeft -= Time.deltaTime;
     } else {
       forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * currentForwardAccelerationMultiplier();
       forwardAccelerationUnderwater = Mathf.Max(forwardAccelerationUnderwater, minimumUnderwaterAcceleration());
@@ -623,7 +627,7 @@ public class TurtleMovementController : MonoBehaviour {
     lastRecordedState = stateController.LastRecordedState();
     if (lastRecordedState == "underwater" && previousState == "airborne" && positionVector.y <= -5f){
       didJustSplashIntoWater = true;
-      splashTimeLeft = Mathf.Abs(positionVector.y / 50f);
+      splashTimeLeft = Mathf.Min(Mathf.Abs(positionVector.y * .01f), 3f);
     }
     if (lastRecordedState == "underwater" && previousState == "grounded"){
       isCurrentlySubmerging = true;

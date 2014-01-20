@@ -122,7 +122,13 @@ public class TurtleStateController : MonoBehaviour {
       isCollidingWithBodyOfWater = false;
       currentRelevantBodyOfWater = null;
       shouldApplyEnvironmentalForce = false;
+      shouldConstrainLookDirection = false;
+      shouldApplyForwardVelocityOverride = false;
     }
+  }
+
+  public GameObject CurrentBodyOfWater(){
+    return currentRelevantBodyOfWater;
   }
 
   private bool playerIsTouchingTerrain(){

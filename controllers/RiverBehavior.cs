@@ -22,11 +22,13 @@ public class RiverBehavior : MonoBehaviour {
     forceVector = transform.up * 15f;
   }
 
-  void Update(){
-    if (!colliding){
+  void FixedUpdate(){
+    if (!colliding && !playerStateController.PlayerIsInWater() && playerStateController.CurrentBodyOfWater() == null){
       determineIfAreaIsRelevant();
       if (areaIsRelevant) fallTowardSurface();
-    } else {
+    } else if (colliding) {
+      playerStateController.ForceForwardVelocity(true, 80f);
+      playerStateController.ConstrainLookDirection(true, transform.forward);
       playerStateController.ApplyEnvironmentalForce(true, forceVector);
     }
   }
@@ -38,7 +40,6 @@ public class RiverBehavior : MonoBehaviour {
     RaycastHit[] hits;
     Vector3 raycastFrom = playerStateController.transform.position;
     raycastFrom.y += 5f;
-    Debug.DrawRay(raycastFrom, ray, Color.magenta);
     hits = Physics.RaycastAll(raycastFrom, ray, distance);
     if (hits.Length > 0){
       foreach (RaycastHit hit in hits){
@@ -54,6 +55,8 @@ public class RiverBehavior : MonoBehaviour {
   private void fallTowardSurface(){
     playerStateController.PlayerIsNearSurface(false);
     playerStateController.PlayerIsCollidingWithBodyOfWater(false);
+    playerStateController.ForceForwardVelocity(false, 0f);
+    playerStateController.ConstrainLookDirection(false, Vector3.zero);
     playerStateController.ApplyEnvironmentalForce(false, Vector3.zero);
   }
 
@@ -83,10 +86,11 @@ public class RiverBehavior : MonoBehaviour {
     if (collider.gameObject.tag == "Player"){
       colliding = false;
       fallTowardSurface();
+      playerStateController.WaterBodyGameObjectIsRelevant(gameObject, false);
     }
   }
 
   private void setAsRelevantBodyOfWater(){
-    if (!areaIsRelevant) playerStateController.WaterBodyGameObjectIsRelevant(gameObject, true);
+    playerStateController.WaterBodyGameObjectIsRelevant(gameObject, true);
   }
 }

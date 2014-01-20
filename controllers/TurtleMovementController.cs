@@ -366,13 +366,14 @@ public class TurtleMovementController : MonoBehaviour {
     underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
     accountForSpecialMoves();
     Vector3 thrustVector = clampUnderwaterMovementVector();
+    Debug.DrawRay(transform.position, thrustVector, Color.blue);
     thrustVector = applyEnvironmentalForces(thrustVector);
 
     return thrustVector;
   }
 
   private Vector3 clampUnderwaterMovementVector(){
-    return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed);
+    return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, currentSwimSpeed());
   }
 
   private Vector3 applyEnvironmentalForces(Vector3 thrustVector){
@@ -467,7 +468,8 @@ public class TurtleMovementController : MonoBehaviour {
       }
       splashTimeLeft -= Time.deltaTime;
     } else {
-      forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * 10f;
+      forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * currentForwardAccelerationMultiplier();
+      forwardAccelerationUnderwater = Mathf.Max(forwardAccelerationUnderwater, minimumUnderwaterAcceleration());
     }
   }
 
@@ -629,5 +631,17 @@ public class TurtleMovementController : MonoBehaviour {
       float angle = Vector3.Angle(transform.forward, Vector3.up);
       submersionDirection = angle <= 90f ? -1f : 1f;
     }
+  }
+
+  private float currentSwimSpeed(){
+    return stateController.ShouldApplyForwardVelocityOverride() ? stateController.ForwardVelocityOverride() : maximumSwimSpeed;
+  }
+
+  private float currentForwardAccelerationMultiplier(){
+    return stateController.ShouldApplyForwardVelocityOverride() ? stateController.ForwardVelocityOverride() : 10f;
+  }
+
+  private float minimumUnderwaterAcceleration(){
+    return stateController.ShouldApplyForwardVelocityOverride() ? (stateController.ForwardVelocityOverride() * .4f) : 0f;
   }
 }

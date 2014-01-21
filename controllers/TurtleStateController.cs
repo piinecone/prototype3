@@ -98,6 +98,10 @@ public class TurtleStateController : MonoBehaviour {
     return isNearSurface;
   }
 
+  public bool PlayerIsRushingDownARiver(){
+    return (currentRelevantBodyOfWater != null);
+  }
+
   private bool playerIsCompletelySubmerged(float range){
     return (transform.position.y + range <= waterSurfaceLevel);
   }

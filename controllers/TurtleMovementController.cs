@@ -119,6 +119,21 @@ public class TurtleMovementController : MonoBehaviour {
     mapInputParameters();
     handleStateChange();
 
+    if (currentlyRushingDownARiver())
+      performRiverRushingMovement();
+    else
+      performNormalMovement();
+
+    lastKnownPosition = transform.position;
+    updateTransformPositionAndRotation();
+  }
+
+  private void performRiverRushingMovement(){
+    if (isUnderwater()) swim();
+    else if (isFalling()) fall();
+  }
+
+  private void performNormalMovement(){
     if (isCurrentlySubmerging || isUnderwater())
       swim();
     else if (isFalling())
@@ -127,9 +142,6 @@ public class TurtleMovementController : MonoBehaviour {
       emerge();
     else if (stateController.PlayerIsOnLand())
       walk(slope: defaultSlope, terrainRay: defaultTerrainRay);
-
-    lastKnownPosition = transform.position;
-    updateTransformPositionAndRotation();
   }
 
   private void updateTransformPositionAndRotation(){
@@ -661,5 +673,9 @@ public class TurtleMovementController : MonoBehaviour {
 
   private float minimumUnderwaterAcceleration(){
     return stateController.ShouldApplyForwardVelocityOverride() ? (stateController.ForwardVelocityOverride() * .4f) : 0f;
+  }
+
+  private bool currentlyRushingDownARiver(){
+    return stateController.PlayerIsRushingDownARiver();
   }
 }

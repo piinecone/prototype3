@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof (TurtleController))]
 public class FishMovement : MonoBehaviour {
-  private bool debugging = true;
+  private bool debugging = false;
 
   [SerializeField]
   private List<GameObject> waypoints;

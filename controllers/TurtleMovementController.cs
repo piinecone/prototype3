@@ -121,12 +121,12 @@ public class TurtleMovementController : MonoBehaviour {
 
     if (isCurrentlySubmerging || isUnderwater())
       swim();
+    else if (isFalling())
+      fall();
     else if (isEmerging())
       emerge();
     else if (stateController.PlayerIsOnLand())
       walk(slope: defaultSlope, terrainRay: defaultTerrainRay);
-    else if (isFalling())
-      fall();
 
     lastKnownPosition = transform.position;
     updateTransformPositionAndRotation();

@@ -162,14 +162,11 @@ public class TurtleMovementController : MonoBehaviour {
     mouseInput = mouseRay.direction;
 
     // keyboard input
-    // FIXME no need for a vector3 here, right?
-    Vector3 rawKeyboardInput = new Vector3(horizontalValue, 0, verticalValue);
-
     previousRollValue = rawRollValue;        // store roll value slope
-    rawForwardValue = rawKeyboardInput.z;    // forward thrust
-    rawHorizontalValue = rawKeyboardInput.x; // lateral thrust
+    rawForwardValue = verticalValue;         // forward thrust
+    rawHorizontalValue = horizontalValue;    // lateral thrust
     rawPitchValue = mouseInput.y;            // pitch
-    rawRollValue = rawKeyboardInput.x;       // roll
+    rawRollValue = horizontalValue;          // roll
     rawYawValue = mouseInput.x;              // yaw
 
     adjustRawInputValues();

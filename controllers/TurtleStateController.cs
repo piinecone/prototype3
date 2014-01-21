@@ -113,7 +113,7 @@ public class TurtleStateController : MonoBehaviour {
   public bool PlayerIsNotTouchingAnything(){
     float distance = 2f; // FIXME may want to scale this back a touch
     RaycastHit hit;
-    Vector3 downRay = transform.TransformDirection(Vector3.down);
+    Vector3 downRay = Vector3.down;
     if (Physics.Raycast(transform.position, downRay, out hit, distance))
       return false;
     return true;

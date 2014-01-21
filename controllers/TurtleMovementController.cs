@@ -349,7 +349,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateAppliedRollValueForCorkscrewCompletion(){
-    float maximumRotation = 5f * 360f;
+    float maximumRotation = 5f * 360f; // FIXME maybe 4 rotations are enough?
     if (Mathf.Abs(appliedRollValue) < (maximumRotation + rollRotationOffset)){
       appliedRollValue -= (corkscrewDirection * corkscrewCompletionRollSpeed);
     } else if (Mathf.Abs(appliedRollValue) >= (maximumRotation + rollRotationOffset)){
@@ -586,7 +586,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private float rotationSpeedInAir(){
-    return 20f * Time.deltaTime;
+    return .1f * Time.deltaTime;
   }
 
   private float rotationSpeedOnLand(){

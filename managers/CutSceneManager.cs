@@ -38,11 +38,14 @@ public class CutSceneManager : MonoBehaviour {
   private float errorMargin = .005f;
 
   void Start(){
-    openingLoop.volume = volumeOn;
-    openingLoop.Play();
+    // FIXME re-enable
+    //openingLoop.volume = volumeOn;
+    //openingLoop.Play();
+    //underWaterMusic.Play();
   }
 
   void LateUpdate(){
+    //underWaterMusic.Stop();
     if (musicFading && musicCanPlay){
       if (underWaterMusic.volume <= (targetVolume - errorMargin) || underWaterMusic.volume >= (targetVolume + errorMargin)){
         underWaterMusic.volume = Mathf.SmoothStep(underWaterMusic.volume, targetVolume, 2.2f * Time.deltaTime);

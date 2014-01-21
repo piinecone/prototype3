@@ -32,15 +32,19 @@ public class TurtleStateController : MonoBehaviour {
   private bool shouldApplyEnvironmentalForce = false;
   private Vector3 environmentalForceVector = Vector3.zero;
 
+  // forward force override
+  private bool shouldApplyForwardVelocityOverride = false;
+  private float forwardVelocityOverride = 0f;
+
+  // constrain look direction
+  private bool shouldConstrainLookDirection = false;
+  private Vector3 constrainedLookDirectionVector = Vector3.zero;
+
   void Start() {
     capsuleCollider = GetComponent<CapsuleCollider>();
     particleEmitter = GetComponent<ParticleSystem>();
     characterController = GetComponent<CharacterController>();
     splashEmitter.active = false;
-  }
-
-  void Update(){
-    Debug.DrawRay(transform.position, environmentalForceVector * 10f, Color.red);
   }
 
   public string LastRecordedState(){
@@ -121,7 +125,14 @@ public class TurtleStateController : MonoBehaviour {
     } else if (!relevant && currentRelevantBodyOfWater == waterBody){
       isCollidingWithBodyOfWater = false;
       currentRelevantBodyOfWater = null;
+      shouldApplyEnvironmentalForce = false;
+      shouldConstrainLookDirection = false;
+      shouldApplyForwardVelocityOverride = false;
     }
+  }
+
+  public GameObject CurrentBodyOfWater(){
+    return currentRelevantBodyOfWater;
   }
 
   private bool playerIsTouchingTerrain(){
@@ -152,7 +163,6 @@ public class TurtleStateController : MonoBehaviour {
     bool hitRecorded = false;
     RaycastHit hit;
     Vector3 ray = transform.forward * distance;
-    Debug.DrawRay(transform.position, ray, Color.red);
     hitRecorded = Physics.Raycast(transform.position, ray, out hit, distance);
     return (ray.z < 0f && (hitRecorded == false || (hit.transform.gameObject.tag == "Water" || hit.transform.gameObject.tag == "SurfaceCollider")));
   }
@@ -161,7 +171,6 @@ public class TurtleStateController : MonoBehaviour {
     float distance = 5f;
     RaycastHit hit;
     Vector3 ray = transform.forward * distance;
-    Debug.DrawRay(transform.position, ray, Color.red);
     return (ray.z < 0f && Physics.Raycast(transform.position, ray, out hit, distance));
   }
 
@@ -219,18 +228,17 @@ public class TurtleStateController : MonoBehaviour {
       environment.SwitchToAboveWaterEnvironment();
   }
 
-  public void LockVerticalPosition(bool value=true, float position=0f){
-    shouldLockVerticalPosition = value;
-    verticalPositionMaximum = position;
-    PlayerIsNearSurface(value);
+  public void ForceForwardVelocity(bool state, float magnitude){
+    shouldApplyForwardVelocityOverride = state;
+    forwardVelocityOverride = magnitude;
   }
 
-  public bool ShouldLockVerticalPosition(){
-    return shouldLockVerticalPosition;
+  public bool ShouldApplyForwardVelocityOverride(){
+    return shouldApplyForwardVelocityOverride;
   }
 
-  public float VerticalPositionMaximum(){
-    return verticalPositionMaximum;
+  public float ForwardVelocityOverride(){
+    return forwardVelocityOverride;
   }
 
   public void ApplyEnvironmentalForce(bool state, Vector3 forceVector){
@@ -244,6 +252,19 @@ public class TurtleStateController : MonoBehaviour {
 
   public Vector3 EnvironmentalForceVector(){
     return environmentalForceVector;
+  }
+
+  public void ConstrainLookDirection(bool value, Vector3 direction){
+    shouldConstrainLookDirection = value;
+    constrainedLookDirectionVector = direction;
+  }
+
+  public bool ShouldConstrainLookDirection(){
+    return shouldConstrainLookDirection;
+  }
+
+  public Vector3 ConstrainedLookDirectionVector(){
+    return constrainedLookDirectionVector;
   }
 
   // FIXME replace FishMovement with FishController

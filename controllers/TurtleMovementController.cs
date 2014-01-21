@@ -81,7 +81,7 @@ public class TurtleMovementController : MonoBehaviour {
   private bool performingBarrelRoll = false;
   private float rollRotationOffset = 0f;
   private Vector3 rollPositionVector = Vector3.zero;
-  private float barrelRollSpeed = 10f;
+  private float barrelRollSpeed = 17f;
 
   // corkscrew launch
   private bool preparingForCorkscrewLaunch = false;
@@ -115,7 +115,7 @@ public class TurtleMovementController : MonoBehaviour {
     maximumSwimSpeed = defaultMaximumSwimSpeed;
   }
 
-  void FixedUpdate(){
+  void Update() {
     mapInputParameters();
     handleStateChange();
 
@@ -127,9 +127,7 @@ public class TurtleMovementController : MonoBehaviour {
       walk(slope: defaultSlope, terrainRay: defaultTerrainRay);
     else if (isFalling())
       fall();
-  }
 
-  void Update() {
     lastKnownPosition = transform.position;
     updateTransformPositionAndRotation();
   }
@@ -143,14 +141,10 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void adjustPlayerPositionNearWaterSurface(){
-    if (stateController.ShouldLockVerticalPosition()){
-      transform.position = new Vector3(transform.position.x, Mathf.Min(transform.position.y, stateController.VerticalPositionMaximum()), transform.position.z);
-    } else {
-      float angle = Vector3.Angle(positionVector, Vector3.up);
-      float magnitude = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed).magnitude;
-      if (isNearSurface() && (transform.position.y + .5f) >= waterSurfaceLevel && angle <= 90f && magnitude <= defaultMaximumSwimSpeed)
-        transform.position = new Vector3(transform.position.x, waterSurfaceLevel - .5f, transform.position.z);
-    }
+    float angle = Vector3.Angle(positionVector, Vector3.up);
+    float magnitude = Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed).magnitude;
+    if (isNearSurface() && (transform.position.y + .5f) >= waterSurfaceLevel && angle <= 90f && magnitude <= defaultMaximumSwimSpeed)
+      transform.position = new Vector3(transform.position.x, Mathf.Min(transform.position.y, waterSurfaceLevel - .5f), transform.position.z);
   }
 
   private void adjustPlayerPositionForSubmersion(){
@@ -351,8 +345,8 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateAppliedRollValueForBanking(){
-    float forwardStep = Time.deltaTime * 6f;
-    float backwardStep = Time.deltaTime * 3f;
+    float forwardStep = Time.deltaTime * 10f;
+    float backwardStep = Time.deltaTime * 5f;
     if (rawRollValue != 0f)
       appliedRollValue = Mathf.SmoothStep(appliedRollValue, rawRollValue * -maxRollRotationAngle, forwardStep);
     else
@@ -362,6 +356,16 @@ public class TurtleMovementController : MonoBehaviour {
   private void calculatePositionInWater(){
     positionVector = underwaterThrustVector();
     if (!isNearSurface()) positionVector.y -= gravity * Time.deltaTime;
+    if (didJustSplashIntoWater) renderSplash();
+  }
+
+  private void renderSplash(){
+    stateController.EmitSplashTrail(positionVector * -1f);
+    if (splashTimeLeft <= 0f){// || positionVector.magnitude < 5f){
+      didJustSplashIntoWater = false;
+      stateController.StopSplashTrailEmission();
+    }
+    splashTimeLeft -= Time.deltaTime;
   }
 
   private Vector3 underwaterThrustVector(){
@@ -372,13 +376,14 @@ public class TurtleMovementController : MonoBehaviour {
     underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
     accountForSpecialMoves();
     Vector3 thrustVector = clampUnderwaterMovementVector();
+    Debug.DrawRay(transform.position, thrustVector, Color.blue);
     thrustVector = applyEnvironmentalForces(thrustVector);
 
     return thrustVector;
   }
 
   private Vector3 clampUnderwaterMovementVector(){
-    return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, maximumSwimSpeed);
+    return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, currentSwimSpeed());
   }
 
   private Vector3 applyEnvironmentalForces(Vector3 thrustVector){
@@ -464,16 +469,11 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateForwardAccelerationUnderwater(){
-    if (didJustSplashIntoWater){
+    if (didJustSplashIntoWater && !stateController.ShouldApplyForwardVelocityOverride()){
       forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f);
-      stateController.EmitSplashTrail(positionVector * -1f);
-      if (splashTimeLeft <= 0f){
-        didJustSplashIntoWater = false;
-        stateController.StopSplashTrailEmission();
-      }
-      splashTimeLeft -= Time.deltaTime;
     } else {
-      forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * 10f;
+      forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * currentForwardAccelerationMultiplier();
+      forwardAccelerationUnderwater = Mathf.Max(forwardAccelerationUnderwater, minimumUnderwaterAcceleration());
     }
   }
 
@@ -627,7 +627,7 @@ public class TurtleMovementController : MonoBehaviour {
     lastRecordedState = stateController.LastRecordedState();
     if (lastRecordedState == "underwater" && previousState == "airborne" && positionVector.y <= -5f){
       didJustSplashIntoWater = true;
-      splashTimeLeft = Mathf.Abs(positionVector.y / 50f);
+      splashTimeLeft = Mathf.Min(Mathf.Abs(positionVector.y * .01f), 3f);
     }
     if (lastRecordedState == "underwater" && previousState == "grounded"){
       isCurrentlySubmerging = true;
@@ -635,5 +635,17 @@ public class TurtleMovementController : MonoBehaviour {
       float angle = Vector3.Angle(transform.forward, Vector3.up);
       submersionDirection = angle <= 90f ? -1f : 1f;
     }
+  }
+
+  private float currentSwimSpeed(){
+    return stateController.ShouldApplyForwardVelocityOverride() ? stateController.ForwardVelocityOverride() : maximumSwimSpeed;
+  }
+
+  private float currentForwardAccelerationMultiplier(){
+    return stateController.ShouldApplyForwardVelocityOverride() ? stateController.ForwardVelocityOverride() : 10f;
+  }
+
+  private float minimumUnderwaterAcceleration(){
+    return stateController.ShouldApplyForwardVelocityOverride() ? (stateController.ForwardVelocityOverride() * .4f) : 0f;
   }
 }

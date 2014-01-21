@@ -12,34 +12,34 @@ public class RiverBehavior : MonoBehaviour {
   [SerializeField]
   private TurtleStateController playerStateController;
 
+  private Vector3 forceVector = Vector3.zero;
   private bool hasAlreadyCollidedWithPlayer = false;
   private bool colliding = false;
   private bool areaIsRelevant = false;
   private bool areaIsActive = true;
-  private Vector3 forceVector;
 
   void Start () {
-    forceVector = transform.forward.normalized * force;
-    forceVector.y = 4f;
+    forceVector = transform.up * 15f;
   }
 
   void FixedUpdate(){
-    if (!colliding){
+    if (!colliding && !playerStateController.PlayerIsInWater() && playerStateController.CurrentBodyOfWater() == null){
       determineIfAreaIsRelevant();
-      if (areaIsRelevant) determineIfPlayerShouldLockVerticalPosition();
-    } else {
+      if (areaIsRelevant) fallTowardSurface();
+    } else if (colliding) {
+      playerStateController.ForceForwardVelocity(true, 80f);
+      playerStateController.ConstrainLookDirection(true, transform.forward);
       playerStateController.ApplyEnvironmentalForce(true, forceVector);
     }
   }
 
   private void determineIfAreaIsRelevant(){
     areaIsRelevant = false;
-    float distance = 100f;
+    float distance = 300f;
     Vector3 ray = Vector3.down * distance;
     RaycastHit[] hits;
     Vector3 raycastFrom = playerStateController.transform.position;
     raycastFrom.y += 5f;
-    Debug.DrawRay(raycastFrom, ray, Color.magenta);
     hits = Physics.RaycastAll(raycastFrom, ray, distance);
     if (hits.Length > 0){
       foreach (RaycastHit hit in hits){
@@ -52,18 +52,12 @@ public class RiverBehavior : MonoBehaviour {
     playerStateController.WaterBodyGameObjectIsRelevant(gameObject, areaIsRelevant);
   }
 
-  private void determineIfPlayerShouldLockVerticalPosition(){
-    float distance = 5f;
-    Vector3 ray = Vector3.down * 5f;
-    RaycastHit hit;
-    if (hasAlreadyCollidedWithPlayer && Physics.Raycast(playerStateController.transform.position, ray, out hit, distance)){
-      playerStateController.LockVerticalPosition(true, position: (playerStateController.transform.position.y - hit.distance + 1f));
-      playerStateController.ApplyEnvironmentalForce(true, forceVector);
-    } else { // allow player to fall
-      playerStateController.LockVerticalPosition(false);
-      playerStateController.PlayerIsCollidingWithBodyOfWater(false);
-      playerStateController.ApplyEnvironmentalForce(false, Vector3.zero);
-    }
+  private void fallTowardSurface(){
+    playerStateController.PlayerIsNearSurface(false);
+    playerStateController.PlayerIsCollidingWithBodyOfWater(false);
+    playerStateController.ForceForwardVelocity(false, 0f);
+    playerStateController.ConstrainLookDirection(false, Vector3.zero);
+    playerStateController.ApplyEnvironmentalForce(false, Vector3.zero);
   }
 
   void OnTriggerEnter(Collider collider){
@@ -71,6 +65,7 @@ public class RiverBehavior : MonoBehaviour {
       colliding = true;
       areaIsRelevant = true;
       hasAlreadyCollidedWithPlayer = true;
+      playerStateController.PlayerIsNearSurface(false);
       playerStateController.PlayerIsCollidingWithBodyOfWater(true);
       setAsRelevantBodyOfWater();
     }
@@ -81,18 +76,21 @@ public class RiverBehavior : MonoBehaviour {
       colliding = true;
       areaIsRelevant = true;
       hasAlreadyCollidedWithPlayer = true;
-      playerStateController.LockVerticalPosition(false);
+      playerStateController.PlayerIsNearSurface(false);
       playerStateController.PlayerIsCollidingWithBodyOfWater(true);
       setAsRelevantBodyOfWater();
     }
   }
 
   void OnTriggerExit(Collider collider){
-    if (collider.gameObject.tag == "Player")
+    if (collider.gameObject.tag == "Player"){
       colliding = false;
+      fallTowardSurface();
+      playerStateController.WaterBodyGameObjectIsRelevant(gameObject, false);
+    }
   }
 
   private void setAsRelevantBodyOfWater(){
-    if (!areaIsRelevant) playerStateController.WaterBodyGameObjectIsRelevant(gameObject, true);
+    playerStateController.WaterBodyGameObjectIsRelevant(gameObject, true);
   }
 }

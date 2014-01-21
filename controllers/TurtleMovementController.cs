@@ -278,10 +278,28 @@ public class TurtleMovementController : MonoBehaviour {
     Ray mouseRay = Camera.main.ScreenPointToRay(mousePosition);
     Vector3 lookDirection = mouseRay.direction;
     lookDirection.y *= currentYAxisMultiplier();
+    lookDirection = limitHorizontalLookDirection(lookDirection);
     lookDirection = adjustedLookDirectionNearWaterSurface(lookDirection);
     lookDirection = adjustedLookDirectionDuringSubmersion(lookDirection);
 
     return Quaternion.LookRotation(lookDirection);
+  }
+
+  private Vector3 limitHorizontalLookDirection(Vector3 direction){
+    if (stateController.ShouldConstrainLookDirection()){
+      Vector3 guideVector = stateController.ConstrainedLookDirectionVector();
+      //Vector3 lookDirection = new Vector3(direction.x, guideVector.y, direction.z);
+      //Debug.DrawRay(transform.position, lookDirection * 10f, Color.magenta);
+      //Debug.DrawRay(transform.position, stateController.ConstrainedLookDirectionVector() * 10f, Color.green);
+      //float angle = Vector3.Angle(lookDirection, guideVector);
+      //Debug.Log("Angle: " + angle + " x value: " + lookDirection.x);
+      //if (angle > 45f){
+      //  if (lookDirection.x < 0) direction.x = guideVector.x - .2f;
+      //  if (lookDirection.x > 0) direction.x = guideVector.x + .2f;
+      //}
+    }
+
+    return direction;
   }
 
   private Vector3 adjustedLookDirectionNearWaterSurface(Vector3 lookDirection){

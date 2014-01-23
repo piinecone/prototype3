@@ -33,8 +33,11 @@ public class TurtleStateController : MonoBehaviour {
   private Vector3 environmentalForceVector = Vector3.zero;
 
   // forward force override
-  private bool shouldApplyForwardVelocityOverride = false;
-  private float forwardVelocityOverride = 0f;
+  private bool shouldOverrideVelocity = false;
+  private float minimumForwardAccelerationOverride = 0f;
+  private float forwardAccelerationMultiplier = 0f;
+  private float speedClampOverride = 0f;
+  private float speedOffset = 20f;
 
   // constrain look direction
   private bool shouldConstrainLookDirection = false;
@@ -131,7 +134,7 @@ public class TurtleStateController : MonoBehaviour {
       currentRelevantBodyOfWater = null;
       shouldApplyEnvironmentalForce = false;
       shouldConstrainLookDirection = false;
-      shouldApplyForwardVelocityOverride = false;
+      shouldOverrideVelocity = false;
     }
   }
 
@@ -232,17 +235,27 @@ public class TurtleStateController : MonoBehaviour {
       environment.SwitchToAboveWaterEnvironment();
   }
 
-  public void ForceForwardVelocity(bool state, float magnitude){
-    shouldApplyForwardVelocityOverride = state;
-    forwardVelocityOverride = magnitude;
+  public void IncreaseVelocity(bool state, float magnitude){
+    shouldOverrideVelocity = state;
+    speedClampOverride = magnitude + speedOffset;
+    minimumForwardAccelerationOverride = speedOffset;
+    forwardAccelerationMultiplier = magnitude;
   }
 
-  public bool ShouldApplyForwardVelocityOverride(){
-    return shouldApplyForwardVelocityOverride;
+  public bool ShouldOverrideVelocity(){
+    return shouldOverrideVelocity;
   }
 
-  public float ForwardVelocityOverride(){
-    return forwardVelocityOverride;
+  public float SpeedClampOverride(){
+    return speedClampOverride;
+  }
+
+  public float ForwardAccelerationMultiplier(){
+    return forwardAccelerationMultiplier;
+  }
+
+  public float MinimumForwardAcceleration(){
+    return minimumForwardAccelerationOverride;
   }
 
   public void ApplyEnvironmentalForce(bool state, Vector3 forceVector){

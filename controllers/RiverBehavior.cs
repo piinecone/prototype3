@@ -4,22 +4,20 @@ using System.Collections;
 public class RiverBehavior : MonoBehaviour {
 
   [SerializeField]
-  private float force = 0f;
-
-  [SerializeField]
   private int legNumber = 0;
 
   [SerializeField]
   private TurtleStateController playerStateController;
 
   private Vector3 forceVector = Vector3.zero;
+  private float magnitude = 100f;
   private bool hasAlreadyCollidedWithPlayer = false;
   private bool colliding = false;
   private bool areaIsRelevant = false;
   private bool areaIsActive = true;
 
   void Start () {
-    forceVector = transform.up * 15f;
+    forceVector = transform.forward * magnitude;
   }
 
   void FixedUpdate(){
@@ -27,7 +25,7 @@ public class RiverBehavior : MonoBehaviour {
       determineIfAreaIsRelevant();
       if (areaIsRelevant) fallTowardSurface();
     } else if (colliding) {
-      playerStateController.ForceForwardVelocity(true, 80f);
+      playerStateController.IncreaseVelocity(true, magnitude);
       playerStateController.ConstrainLookDirection(true, transform.forward);
       playerStateController.ApplyEnvironmentalForce(true, forceVector);
     }
@@ -55,7 +53,7 @@ public class RiverBehavior : MonoBehaviour {
   private void fallTowardSurface(){
     playerStateController.PlayerIsNearSurface(false);
     playerStateController.PlayerIsCollidingWithBodyOfWater(false);
-    playerStateController.ForceForwardVelocity(false, 0f);
+    playerStateController.IncreaseVelocity(false, 0f);
     playerStateController.ConstrainLookDirection(false, Vector3.zero);
     playerStateController.ApplyEnvironmentalForce(false, Vector3.zero);
   }

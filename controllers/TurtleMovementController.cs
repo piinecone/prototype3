@@ -401,9 +401,8 @@ public class TurtleMovementController : MonoBehaviour {
     calculateForwardAccelerationUnderwater();
     underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
     accountForSpecialMoves();
+    underwaterMovementVectorInWorldSpace = applyEnvironmentalForces(underwaterMovementVectorInWorldSpace);
     Vector3 thrustVector = clampUnderwaterMovementVector();
-    Debug.DrawRay(transform.position, thrustVector, Color.blue);
-    thrustVector = applyEnvironmentalForces(thrustVector);
 
     return thrustVector;
   }
@@ -412,11 +411,15 @@ public class TurtleMovementController : MonoBehaviour {
     return Vector3.ClampMagnitude(underwaterMovementVectorInWorldSpace, currentSwimSpeed());
   }
 
-  private Vector3 applyEnvironmentalForces(Vector3 thrustVector){
-    if (stateController.ShouldApplyEnvironmentalForce())
-      return (thrustVector + stateController.EnvironmentalForceVector());
-    else
-      return thrustVector;
+  private Vector3 applyEnvironmentalForces(Vector3 inputVector){
+    if (stateController.ShouldApplyEnvironmentalForce()){
+      //Debug.DrawRay(transform.position, inputVector, Color.blue);
+      //Debug.DrawRay(transform.position, stateController.EnvironmentalForceVector(), Color.red);
+      //Debug.DrawRay(transform.position, inputVector + stateController.EnvironmentalForceVector(), Color.magenta);
+      return (inputVector + stateController.EnvironmentalForceVector());
+    } else {
+      return inputVector;
+    }
   }
 
   private void accountForSpecialMoves(){
@@ -495,7 +498,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateForwardAccelerationUnderwater(){
-    if (didJustSplashIntoWater && !stateController.ShouldApplyForwardVelocityOverride()){
+    if (didJustSplashIntoWater && !stateController.ShouldOverrideVelocity()){
       forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f);
     } else {
       forwardAccelerationUnderwater = Mathf.Max(rawForwardValue, 0f) * currentForwardAccelerationMultiplier();
@@ -664,15 +667,15 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private float currentSwimSpeed(){
-    return stateController.ShouldApplyForwardVelocityOverride() ? stateController.ForwardVelocityOverride() : maximumSwimSpeed;
+    return stateController.ShouldOverrideVelocity() ? stateController.SpeedClampOverride() : maximumSwimSpeed;
   }
 
   private float currentForwardAccelerationMultiplier(){
-    return stateController.ShouldApplyForwardVelocityOverride() ? stateController.ForwardVelocityOverride() : 10f;
+    return stateController.ShouldOverrideVelocity() ? stateController.ForwardAccelerationMultiplier() : 10f;
   }
 
   private float minimumUnderwaterAcceleration(){
-    return stateController.ShouldApplyForwardVelocityOverride() ? (stateController.ForwardVelocityOverride() * .4f) : 0f;
+    return stateController.ShouldOverrideVelocity() ? stateController.MinimumForwardAcceleration() : 0f;
   }
 
   private bool currentlyRushingDownARiver(){

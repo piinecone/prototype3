@@ -572,7 +572,7 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void fall(){
     animator.SetBool("Underwater", false);
-    gravity = 80f;
+    gravity = 80f; // FIXME maybe this should be rigidbody?
     positionVector.y -= gravity * Time.deltaTime;
     underwaterMovementVectorInWorldSpace = positionVector;
     targetRotation = determineAirborneRotation();

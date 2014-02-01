@@ -130,9 +130,9 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void performRiverRushingMovement(){
     if (isUnderwater()){
-      adjustPositionVectorAfterTerrainCollision();
+      //adjustPositionVectorAfterTerrainCollision(); // FIXME potentially superfluous
       swim();
-    } else if (isFalling()) fall();
+    } else fall();
   }
 
   private void performNormalMovement(){
@@ -645,10 +645,6 @@ public class TurtleMovementController : MonoBehaviour {
     return (stateController.PlayerIsEmergingFromWater());
   }
 
-  private bool isSubmerging(){
-    return false; // (stateController.PlayerIsSubmergingIntoWater());
-  }
-
   private bool isFalling(){
     return (stateController.PlayerIsAirborne());
   }
@@ -684,17 +680,39 @@ public class TurtleMovementController : MonoBehaviour {
     return stateController.PlayerIsRushingDownARiver();
   }
 
-  private void adjustPositionVectorAfterTerrainCollision(){
-    RaycastHit[] hits;
-    float distance = 7f;
-    Vector3 positionRay = underwaterMovementVectorInWorldSpace.normalized * distance;
+  // NOTE Uncomment this to use detect and repel away from nearby terrain
+  // using a spherecast.
+  //private void adjustPositionVectorAfterTerrainCollision(){
+  //  RaycastHit[] hits;
+  //  float distance = 7f;
+  //  Vector3 positionRay = underwaterMovementVectorInWorldSpace.normalized * distance;
 
-    hits = Physics.SphereCastAll(transform.position, 2f, positionRay, distance);
-    foreach(RaycastHit hit in hits){
-      if (hit.transform.gameObject.tag == "Terrain"){
-        underwaterMovementVectorInWorldSpace = hit.normal * underwaterMovementVectorInWorldSpace.magnitude * .2f;
-        break;
-      }
-    }
-  }
+  //  hits = Physics.SphereCastAll(transform.position, 2f, positionRay, distance);
+  //  foreach(RaycastHit hit in hits){
+  //    if (hit.transform.gameObject.tag == "Terrain"){
+  //      underwaterMovementVectorInWorldSpace = hit.normal * underwaterMovementVectorInWorldSpace.magnitude * .1f;
+  //      break;
+  //    }
+  //  }
+  //}
+
+  // NOTE Enable this to bounce the player off of terrain during collisions while swimming
+  // or falling. This may affect submerging into bodies of water in a negative manner.
+  //void OnControllerColliderHit(ControllerColliderHit hit){
+  //  if (hit.transform.gameObject.tag == "Terrain"){
+  //    if (isSwimming()) underwaterMovementVectorInWorldSpace = hit.normal * underwaterMovementVectorInWorldSpace.magnitude * .5f;
+  //    if (isFalling()) positionVector = hit.normal * positionVector.magnitude * .5f;
+  //  }
+
+  //  // NOTE use this to push rigidbodies around
+  //  //Rigidbody body = hit.collider.attachedRigidbody;
+  //  //if (body == null || body.isKinematic)
+  //  //    return;
+  //  
+  //  //if (hit.moveDirection.y < -0.3F)
+  //  //    return;
+  //  //
+  //  //Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
+  //  //body.velocity = pushDir * pushPower;
+  //}
 }

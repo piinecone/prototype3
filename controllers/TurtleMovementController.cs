@@ -129,8 +129,10 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void performRiverRushingMovement(){
-    if (isUnderwater()) swim();
-    else if (isFalling()) fall();
+    if (isUnderwater()){
+      adjustPositionVectorAfterTerrainCollision();
+      swim();
+    } else if (isFalling()) fall();
   }
 
   private void performNormalMovement(){
@@ -680,5 +682,19 @@ public class TurtleMovementController : MonoBehaviour {
 
   private bool currentlyRushingDownARiver(){
     return stateController.PlayerIsRushingDownARiver();
+  }
+
+  private void adjustPositionVectorAfterTerrainCollision(){
+    RaycastHit[] hits;
+    float distance = 7f;
+    Vector3 positionRay = underwaterMovementVectorInWorldSpace.normalized * distance;
+
+    hits = Physics.SphereCastAll(transform.position, 2f, positionRay, distance);
+    foreach(RaycastHit hit in hits){
+      if (hit.transform.gameObject.tag == "Terrain"){
+        underwaterMovementVectorInWorldSpace = hit.normal * underwaterMovementVectorInWorldSpace.magnitude * .2f;
+        break;
+      }
+    }
   }
 }

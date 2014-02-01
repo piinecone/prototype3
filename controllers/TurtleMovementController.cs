@@ -258,6 +258,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void swim(){
+    //Debug.Log("swimming");
     animator.SetBool("Underwater", true);
     calculateRotationInWater();
     calculatePositionInWater();
@@ -539,6 +540,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void walk(float slope, Vector3 terrainRay){
+    //Debug.Log("walking");
     appliedRollValue = 0f;
     animator.SetBool("Underwater", false);
     slope = slope == null ? 90f : slope;
@@ -573,6 +575,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void fall(){
+    //Debug.Log("falling");
     animator.SetBool("Underwater", false);
     gravity = 80f; // FIXME maybe this should be rigidbody?
     positionVector.y -= gravity * Time.deltaTime;

@@ -788,4 +788,9 @@ public class TurtleMovementController : MonoBehaviour {
     else
       return "N/A";
   }
+
+  // FIXME this doesn't work correctly
+  public bool PlayerIsCurrentlyStuck(){
+    return (positionVector.magnitude > 0f && Velocity() == 0f); // FIXME for some duration
+  }
 }

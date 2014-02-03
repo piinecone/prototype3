@@ -43,6 +43,7 @@ public class TurtleTelemetry : MonoBehaviour {
     description += string.Format("\nState:                  {0}", state());
     description += string.Format("\nPrevious State:    {0}", previousState());
     description += string.Format("\nSpecial Move:      {0}", move());
+    description += string.Format("\nStuck:                 {0}", stuck());
   }
 
   private void computeVelocity(){
@@ -69,5 +70,9 @@ public class TurtleTelemetry : MonoBehaviour {
 
   private string move(){
     return movementController.CurrentSpecialMove();
+  }
+
+  private bool stuck(){
+    return movementController.PlayerIsCurrentlyStuck();
   }
 }

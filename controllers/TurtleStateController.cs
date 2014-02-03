@@ -44,11 +44,22 @@ public class TurtleStateController : MonoBehaviour {
   private bool shouldConstrainLookDirection = false;
   private Vector3 constrainedLookDirectionVector = Vector3.zero;
 
+  // debugging
+  private bool drawDebugVectorsEnabled = false;
+
   void Start() {
     capsuleCollider = GetComponent<CapsuleCollider>();
     particleEmitter = GetComponent<ParticleSystem>();
     characterController = GetComponent<CharacterController>();
     splashEmitter.active = false;
+  }
+
+  void Update(){
+    if (Input.GetKeyDown(KeyCode.V)) drawDebugVectorsEnabled = !drawDebugVectorsEnabled;
+  }
+
+  public bool DrawDebugVectors(){
+    return drawDebugVectorsEnabled;
   }
 
   public string LastRecordedState(){
@@ -129,6 +140,7 @@ public class TurtleStateController : MonoBehaviour {
     float distance = 2f; // FIXME may want to scale this back a touch
     RaycastHit hit;
     Vector3 downRay = Vector3.down;
+    if (drawDebugVectorsEnabled) Debug.DrawRay(transform.position, downRay, Color.blue);
     if (Physics.Raycast(transform.position, downRay, out hit, distance))
       return false;
     return true;
@@ -154,6 +166,7 @@ public class TurtleStateController : MonoBehaviour {
     float distance = 2f;
     RaycastHit[] hits;
     Vector3 ray = Vector3.down * distance;
+    if (drawDebugVectorsEnabled) Debug.DrawRay(transform.position, ray, Color.cyan);
     hits = Physics.RaycastAll(transform.position, ray, distance);
     foreach (RaycastHit hit in hits)
       if (hit.transform.gameObject.tag == "Terrain") return true;
@@ -164,6 +177,7 @@ public class TurtleStateController : MonoBehaviour {
     float distance = 6f;
     RaycastHit hit;
     Vector3 forwardRay = transform.forward * distance;
+    if (drawDebugVectorsEnabled) Debug.DrawRay(transform.position, forwardRay, Color.black);
     if (Physics.Raycast(transform.position, forwardRay, out hit, distance))
       return (hit.transform.gameObject.tag == "Water");
     return false;
@@ -178,6 +192,7 @@ public class TurtleStateController : MonoBehaviour {
     bool hitRecorded = false;
     RaycastHit hit;
     Vector3 ray = transform.forward * distance;
+    if (drawDebugVectorsEnabled) Debug.DrawRay(transform.position, ray, Color.gray);
     hitRecorded = Physics.Raycast(transform.position, ray, out hit, distance);
     return (ray.z < 0f && (hitRecorded == false || (hit.transform.gameObject.tag == "Water" || hit.transform.gameObject.tag == "SurfaceCollider")));
   }
@@ -186,6 +201,7 @@ public class TurtleStateController : MonoBehaviour {
     float distance = 5f;
     RaycastHit hit;
     Vector3 ray = transform.forward * distance;
+    if (drawDebugVectorsEnabled) Debug.DrawRay(transform.position, ray, Color.yellow);
     return (ray.z < 0f && Physics.Raycast(transform.position, ray, out hit, distance));
   }
 
@@ -207,6 +223,12 @@ public class TurtleStateController : MonoBehaviour {
     RaycastHit[] forwardHits;
     RaycastHit[] intermediateHits;
     RaycastHit[] downHits;
+
+    if (drawDebugVectorsEnabled){
+      Debug.DrawRay(transform.position, forwardRay, Color.white);
+      Debug.DrawRay(transform.position, intermediateRay, Color.white);
+      Debug.DrawRay(transform.position, downRay, Color.white);
+    }
 
     forwardHits = Physics.RaycastAll(transform.position, forwardRay, distance);
     intermediateHits = Physics.RaycastAll(transform.position, intermediateRay, distance);

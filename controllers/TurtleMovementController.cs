@@ -128,6 +128,13 @@ public class TurtleMovementController : MonoBehaviour {
     updateTransformPositionAndRotation();
   }
 
+  void LateUpdate(){
+    if (!stateController.DrawDebugVectors()) return;
+
+    Debug.DrawRay(transform.position, underwaterMovementVectorInWorldSpace, Color.red);
+    Debug.DrawRay(transform.position, positionVector, Color.green);
+  }
+
   private void performRiverRushingMovement(){
     if (isUnderwater()){
       //adjustPositionVectorAfterTerrainCollision(); // FIXME potentially superfluous
@@ -258,7 +265,6 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void swim(){
-    //Debug.Log("swimming");
     animator.SetBool("Underwater", true);
     calculateRotationInWater();
     calculatePositionInWater();
@@ -383,6 +389,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculatePositionInWater(){
+    gravity = 40f;
     positionVector = underwaterThrustVector();
     if (!isNearSurface()) positionVector.y -= gravity * Time.deltaTime;
     if (didJustSplashIntoWater) renderSplash();
@@ -540,7 +547,6 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void walk(float slope, Vector3 terrainRay){
-    //Debug.Log("walking");
     appliedRollValue = 0f;
     animator.SetBool("Underwater", false);
     slope = slope == null ? 90f : slope;
@@ -575,7 +581,6 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void fall(){
-    //Debug.Log("falling");
     animator.SetBool("Underwater", false);
     gravity = 80f; // FIXME maybe this should be rigidbody?
     positionVector.y -= gravity * Time.deltaTime;

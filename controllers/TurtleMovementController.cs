@@ -67,6 +67,7 @@ public class TurtleMovementController : MonoBehaviour {
   private Vector3 mouseInput;
   private Vector3 keyboardInput;
   private float rawForwardValue = 0f;
+  private float previousRawForwardValue = 0f;
   private float rawHorizontalValue = 0f;
   private float rawPitchValue = 0f;
   private float rawYawValue = 0f;
@@ -82,6 +83,14 @@ public class TurtleMovementController : MonoBehaviour {
   private float rollRotationOffset = 0f;
   private Vector3 rollPositionVector = Vector3.zero;
   private float barrelRollSpeed = 17f;
+
+  // forward burst
+  private bool forwardBurstArmed = false;
+  private bool performingForwardBurst = false;
+  private float forwardBurstCaptureTimeLeft = 0f;
+  private float forwardBurstCaptureTime = .3f;
+  private float forwardBurstTimeLeft = 0f;
+  private float forwardBurstDuration = 1f;
 
   // corkscrew launch
   private bool preparingForCorkscrewLaunch = false;
@@ -183,16 +192,20 @@ public class TurtleMovementController : MonoBehaviour {
     mouseInput = mouseRay.direction;
 
     // keyboard input
-    previousRollValue = rawRollValue;        // store roll value slope
-    rawForwardValue = verticalValue;         // forward thrust
-    rawHorizontalValue = horizontalValue;    // lateral thrust
-    rawPitchValue = mouseInput.y;            // pitch
-    rawRollValue = horizontalValue;          // roll
-    rawYawValue = mouseInput.x;              // yaw
+    previousRollValue = rawRollValue;           // store roll value slope
+    previousRawForwardValue = rawForwardValue;  // store forward value slope
+    rawForwardValue = verticalValue;            // forward thrust
+    rawHorizontalValue = horizontalValue;       // lateral thrust
+    rawPitchValue = mouseInput.y;               // pitch
+    rawRollValue = horizontalValue;             // roll
+    rawYawValue = mouseInput.x;                 // yaw
 
     adjustRawInputValues();
     updateAnimatorStates();
-    if (isUnderwater()) captureBarrelRoll();
+    if (isUnderwater()){
+      captureBarrelRoll();
+      captureForwardBurst();
+    }
   }
 
   private void adjustRawInputValues(){
@@ -246,7 +259,6 @@ public class TurtleMovementController : MonoBehaviour {
     barrelRollCaptureTimeLeft = barrelRollCaptureTime;
     rollRotationOffset = Mathf.Abs(appliedRollValue);
     rollPositionVector = transform.right * barrelRollDirection * 12f;
-    attemptCorkscrewLaunch();
   }
 
   private void primeBarrelRoll(){
@@ -254,6 +266,39 @@ public class TurtleMovementController : MonoBehaviour {
     barrelRollCaptureTimeLeft = barrelRollCaptureTime;
     barrelRollArmed = false;
     performingBarrelRoll = false;
+  }
+
+  private void captureForwardBurst(){
+    if (currentlyPerformingACorkscrew() || performingForwardBurst) return;
+
+    if (Mathf.Abs(rawForwardValue) > Mathf.Abs(previousRawForwardValue)){
+      if (forwardBurstCaptureTimeLeft > 0f && forwardBurstArmed)
+        performForwardBurst();
+      else
+        primeForwardBurst();
+    } else if (forwardBurstCaptureTimeLeft > 0f && Mathf.Abs(rawForwardValue) < Mathf.Abs(previousRawForwardValue)){
+      forwardBurstArmed = true;
+    }
+
+    forwardBurstCaptureTimeLeft -= Time.deltaTime;
+  }
+
+  private void performForwardBurst(){
+    performingForwardBurst = true;
+    forwardBurstArmed = false;
+    forwardBurstCaptureTimeLeft = forwardBurstCaptureTime;
+    forwardBurstTimeLeft = forwardBurstDuration;
+    attemptCorkscrewLaunch();
+  }
+
+  private void primeForwardBurst(){
+    forwardBurstCaptureTimeLeft = forwardBurstCaptureTime;
+    forwardBurstArmed = false;
+    performingForwardBurst = false;
+  }
+
+  private bool currentlyPerformingACorkscrew(){
+    return (preparingForCorkscrewLaunch || performingCorkscrewLaunch || finishingACorkscrewLaunch);
   }
 
   private bool bankingForMoreThan(float seconds){
@@ -434,8 +479,9 @@ public class TurtleMovementController : MonoBehaviour {
 
   private void accountForSpecialMoves(){
     if (isCurrentlySubmerging) continueSubmersion();
-    if (performingBarrelRoll && !preparingForCorkscrewLaunch) underwaterMovementVectorInWorldSpace += rollPositionVector;
+    if (performingBarrelRoll) underwaterMovementVectorInWorldSpace += rollPositionVector;
     if (preparingForCorkscrewLaunch || performingCorkscrewLaunch) performCorkscrewLaunch();
+    if (performingForwardBurst && !preparingForCorkscrewLaunch) continueForwardBurst();
   }
 
   private void continueSubmersion(){
@@ -443,6 +489,12 @@ public class TurtleMovementController : MonoBehaviour {
       submergeTimeLeft -= Time.deltaTime;
     else
       isCurrentlySubmerging = false;
+  }
+
+  private void continueForwardBurst(){
+    if (forwardBurstTimeLeft > 0f){
+      forwardBurstTimeLeft -= Time.deltaTime;
+    } else performingForwardBurst = false;
   }
 
   private void performCorkscrewLaunch(){
@@ -732,6 +784,7 @@ public class TurtleMovementController : MonoBehaviour {
     if (performingBarrelRoll) return "Barrel Roll";
     if (preparingForCorkscrewLaunch || performingCorkscrewLaunch || finishingACorkscrewLaunch)
       return "Corkscrew Launch";
+    if (performingForwardBurst) return "Forward Burst";
     else
       return "N/A";
   }

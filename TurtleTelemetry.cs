@@ -12,6 +12,7 @@ public class TurtleTelemetry : MonoBehaviour {
   public bool Enabled = false;
 
   private Vector3 lastKnownPosition = Vector3.zero;
+  private float currentVelocity = 0f;
 
   private GUIStyle style = new GUIStyle();
   private int width = 160;
@@ -32,10 +33,11 @@ public class TurtleTelemetry : MonoBehaviour {
 
   void Update(){
     if (Input.GetKeyDown(KeyCode.T)) Enabled = !Enabled;
+    if (Enabled) computeVelocity();
   }
 
   void FixedUpdate(){
-    description =  string.Format("Velocity:              {0}", velocity());
+    description =  string.Format("Velocity:              {0}", currentVelocity);
     //description += String.Format("\nSpeed: {0}", speed());
     description += string.Format("\nAcceleration:        {0}", acceleration());
     description += string.Format("\nState:                  {0}", state());
@@ -43,10 +45,9 @@ public class TurtleTelemetry : MonoBehaviour {
     description += string.Format("\nSpecial Move:      {0}", move());
   }
 
-  private float velocity(){
-    float velocity = Vector3.Distance(transform.position, lastKnownPosition) / Time.deltaTime;
+  private void computeVelocity(){
+    currentVelocity = Vector3.Distance(transform.position, lastKnownPosition) / Time.deltaTime;
     lastKnownPosition = transform.position;
-    return velocity;
   }
 
   //private float speed(){

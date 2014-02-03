@@ -143,7 +143,7 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   private bool playerIsTouchingTerrain(){
-    float distance = 5f;
+    float distance = 2f;
     RaycastHit[] hits;
     Vector3 ray = Vector3.down * distance;
     hits = Physics.RaycastAll(transform.position, ray, distance);

@@ -718,4 +718,16 @@ public class TurtleMovementController : MonoBehaviour {
   //  //Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
   //  //body.velocity = pushDir * pushPower;
   //}
+
+  public float CurrentAcceleration(){
+    return forwardAccelerationUnderwater; // FIXME this should be the actual acceleration
+  }
+
+  public string CurrentSpecialMove(){
+    if (performingBarrelRoll) return "Barrel Roll";
+    if (preparingForCorkscrewLaunch || performingCorkscrewLaunch || finishingACorkscrewLaunch)
+      return "Corkscrew Launch";
+    else
+      return "N/A";
+  }
 }

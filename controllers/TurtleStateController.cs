@@ -20,6 +20,7 @@ public class TurtleStateController : MonoBehaviour {
   private ParticleSystem particleEmitter;
   private CharacterController characterController;
   private string lastRecordedState;
+  private string previousState;
 
   // surfacing
   private bool isNearSurface = false;
@@ -56,15 +57,22 @@ public class TurtleStateController : MonoBehaviour {
 
   public bool PlayerIsEmergingFromWater(){
     if (isApproachingTerrainNearTheSurface() && !isApproachingWater()){
-      lastRecordedState = "grounded";
+      recordState("grounded");
       return true;
     }
     return false;
   }
 
+  private void recordState(string state){
+    if (lastRecordedState != state){
+      previousState = lastRecordedState;
+      lastRecordedState = state;
+    }
+  }
+
   public bool PlayerIsUnderwater(){ // the player is completely submerged
     if (playerIsPartiallySubmerged() && !isApproachingTerrainNearTheSurface()){
-      lastRecordedState = "underwater";
+      recordState("underwater");
       return true;
     }
     return false;
@@ -73,7 +81,7 @@ public class TurtleStateController : MonoBehaviour {
   public bool PlayerIsInWater(){ // the player is at least partially submerged
     // y = y - the distance to the turtle's underside / limbs
     if (playerIsPartiallySubmerged()){
-      lastRecordedState = "underwater";
+      recordState("underwater");
       return true;
     }
     return false;
@@ -83,7 +91,7 @@ public class TurtleStateController : MonoBehaviour {
     // y = y - the distance to the turtle's underside / limbs
     // and player is "above" terrain, not water
     if (playerIsTouchingTerrain() && playerHasCompletelyEmerged(range: .6f)){
-      lastRecordedState = "grounded";
+      recordState("grounded");
       return true;
     }
     return false;
@@ -91,7 +99,7 @@ public class TurtleStateController : MonoBehaviour {
 
   public bool PlayerIsAirborne(){
     if (PlayerIsNotTouchingAnything() && playerHasCompletelyEmerged(range: 0f)){
-      lastRecordedState = "airborne";
+      recordState("airborne");
       return true;
     }
     return false;
@@ -320,5 +328,17 @@ public class TurtleStateController : MonoBehaviour {
     splashEmitter.Stop();
     splashEmitter.Pause();
     splashEmitter.active = false;
+  }
+
+  public string CurrentState(string state=""){
+    if (state == "") state = lastRecordedState;
+    if (state == "grounded") return "Walking";
+    else if (state == "underwater") return "Swimming";
+    else if (state == "airborne") return "Falling";
+    else return "Undefined";
+  }
+
+  public string PreviousState(){
+    return CurrentState(previousState);
   }
 }

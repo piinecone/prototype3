@@ -37,6 +37,8 @@ public class FishMovement : MonoBehaviour {
   [SerializeField]
   private GameObject player;
   [SerializeField]
+  private TurtleStateController playerStateController;
+  [SerializeField]
   private TurtleController turtleController;
   [SerializeField]
   private AudioSource startedFollowingSound;
@@ -99,6 +101,9 @@ public class FishMovement : MonoBehaviour {
   private float corkscrewOffset = 0f;
   private float corkscrewOffsetZ = 0f;
 
+  // converting into energy
+  private bool isConvertingIntoEnergy = false;
+
   // performance
   private bool shouldDoCalculations = false;
   private bool playerIsNearby = false;
@@ -106,9 +111,11 @@ public class FishMovement : MonoBehaviour {
   // particles
   private ParticleSystem particleEmitter;
 
+
   void Start () {
     player = GameObject.FindWithTag("Player");
     turtleController = player.GetComponent<TurtleController>();
+    playerStateController = player.GetComponent<TurtleStateController>();
     forwardSpeed = 16f;
     shoalingSpeed = 7f;
     burstSpeed = 25f;
@@ -148,6 +155,8 @@ public class FishMovement : MonoBehaviour {
     } else if (currentlyFollowingPlayer){
       if (isPerformingCorkscrew){
         performCorkscrew();
+      } else if (isConvertingIntoEnergy){
+        ConvertIntoEnergy();
       } else if (boredByPlayer()){
         stopFollowingPlayer();
       } else {
@@ -627,5 +636,30 @@ public class FishMovement : MonoBehaviour {
       CancelInvoke("emitBubbleTrail");
       isPerformingCorkscrew = false;
     }
+  }
+
+  public void ConvertIntoEnergy(){
+    if (currentDistanceFromPlayer() > 1f){
+      isConvertingIntoEnergy = true;
+      Vector3 targetPosition = player.transform.position;
+      Vector3 direction = (targetPosition - transform.position).normalized;
+      Quaternion rotation = Quaternion.LookRotation(direction);
+      transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 15f * Time.deltaTime);
+      transform.position += direction * 45f * Time.deltaTime;
+    } else if (isConvertingIntoEnergy) {
+      playerStateController.FishDidConvertIntoEnergy();
+      isConvertingIntoEnergy = false;
+      Disable();
+    }
+  }
+
+  public void Disable(){
+    this.enabled = false;
+    GetComponent<MeshRenderer>().enabled = false;
+  }
+
+  public void Enable(){
+    this.enabled = true;
+    GetComponent<MeshRenderer>().enabled = true;
   }
 }

@@ -47,15 +47,29 @@ public class TurtleStateController : MonoBehaviour {
   // debugging
   private bool drawDebugVectorsEnabled = false;
 
+  // energy trail
+  private TrailRenderer trailRenderer;
+  private bool energyTrailIsCurrentlyActive = false;
+  private float energyTrailTimeLeft = 0f;
+  private float energyTrailDuration = 10f;
+  private float energyTrailDurationPerFish = 2.5f;
+  private float energyTrailWidthPerFish = .25f;
+
   void Start() {
     capsuleCollider = GetComponent<CapsuleCollider>();
     particleEmitter = GetComponent<ParticleSystem>();
     characterController = GetComponent<CharacterController>();
     splashEmitter.active = false;
+    trailRenderer = GetComponent<TrailRenderer>();
   }
 
   void Update(){
     if (Input.GetKeyDown(KeyCode.V)) drawDebugVectorsEnabled = !drawDebugVectorsEnabled;
+  }
+
+  void LateUpdate(){
+    if (energyTrailTimeLeft > 0f) energyTrailTimeLeft -= Time.deltaTime;
+    else energyTrailExpired();
   }
 
   public bool DrawDebugVectors(){
@@ -362,5 +376,42 @@ public class TurtleStateController : MonoBehaviour {
 
   public string PreviousState(){
     return CurrentState(previousState);
+  }
+
+  public void PlayerPassedThroughArchway(ArchwayBehavior archway){
+    if (PlayerHasFollowingFish()){
+      activateEnergyTrail();
+      foreach (FishMovement fish in followingFish)
+        fish.ConvertIntoEnergy();
+    }
+  }
+
+  private void activateEnergyTrail(){
+    energyTrailIsCurrentlyActive = true;
+    trailRenderer.enabled = true;
+    energyTrailTimeLeft = energyTrailDuration;
+  }
+
+  public void FishDidConvertIntoEnergy(){
+    if (energyTrailIsCurrentlyActive){
+      trailRenderer.startWidth += energyTrailWidthPerFish;
+      trailRenderer.endWidth += energyTrailWidthPerFish;
+      energyTrailTimeLeft += energyTrailDurationPerFish;
+    }
+  }
+
+  private void energyTrailExpired(){
+    energyTrailIsCurrentlyActive = false;
+    trailRenderer.enabled = false;
+    foreach (FishMovement fish in followingFish)
+      fish.Enable();
+  }
+
+  public bool EnergyTrailIsCurrentlyActive(){
+    return energyTrailIsCurrentlyActive;
+  }
+
+  public float EnergyTrailTimeLeft(){
+    return energyTrailTimeLeft;
   }
 }

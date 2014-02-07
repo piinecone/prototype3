@@ -15,6 +15,7 @@ public class RiverBehavior : MonoBehaviour {
 
   void Start () {
     forceVector = transform.forward * magnitude;
+    forceVector.y = 3f;
   }
 
   void FixedUpdate(){

@@ -48,16 +48,18 @@ public class FollowingFish : MonoBehaviour {
     Barrier nearestVisibleBarrier;
     float nearestBarrierDistance = nearbyBarrierDistanceThreshold;
     List<Barrier> barriers = barrierController.activeBarriers();
-    foreach(Barrier barrier in barriers){
-      if (!barrier.isViableTarget()) continue;
-      Vector3 direction = (barrier.transform.position - transform.position).normalized;
-      Vector3 forward = transform.forward;
-      if (Vector3.Angle(direction, forward) < 45F){
-        float distance = Vector3.Distance(transform.position, barrier.transform.position);
-        if (distance < nearbyBarrierDistanceThreshold && distance < nearestBarrierDistance){
-          nearestBarrierDistance = distance;
-          nearestVisibleBarrier = barrier;
-          targetedBarrier = nearestVisibleBarrier.trigger;
+    if (barriers.Count > 0){
+      foreach(Barrier barrier in barriers){
+        if (!barrier.isViableTarget()) continue;
+        Vector3 direction = (barrier.transform.position - transform.position).normalized;
+        Vector3 forward = transform.forward;
+        if (Vector3.Angle(direction, forward) < 45F){
+          float distance = Vector3.Distance(transform.position, barrier.transform.position);
+          if (distance < nearbyBarrierDistanceThreshold && distance < nearestBarrierDistance){
+            nearestBarrierDistance = distance;
+            nearestVisibleBarrier = barrier;
+            targetedBarrier = nearestVisibleBarrier.trigger;
+          }
         }
       }
     }

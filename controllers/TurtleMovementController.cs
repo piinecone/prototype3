@@ -331,9 +331,10 @@ public class TurtleMovementController : MonoBehaviour {
   private Quaternion determineAirborneRotation(){
     Quaternion rotation = Quaternion.identity;
     calculateAppliedRollValue();
-    float x = transform.rotation.eulerAngles.x + 2f;
-    if (x < 90f && x > 45f) x = 45f;
-    rotation.eulerAngles = new Vector3(x, transform.rotation.eulerAngles.y, appliedRollValue);
+    //float x = transform.rotation.eulerAngles.x + 2f;
+    //if (x < 90f && x > 45f) x = 45f;
+    //rotation.eulerAngles = new Vector3(x, transform.rotation.eulerAngles.y, appliedRollValue);
+    rotation.eulerAngles = new Vector3(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, appliedRollValue);
 
     return rotation;
   }
@@ -662,7 +663,7 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private float rotationSpeedInAir(){
-    return .1f * Time.deltaTime;
+    return 30f * Time.deltaTime;
   }
 
   private float rotationSpeedOnLand(){

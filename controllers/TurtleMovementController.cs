@@ -439,7 +439,8 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculatePositionInWater(){
-    gravity = 40f;
+    gravity = 40f; // FIXME might be best to disable gravity underwater
+    gravity = 0f;
     positionVector = underwaterThrustVector();
     if (!isNearSurface()) positionVector.y -= gravity * Time.deltaTime;
     if (didJustSplashIntoWater) renderSplash();

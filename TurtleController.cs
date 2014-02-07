@@ -82,8 +82,11 @@ public class TurtleController : MonoBehaviour {
     targetSpeedInMedium = 16.5f;
     currentlyAccelerating = false;
     initialMinimumSpeed = minSpeedInMedium;
-    nextBarrier = sequentialBarriers[0];
-    nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
+    // FIXME remove the barriers stuff
+    if (sequentialBarriers.Count > 0){
+      nextBarrier = sequentialBarriers[0];
+      nextBarrierInstance = barrierController.getBarrierInstanceFromBarrierGameObject(nextBarrier);
+    }
   }
   
   void Update () {

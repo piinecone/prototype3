@@ -4,9 +4,6 @@ using System.Collections;
 public class RiverBehavior : MonoBehaviour {
 
   [SerializeField]
-  private int legNumber = 0;
-
-  [SerializeField]
   private TurtleStateController playerStateController;
 
   private Vector3 forceVector = Vector3.zero;

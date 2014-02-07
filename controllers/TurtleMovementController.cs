@@ -110,6 +110,10 @@ public class TurtleMovementController : MonoBehaviour {
   private bool didJustSplashIntoWater = false;
   private float splashTimeLeft = 0f;
 
+  // energy trail
+  private float energyTrailSwimSpeed = 30f;
+  private float energyTrailResidualSpeedDuration = 4f;
+
   // timing
   private float rawRollInputTimeElapsed = 0f;
   private float rawForwardInputTimeElapsed = 0f;
@@ -483,6 +487,7 @@ public class TurtleMovementController : MonoBehaviour {
     if (performingBarrelRoll) underwaterMovementVectorInWorldSpace += rollPositionVector;
     if (preparingForCorkscrewLaunch || performingCorkscrewLaunch) performCorkscrewLaunch();
     if (performingForwardBurst && !preparingForCorkscrewLaunch) continueForwardBurst();
+    if (stateController.EnergyTrailIsCurrentlyActive()) continueEnergyTrailSwimming();
   }
 
   private void continueSubmersion(){
@@ -496,6 +501,14 @@ public class TurtleMovementController : MonoBehaviour {
     if (forwardBurstTimeLeft > 0f){
       forwardBurstTimeLeft -= Time.deltaTime;
     } else performingForwardBurst = false;
+  }
+
+  private void continueEnergyTrailSwimming(){
+    if (stateController.EnergyTrailTimeLeft() > 0f){
+      maximumSwimSpeed = energyTrailSwimSpeed;
+    } else {
+      StartCoroutine(returnMaximumSwimSpeedToNormal(energyTrailResidualSpeedDuration));
+    }
   }
 
   private void performCorkscrewLaunch(){

@@ -25,6 +25,8 @@ public class TurtleController : MonoBehaviour {
   private SunkenStaircase sunkenStaircase;
   [SerializeField]
   private bool invertedYAxis = false;
+  [SerializeField]
+  private SpecialFish specialFish;
 
   private float speedInMedium = 8f;
   private Vector3 moveDirection = Vector3.zero;
@@ -358,7 +360,7 @@ public class TurtleController : MonoBehaviour {
   public void ReanimateStaircase(){
     if (!sunkenStaircase.isReadyToRaise()){
       staircaseHasBeenRaised = true;
-      //followingFish.beginOrbiting(sunkenStaircase.getFocalPoint()); // FIXME special fish should orbit
+      specialFish.BeginOrbiting(sunkenStaircase.getFocalPoint());
       manager.StopLevelMusic();
       sunkenStaircase.scheduleRaise();
       manager.cutTo(sunkenStaircase.getFocalPoint(), 40f, new Vector3(-10f, 10f, -50f));
@@ -484,5 +486,9 @@ public class TurtleController : MonoBehaviour {
 
   public void PauseLevelMusic(){
     manager.PauseLevelMusic();
+  }
+
+  public void AddSpecialFish(FishMovement fish){
+    specialFish.AddFish(fish);
   }
 }

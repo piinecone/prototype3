@@ -111,11 +111,13 @@ public class FishMovement : MonoBehaviour {
   // particles
   private ParticleSystem particleEmitter;
 
-
-  void Start () {
+  void Awake(){
     player = GameObject.FindWithTag("Player");
     turtleController = player.GetComponent<TurtleController>();
     playerStateController = player.GetComponent<TurtleStateController>();
+  }
+
+  void Start () {
     forwardSpeed = 16f;
     shoalingSpeed = 7f;
     burstSpeed = 25f;
@@ -661,5 +663,9 @@ public class FishMovement : MonoBehaviour {
   public void Enable(){
     this.enabled = true;
     GetComponent<MeshRenderer>().enabled = true;
+  }
+
+  public void SetAsSpecial(bool special){
+    if (special) turtleController.AddSpecialFish(this);
   }
 }

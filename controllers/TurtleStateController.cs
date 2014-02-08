@@ -68,8 +68,14 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   void LateUpdate(){
-    if (energyTrailTimeLeft > 0f) energyTrailTimeLeft -= Time.deltaTime;
-    else energyTrailExpired();
+    if (energyTrailIsCurrentlyActive){
+      if (energyTrailTimeLeft > 0f){
+        if (energyTrailTimeLeft <= 2f) flickerEnergyTrail();
+        energyTrailTimeLeft -= Time.deltaTime;
+      } else if (energyTrailTimeLeft <= 0f){
+        energyTrailExpired();
+      }
+    }
   }
 
   public bool DrawDebugVectors(){
@@ -389,6 +395,8 @@ public class TurtleStateController : MonoBehaviour {
   private void activateEnergyTrail(){
     energyTrailIsCurrentlyActive = true;
     trailRenderer.enabled = true;
+    trailRenderer.startWidth = 0f;
+    trailRenderer.endWidth = 0f;
     energyTrailTimeLeft = energyTrailDuration;
   }
 
@@ -418,5 +426,9 @@ public class TurtleStateController : MonoBehaviour {
   public void PlayerIsNearFossilizedGameObject(FossilizedBehavior fossilizedObject){
     if (energyTrailIsCurrentlyActive)
       fossilizedObject.Reanimate();
+  }
+
+  private void flickerEnergyTrail(){
+    trailRenderer.enabled = (Random.Range(0f, 1f) >= .5f);
   }
 }

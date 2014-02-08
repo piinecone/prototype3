@@ -14,6 +14,7 @@ public class FossilizedBehavior : MonoBehaviour {
   [SerializeField]
   private BigLakeLevelManager levelManager;
 
+  private ParticleSystem particleSystem ;
   private GameObject player;
   private TurtleStateController playerStateController;
   private bool colliding = false;
@@ -21,6 +22,7 @@ public class FossilizedBehavior : MonoBehaviour {
   void Start () {
     player = GameObject.FindWithTag("Player");
     playerStateController = player.GetComponent<TurtleStateController>();
+    particleSystem = GetComponent<ParticleSystem>();
   }
 
   void OnTriggerEnter(Collider collider){
@@ -34,8 +36,10 @@ public class FossilizedBehavior : MonoBehaviour {
   }
 
   public void Reanimate(){
+    particleSystem.Play();
     sicknessFactor -= healingStep;
     if (sicknessFactor <= 0f){
+      particleSystem.Stop();
       renderer.material = healthyMaterial;
       levelManager.ReanimatedGameObject(gameObject);
     } else if (sicknessFactor < 10f){

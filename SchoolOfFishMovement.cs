@@ -54,6 +54,7 @@ public class SchoolOfFishMovement : MonoBehaviour {
       f.toggleShoaling(shoaling);
       f.setTrapped(trapped);
       f.canFollowPlayer = canFollowPlayer;
+      f.SetAsSpecial(!canFollowPlayer);
       if (shoalPoint != null) {
         f.setShoalPoint(shoalPoint);
       } else {

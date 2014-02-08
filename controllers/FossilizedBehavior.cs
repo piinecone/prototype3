@@ -44,7 +44,7 @@ public class FossilizedBehavior : MonoBehaviour {
   }
 
   public bool Healthy(){
-    return (sicknessFactor == 0f);
+    return (sicknessFactor <= 0f);
   }
 
   private bool collidingWithPlayer(Collider collider){

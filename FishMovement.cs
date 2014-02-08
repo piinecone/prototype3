@@ -660,9 +660,10 @@ public class FishMovement : MonoBehaviour {
     GetComponent<MeshRenderer>().enabled = false;
   }
 
-  public void Enable(){
+  public void Enable(bool forcePosition = false){
     this.enabled = true;
     GetComponent<MeshRenderer>().enabled = true;
+    if (forcePosition) transform.position = player.transform.position;
   }
 
   public void SetAsSpecial(bool special){

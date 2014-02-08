@@ -412,7 +412,7 @@ public class TurtleStateController : MonoBehaviour {
     energyTrailIsCurrentlyActive = false;
     trailRenderer.enabled = false;
     foreach (FishMovement fish in followingFish)
-      fish.Enable();
+      fish.Enable(true);
   }
 
   public bool EnergyTrailIsCurrentlyActive(){

@@ -110,24 +110,24 @@ public class CutSceneManager : MonoBehaviour {
   }
 
   private void RemindPlayerToVisitForest(){
-    if (shouldRemindPlayerAboutForest()) playCutSceneFor("Underwater Forest");
+    //if (shouldRemindPlayerAboutForest()) playCutSceneFor("Underwater Forest");
   }
 
   private void ShowPlayerWhichBarrierToVisit(){
-    if (shouldRemindPlayerAboutInitialBarrier()) playCutSceneFor("Initial Barrier");
+    //if (shouldRemindPlayerAboutInitialBarrier()) playCutSceneFor("Initial Barrier");
   }
 
-  private bool shouldRemindPlayerAboutForest(){
-    return !initialBarrier.isDestroyed() &&
-      turtleController.numberOfFollowingFish() < initialBarrier.Strength() &&
-      Vector3.Distance(turtleController.transform.position, underwaterForest.transform.position) > 120f;
-  }
+  //private bool shouldRemindPlayerAboutForest(){
+  //  return !initialBarrier.isDestroyed() &&
+  //    turtleController.numberOfFollowingFish() < initialBarrier.Strength() &&
+  //    Vector3.Distance(turtleController.transform.position, underwaterForest.transform.position) > 120f;
+  //}
 
-  private bool shouldRemindPlayerAboutInitialBarrier(){
-    return !initialBarrier.isDestroyed() &&
-      turtleController.numberOfFollowingFish() >= initialBarrier.Strength() &&
-      Vector3.Distance(turtleController.transform.position, initialBarrier.transform.position) > 100f;
-  }
+  //private bool shouldRemindPlayerAboutInitialBarrier(){
+  //  return !initialBarrier.isDestroyed() &&
+  //    turtleController.numberOfFollowingFish() >= initialBarrier.Strength() &&
+  //    Vector3.Distance(turtleController.transform.position, initialBarrier.transform.position) > 100f;
+  //}
 
   public void PlayerIsUnderwater(bool value=true){
     playerIsUnderwater = value;

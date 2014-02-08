@@ -6,7 +6,7 @@ public class FossilizedBehavior : MonoBehaviour {
   [SerializeField]
   private float sicknessFactor = 0f;
   [SerializeField]
-  private float healingStep = .2f;
+  private float healingStep = .5f;
   [SerializeField]
   private Material recoveringMaterial;
   [SerializeField]

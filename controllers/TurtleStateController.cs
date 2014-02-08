@@ -385,8 +385,8 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   public void PlayerPassedThroughArchway(ArchwayBehavior archway){
+    activateEnergyTrail();
     if (PlayerHasFollowingFish()){
-      activateEnergyTrail();
       foreach (FishMovement fish in followingFish)
         fish.ConvertIntoEnergy();
     }

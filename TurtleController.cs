@@ -355,6 +355,16 @@ public class TurtleController : MonoBehaviour {
     }
   }
 
+  public void ReanimateStaircase(){
+    if (!sunkenStaircase.isReadyToRaise()){
+      staircaseHasBeenRaised = true;
+      //followingFish.beginOrbiting(sunkenStaircase.getFocalPoint()); // FIXME special fish should orbit
+      manager.StopLevelMusic();
+      sunkenStaircase.scheduleRaise();
+      manager.cutTo(sunkenStaircase.getFocalPoint(), 40f, new Vector3(-10f, 10f, -50f));
+    }
+  }
+
   public void tellFollowingFishToLeaveStaircase(){
     followingFish.stopOrbiting();
   }

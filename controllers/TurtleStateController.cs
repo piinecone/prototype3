@@ -51,8 +51,8 @@ public class TurtleStateController : MonoBehaviour {
   private TrailRenderer trailRenderer;
   private bool energyTrailIsCurrentlyActive = false;
   private float energyTrailTimeLeft = 0f;
-  private float energyTrailDuration = 3f;
-  private float energyTrailDurationPerFish = .75f;
+  private float energyTrailDuration = 1f;
+  private float energyTrailDurationPerFish = 1.5f;
   private float energyTrailWidthPerFish = .5f;
 
   void Start() {
@@ -68,13 +68,17 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   void LateUpdate(){
+    //Debug.Log("------- energy trail ----------");
+    //Debug.Log("time left: " + energyTrailTimeLeft);
+    //Debug.Log("width: " + trailRenderer.startWidth);
+    //Debug.Log("enabled: " + trailRenderer.enabled);
     if (energyTrailIsCurrentlyActive){
       if (energyTrailTimeLeft > 0f){
-        if (energyTrailTimeLeft <= 2f) flickerEnergyTrail();
         energyTrailTimeLeft -= Time.deltaTime;
       } else if (energyTrailTimeLeft <= 0f){
         energyTrailExpired();
       }
+      if (energyTrailTimeLeft > 0f && energyTrailTimeLeft <= 2f) flickerEnergyTrail();
     }
   }
 
@@ -393,9 +397,9 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   private void activateEnergyTrail(){
-    energyTrailIsCurrentlyActive = true;
     trailRenderer.enabled = true;
-    trailRenderer.startWidth = 0f;
+    energyTrailIsCurrentlyActive = true;
+    trailRenderer.startWidth = 1f;
     trailRenderer.endWidth = 0f;
     energyTrailTimeLeft = energyTrailDuration;
   }

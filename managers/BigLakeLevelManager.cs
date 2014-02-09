@@ -5,6 +5,8 @@ using System.Collections.Generic;
 public class BigLakeLevelManager : MonoBehaviour {
   [SerializeField]
   private int numberOfFossilizedObjects = 0;
+  [SerializeField]
+  private ParticleSystem plagueParticleSystem;
 
   private TurtleController deprecatedPlayerController;
   private List<GameObject> reanimatedObjects = new List<GameObject>();
@@ -17,7 +19,9 @@ public class BigLakeLevelManager : MonoBehaviour {
     if (reanimatedObjects.Contains(reanimatedObject)) return;
 
     reanimatedObjects.Add(reanimatedObject);
-    if (reanimatedObjects.Count >= numberOfFossilizedObjects)
+    if (reanimatedObjects.Count >= numberOfFossilizedObjects){
+      plagueParticleSystem.Stop();
       deprecatedPlayerController.ReanimateStaircase();
+    }
   }
 }

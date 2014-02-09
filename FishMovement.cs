@@ -38,6 +38,7 @@ public class FishMovement : MonoBehaviour {
   private GameObject player;
   [SerializeField]
   private TurtleStateController playerStateController;
+  private TurtleMovementController playerMovementController;
   [SerializeField]
   private TurtleController turtleController;
   [SerializeField]
@@ -115,6 +116,7 @@ public class FishMovement : MonoBehaviour {
     player = GameObject.FindWithTag("Player");
     turtleController = player.GetComponent<TurtleController>();
     playerStateController = player.GetComponent<TurtleStateController>();
+    playerMovementController = player.GetComponent<TurtleMovementController>();
   }
 
   void Start () {
@@ -183,7 +185,7 @@ public class FishMovement : MonoBehaviour {
   private bool boredByPlayer(){
     if (turtleController.isFrozen()) return false;
 
-    if (turtleController.velocity() < 10f || distanceFromPlayer() > patienceDistance){
+    if (playerMovementController.Velocity() < 10f || distanceFromPlayer() > patienceDistance){
       patienceLeft -= Time.deltaTime;
     } else {
       patienceLeft = Random.Range(.75f, 2f) * patienceSeed;
@@ -193,8 +195,8 @@ public class FishMovement : MonoBehaviour {
 
   void OnTriggerEnter(Collider collider){
     if (collider.gameObject.tag == "PlayerInfluence"){
-      if (shouldFollowPlayer()){
-        if (!currentlyFollowingPlayer && !isTrapped){ // then look at the player
+      if (shouldFollowPlayer() && playerStateController.NumberOfFollowingFish() < 50f){
+        if (!currentlyFollowingPlayer && !isTrapped){
           Vector3 direction = player.transform.forward.normalized;
           Quaternion rotation = Quaternion.LookRotation(direction);
           transform.rotation = Quaternion.Slerp(transform.rotation, rotation, fastRotationSpeed * Time.deltaTime);
@@ -272,7 +274,7 @@ public class FishMovement : MonoBehaviour {
     //} else if (distanceFromPlayer < 8f) {
     //  speedMultiplier = .5f;
     //}
-    float speed = followingSpeed * speedMultiplier;
+    float speed = Mathf.Max(followingSpeed, playerMovementController.Velocity() - 1f) * speedMultiplier;
     transform.position += transform.forward * speed * Time.deltaTime;
   }
 
@@ -475,10 +477,11 @@ public class FishMovement : MonoBehaviour {
   }
 
   private bool playerIsInFront(){
-    Vector3 direction = (player.transform.position - transform.position).normalized;
-    Vector3 forward = transform.forward;
-    float angle = Vector3.Angle(direction, forward);
-    return (angle < 45F) ? true : false;
+    return true;
+    //Vector3 direction = (player.transform.position - transform.position).normalized;
+    //Vector3 forward = transform.forward;
+    //float angle = Vector3.Angle(direction, forward);
+    //return (angle < 45F) ? true : false;
   }
 
   public void rushBarrier(GameObject barrier, GameObject aRendezvousPoint=null, bool force=false){

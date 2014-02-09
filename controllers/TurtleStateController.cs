@@ -40,6 +40,10 @@ public class TurtleStateController : MonoBehaviour {
   private float speedClampOverride = 0f;
   private float speedOffset = 20f;
 
+  // maximum speed increase
+  private bool shouldRampUpMaximumSpeed = false;
+  private float rampUpMaximumSpeedTo = 0f;
+
   // constrain look direction
   private bool shouldConstrainLookDirection = false;
   private Vector3 constrainedLookDirectionVector = Vector3.zero;
@@ -287,6 +291,19 @@ public class TurtleStateController : MonoBehaviour {
       environment.SwitchToUnderwaterEnvironment();
     else
       environment.SwitchToAboveWaterEnvironment();
+  }
+
+  public void RampMaximumSpeedUpTo(float newMaximumSpeed){
+    shouldRampUpMaximumSpeed = true;
+    rampUpMaximumSpeedTo = newMaximumSpeed;
+  }
+
+  public bool ShouldRampUpMaximumSpeed(){
+    return shouldRampUpMaximumSpeed;
+  }
+
+  public float RampUpMaximumSpeedTo(){
+    return rampUpMaximumSpeedTo;
   }
 
   public void IncreaseVelocity(bool state, float magnitude){

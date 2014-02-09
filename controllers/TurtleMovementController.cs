@@ -462,8 +462,15 @@ public class TurtleMovementController : MonoBehaviour {
     calculateForwardAccelerationUnderwater();
     underwaterMovementVectorInWorldSpace += transform.forward * forwardAccelerationUnderwater;
     accountForSpecialMoves();
-    underwaterMovementVectorInWorldSpace = applyEnvironmentalForces(underwaterMovementVectorInWorldSpace);
+    // if you want to grant the player more velocity alongside environmental forces, use this code:
+    // underwaterMovementVectorInWorldSpace = applyEnvironmentalForces(underwaterMovementVectorInWorldSpace);
+    // Vector3 thrustVector = clampUnderwaterMovementVector();
+    // if you want to impact the player's speed without giving them more thrust, use this:
     Vector3 thrustVector = clampUnderwaterMovementVector();
+    underwaterMovementVectorInWorldSpace = applyEnvironmentalForces(underwaterMovementVectorInWorldSpace);
+    // this allows the force to move the player faster than the clamped speed, but does not allow the player to
+    // propel themselves faster than usual
+    thrustVector = applyEnvironmentalForces(thrustVector);
 
     return thrustVector;
   }
@@ -477,6 +484,7 @@ public class TurtleMovementController : MonoBehaviour {
       //Debug.DrawRay(transform.position, inputVector, Color.blue);
       //Debug.DrawRay(transform.position, stateController.EnvironmentalForceVector(), Color.red);
       //Debug.DrawRay(transform.position, inputVector + stateController.EnvironmentalForceVector(), Color.magenta);
+      stateController.EmitBubbleTrail();
       return (inputVector + stateController.EnvironmentalForceVector());
     } else {
       return inputVector;

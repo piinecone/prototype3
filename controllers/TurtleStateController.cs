@@ -84,6 +84,10 @@ public class TurtleStateController : MonoBehaviour {
       }
       if (energyTrailTimeLeft > 0f && energyTrailTimeLeft <= 2f) flickerEnergyTrail();
     }
+
+    if (drawDebugVectorsEnabled){
+      if (shouldApplyEnvironmentalForce) Debug.DrawRay(transform.position, environmentalForceVector, Color.magenta);
+    }
   }
 
   public bool DrawDebugVectors(){

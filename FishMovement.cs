@@ -161,8 +161,8 @@ public class FishMovement : MonoBehaviour {
         performCorkscrew();
       } else if (isConvertingIntoEnergy){
         ConvertIntoEnergy();
-      } else if (boredByPlayer()){
-        stopFollowingPlayer();
+      //} else if (boredByPlayer()){
+      //  stopFollowingPlayer();
       } else {
         moveTowardPlayer();
       }

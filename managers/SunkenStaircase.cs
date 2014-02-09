@@ -12,11 +12,15 @@ public class SunkenStaircase : MonoBehaviour {
   [SerializeField]
   private AudioSource snap;
 
-  private Vector3 finalPosition = new Vector3(438.2f, 206.8f, 651f);
-  private Quaternion finalRotation = new Quaternion(0f, 0f, 0f, 1f);
+  private Vector3 finalPosition = new Vector3(472.3928f, 195.2912f, 601.3843f);
+  private Quaternion finalRotation = Quaternion.identity;
   private bool readyToRaise = false;
   private float timeLeftUntilRaise = 5f;
   private bool toldDemFish = false;
+
+  void Start(){
+    finalRotation.eulerAngles = new Vector3(357.8507f, 1.864043f, 359.8289f);
+  }
 
   void LateUpdate () {
     if (closeToFinalPosition() && !toldDemFish){

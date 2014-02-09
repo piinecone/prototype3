@@ -8,8 +8,6 @@ public class FossilizedBehavior : MonoBehaviour {
   [SerializeField]
   private float healingStep = .5f;
   [SerializeField]
-  private Material recoveringMaterial;
-  [SerializeField]
   private Material healthyMaterial;
   [SerializeField]
   private BigLakeLevelManager levelManager;
@@ -42,8 +40,6 @@ public class FossilizedBehavior : MonoBehaviour {
       particleSystem.Stop();
       renderer.material = healthyMaterial;
       levelManager.ReanimatedGameObject(gameObject);
-    } else if (sicknessFactor < 10f){
-      renderer.material = recoveringMaterial;
     }
   }
 

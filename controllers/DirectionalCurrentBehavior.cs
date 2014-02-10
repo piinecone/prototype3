@@ -43,7 +43,7 @@ public class DirectionalCurrentBehavior : MonoBehaviour {
       colliding = false;
       resetTimer();
       stateController.IncreaseVelocity(false, magnitude);
-      stateController.ApplyEnvironmentalForce(false, forceVector); // FIXME delay?
+      stateController.ApplyEnvironmentalForce(false);
       //particleSystem.Stop();
     }
   }
@@ -63,7 +63,7 @@ public class DirectionalCurrentBehavior : MonoBehaviour {
   private void movePlayer(){
     stateController.IncreaseVelocity(true, magnitude);
     //stateController.RampUpMaximumSpeedTo(magnitude);
-    stateController.ApplyEnvironmentalForce(true, forceVector);
+    stateController.ApplyEnvironmentalForce(forceVector);
     //particleSystem.Play();
   }
 }

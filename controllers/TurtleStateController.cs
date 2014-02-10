@@ -30,7 +30,7 @@ public class TurtleStateController : MonoBehaviour {
   private GameObject currentRelevantBodyOfWater;
 
   // environmental forces
-  private bool shouldApplyEnvironmentalForce = false;
+  private Vector3 currentEnvironmentalForceVector = Vector3.zero;
   private Vector3 environmentalForceVector = Vector3.zero;
 
   // forward force override
@@ -72,10 +72,16 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   void LateUpdate(){
-    //Debug.Log("------- energy trail ----------");
-    //Debug.Log("time left: " + energyTrailTimeLeft);
-    //Debug.Log("width: " + trailRenderer.startWidth);
-    //Debug.Log("enabled: " + trailRenderer.enabled);
+    updateEnergyTrail();
+    updateEnvironmentalForceVector();
+    drawDebugVectors();
+  }
+
+  private void updateEnvironmentalForceVector(){
+    currentEnvironmentalForceVector = Vector3.Slerp(currentEnvironmentalForceVector, environmentalForceVector, 2f * Time.deltaTime);
+  }
+
+  private void updateEnergyTrail(){
     if (energyTrailIsCurrentlyActive){
       if (energyTrailTimeLeft > 0f){
         energyTrailTimeLeft -= Time.deltaTime;
@@ -84,9 +90,11 @@ public class TurtleStateController : MonoBehaviour {
       }
       if (energyTrailTimeLeft > 0f && energyTrailTimeLeft <= 2f) flickerEnergyTrail();
     }
+  }
 
+  private void drawDebugVectors(){
     if (drawDebugVectorsEnabled){
-      if (shouldApplyEnvironmentalForce) Debug.DrawRay(transform.position, environmentalForceVector, Color.magenta);
+      Debug.DrawRay(transform.position, currentEnvironmentalForceVector, Color.magenta);
     }
   }
 
@@ -184,7 +192,6 @@ public class TurtleStateController : MonoBehaviour {
     } else if (!relevant && currentRelevantBodyOfWater == waterBody){
       isCollidingWithBodyOfWater = false;
       currentRelevantBodyOfWater = null;
-      shouldApplyEnvironmentalForce = false;
       shouldConstrainLookDirection = false;
       shouldOverrideVelocity = false;
     }
@@ -333,17 +340,16 @@ public class TurtleStateController : MonoBehaviour {
     return minimumForwardAccelerationOverride;
   }
 
-  public void ApplyEnvironmentalForce(bool state, Vector3 forceVector){
-    shouldApplyEnvironmentalForce = state;
-    environmentalForceVector = forceVector;
+  public void ApplyEnvironmentalForce(Vector3 vector){
+    environmentalForceVector = vector;
   }
 
-  public bool ShouldApplyEnvironmentalForce(){
-    return shouldApplyEnvironmentalForce;
+  public void ApplyEnvironmentalForce(bool state){
+    environmentalForceVector = Vector3.zero;
   }
 
   public Vector3 EnvironmentalForceVector(){
-    return environmentalForceVector;
+    return currentEnvironmentalForceVector;
   }
 
   public void ConstrainLookDirection(bool value, Vector3 direction){

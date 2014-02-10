@@ -25,7 +25,7 @@ public class RiverBehavior : MonoBehaviour {
     } else if (colliding) {
       playerStateController.IncreaseVelocity(true, magnitude);
       playerStateController.ConstrainLookDirection(true, transform.forward);
-      playerStateController.ApplyEnvironmentalForce(true, forceVector);
+      playerStateController.ApplyEnvironmentalForce(forceVector);
     }
   }
 
@@ -53,7 +53,7 @@ public class RiverBehavior : MonoBehaviour {
     playerStateController.PlayerIsCollidingWithBodyOfWater(false);
     playerStateController.IncreaseVelocity(false, 0f);
     playerStateController.ConstrainLookDirection(false, Vector3.zero);
-    playerStateController.ApplyEnvironmentalForce(false, Vector3.zero);
+    playerStateController.ApplyEnvironmentalForce(false);
   }
 
   void OnTriggerEnter(Collider collider){

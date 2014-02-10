@@ -482,15 +482,8 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private Vector3 applyEnvironmentalForces(Vector3 inputVector){
-    if (stateController.ShouldApplyEnvironmentalForce()){
-      //Debug.DrawRay(transform.position, inputVector, Color.blue);
-      //Debug.DrawRay(transform.position, stateController.EnvironmentalForceVector(), Color.red);
-      //Debug.DrawRay(transform.position, inputVector + stateController.EnvironmentalForceVector(), Color.magenta);
-      stateController.EmitBubbleTrail();
-      return (inputVector + stateController.EnvironmentalForceVector());
-    } else {
-      return inputVector;
-    }
+    if (stateController.EnvironmentalForceVector() != Vector3.zero) stateController.EmitBubbleTrail();
+    return (inputVector + stateController.EnvironmentalForceVector());
   }
 
   private void accountForSpecialMoves(){

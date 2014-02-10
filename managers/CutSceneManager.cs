@@ -39,13 +39,18 @@ public class CutSceneManager : MonoBehaviour {
 
   void Start(){
     // FIXME re-enable
-    //openingLoop.volume = volumeOn;
-    //openingLoop.Play();
-    //underWaterMusic.Play();
+    openingLoop.volume = volumeOn;
+    openingLoop.Play();
+    underWaterMusic.Play();
   }
 
   void LateUpdate(){
-    //underWaterMusic.Stop();
+    if (!musicCanPlay){
+      openingLoop.Stop();
+      underWaterMusic.Stop();
+      aboveWaterMusic.Stop();
+    }
+
     if (musicFading && musicCanPlay){
       if (underWaterMusic.volume <= (targetVolume - errorMargin) || underWaterMusic.volume >= (targetVolume + errorMargin)){
         underWaterMusic.volume = Mathf.SmoothStep(underWaterMusic.volume, targetVolume, 2.2f * Time.deltaTime);
@@ -218,7 +223,8 @@ public class CutSceneManager : MonoBehaviour {
 
   public void StopLevelMusic(){
     FadeOutMusic();
-    Invoke("disableMusic", 7f);
+    //Invoke("disableMusic", 7f);
+    Invoke("disableMusic", 0f);
   }
 
   private void disableMusic(){

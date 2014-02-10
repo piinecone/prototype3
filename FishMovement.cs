@@ -157,10 +157,10 @@ public class FishMovement : MonoBehaviour {
     } else if (currentlyMovingTowardRendezvousPoint) {
       moveTowardRendezvousPoint();
     } else if (currentlyFollowingPlayer){
-      if (isPerformingCorkscrew){
-        performCorkscrew();
-      } else if (isConvertingIntoEnergy){
+      if (isConvertingIntoEnergy){
         ConvertIntoEnergy();
+      } else if (isPerformingCorkscrew){
+        performCorkscrew();
       //} else if (boredByPlayer()){
       //  stopFollowingPlayer();
       } else {
@@ -645,13 +645,13 @@ public class FishMovement : MonoBehaviour {
   }
 
   public void ConvertIntoEnergy(){
-    if (currentDistanceFromPlayer() > 1f){
+    if (currentDistanceFromPlayer() > .5f){
       isConvertingIntoEnergy = true;
       Vector3 targetPosition = player.transform.position;
       Vector3 direction = (targetPosition - transform.position).normalized;
       Quaternion rotation = Quaternion.LookRotation(direction);
       transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 15f * Time.deltaTime);
-      transform.position += direction * 45f * Time.deltaTime;
+      transform.position += direction * 40f * Time.deltaTime;
     } else if (isConvertingIntoEnergy) {
       playerStateController.FishDidConvertIntoEnergy();
       isConvertingIntoEnergy = false;
@@ -660,15 +660,14 @@ public class FishMovement : MonoBehaviour {
   }
 
   public void Disable(){
-    this.enabled = false;
+    gameObject.active = false;
     GetComponent<MeshRenderer>().enabled = false;
   }
 
   public void Enable(bool forcePosition = false){
-    this.enabled = true;
+    gameObject.active = true;
     GetComponent<MeshRenderer>().enabled = true;
     if (forcePosition) transform.position = player.transform.position;
-    // FIXME why do these guys occasionally disappear completely?
   }
 
   public void SetAsSpecial(bool special){

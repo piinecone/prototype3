@@ -83,6 +83,11 @@ public class TurtleStateController : MonoBehaviour {
 
   private void updateEnergyTrail(){
     if (energyTrailIsCurrentlyActive){
+      //Debug.Log("------- energy trail ----------");
+      //Debug.Log("time left: " + energyTrailTimeLeft);
+      //Debug.Log("width: " + trailRenderer.startWidth);
+      //Debug.Log("enabled: " + trailRenderer.enabled);
+      //Debug.Log("-------------------------------");
       if (energyTrailTimeLeft > 0f){
         energyTrailTimeLeft -= Time.deltaTime;
       } else if (energyTrailTimeLeft <= 0f){
@@ -416,10 +421,14 @@ public class TurtleStateController : MonoBehaviour {
   }
 
   public void PlayerPassedThroughArchway(ArchwayBehavior archway){
+    if (energyTrailIsCurrentlyActive) return;
+
     activateEnergyTrail();
     if (PlayerHasFollowingFish()){
-      foreach (FishMovement fish in followingFish)
+      foreach (FishMovement fish in followingFish){
         fish.ConvertIntoEnergy();
+        energyTrailTimeLeft += energyTrailDurationPerFish;
+      }
     }
   }
 
@@ -435,15 +444,16 @@ public class TurtleStateController : MonoBehaviour {
     if (energyTrailIsCurrentlyActive){
       trailRenderer.startWidth += energyTrailWidthPerFish;
       trailRenderer.endWidth += energyTrailWidthPerFish;
-      energyTrailTimeLeft += energyTrailDurationPerFish;
     }
   }
 
   private void energyTrailExpired(){
     energyTrailIsCurrentlyActive = false;
     trailRenderer.enabled = false;
-    foreach (FishMovement fish in followingFish)
+    foreach (FishMovement fish in followingFish){
+      fish.gameObject.active = true;
       fish.Enable(true);
+    }
   }
 
   public bool EnergyTrailIsCurrentlyActive(){

@@ -13,12 +13,12 @@ public class ArchwayTrigger : MonoBehaviour {
 
   void Start () {
     particleSystem = GetComponent<ParticleSystem>();
-    flash.SetActive(false);
+    toggleFlash(false);
   }
 
   void OnTriggerEnter(Collider collider){
     if (collider.gameObject.tag == "Player"){
-      flash.SetActive(true);
+      toggleFlash(true);
       stateController.PlayerPassedThroughArchway(archway);
     }
   }
@@ -26,13 +26,17 @@ public class ArchwayTrigger : MonoBehaviour {
   void OnTriggerStay(Collider collider){
     particleSystem.Play();
     if (collider.gameObject.tag == "Player"){
-      flash.SetActive(false);
+      toggleFlash(false);
       stateController.PlayerPassedThroughArchway(archway);
     }
   }
 
   void OnTriggerExit(Collider collider){
-      flash.SetActive(false);
+    toggleFlash(false);
     particleSystem.Stop();
+  }
+
+  void toggleFlash(bool visible=true){
+    flash.GetComponent<MeshRenderer>().enabled = visible;
   }
 }

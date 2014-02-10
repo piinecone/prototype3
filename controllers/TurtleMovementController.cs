@@ -229,10 +229,8 @@ public class TurtleMovementController : MonoBehaviour {
     animator.SetFloat("Direction", rawHorizontalValue);
 
     if (isSwimming()){
-      if (maximumSwimSpeed > defaultMaximumSwimSpeed)
-        animator.speed = Mathf.Max(16f * (1 - rawForwardValue), 1.6f);
-      else if (rawForwardValue > .4f)
-        animator.speed = Mathf.Max(8f * (1 - rawForwardValue), 1.6f);
+      if (rawForwardValue > .4f)
+        animator.speed = Mathf.Max(6f * (1 - rawForwardValue), 1.6f);
       else
         animator.speed = 1.2f;
     } else {

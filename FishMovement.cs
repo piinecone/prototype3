@@ -348,6 +348,7 @@ public class FishMovement : MonoBehaviour {
       transform.position += transform.forward * currentBurstSpeed * Time.deltaTime;
     } else {
       transform.rotation = Quaternion.Slerp(transform.rotation, rotation, obstacleAvoidanceRotationSpeed * Time.deltaTime);
+      //float speed = forwardSpeed * 5f; // FIXME parameterize
       transform.position += transform.forward * forwardSpeed * Time.deltaTime;
     }
   }
@@ -667,6 +668,7 @@ public class FishMovement : MonoBehaviour {
     this.enabled = true;
     GetComponent<MeshRenderer>().enabled = true;
     if (forcePosition) transform.position = player.transform.position;
+    // FIXME why do these guys occasionally disappear completely?
   }
 
   public void SetAsSpecial(bool special){

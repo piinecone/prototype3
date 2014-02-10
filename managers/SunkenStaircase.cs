@@ -12,14 +12,14 @@ public class SunkenStaircase : MonoBehaviour {
   [SerializeField]
   private AudioSource snap;
 
-  private Vector3 finalPosition = new Vector3(472.3928f, 195.2912f, 601.3843f);
+  private Vector3 finalPosition = new Vector3(472.983f, 212.628f, 660.2581f);
   private Quaternion finalRotation = Quaternion.identity;
   private bool readyToRaise = false;
   private float timeLeftUntilRaise = 5f;
   private bool toldDemFish = false;
 
   void Start(){
-    finalRotation.eulerAngles = new Vector3(357.8507f, 1.864043f, 359.8289f);
+    finalRotation.eulerAngles = new Vector3(358.2986f, 351.1247f, 1.137312f);
   }
 
   void LateUpdate () {
@@ -44,7 +44,7 @@ public class SunkenStaircase : MonoBehaviour {
     float distance = Vector3.Distance(transform.position, finalPosition);
     float angle = Quaternion.Angle(transform.rotation, finalRotation);
 
-    return (distance < 10f && angle < 5f);
+    return (distance < 1f && angle < 1f);
   }
 
   private void PlaySnapSound(){

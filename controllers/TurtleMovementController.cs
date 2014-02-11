@@ -118,6 +118,11 @@ public class TurtleMovementController : MonoBehaviour {
   private float rawRollInputTimeElapsed = 0f;
   private float rawForwardInputTimeElapsed = 0f;
 
+  // forced rotations
+  private bool completingAForcedRotation = false;
+  private Vector3 forcedRotationDirection = Vector3.zero;
+  private float forcedRotationMagnitude = 0f;
+
   void Start () {
     animator = GetComponent<Animator>();
     capsuleCollider = GetComponent<CapsuleCollider>();
@@ -320,7 +325,19 @@ public class TurtleMovementController : MonoBehaviour {
   }
 
   private void calculateRotationInWater(){
+    //if (completingAForcedRotation)
+    //  targetRotation = determineForcedRotationFromImpact();
+    //else
+    //  targetRotation = determineUnderwaterRotationFromInput();
     targetRotation = determineUnderwaterRotationFromInput();
+  }
+
+  private Quaternion determineForcedRotationFromImpact(){
+    Debug.Log("forcing rotation...");
+    Quaternion rotation = Quaternion.identity;
+    rotation = Quaternion.FromToRotation(transform.up, forcedRotationDirection);
+    if (Quaternion.Angle(transform.rotation, rotation) < 1f) completingAForcedRotation = false;
+    return rotation;
   }
 
   private Quaternion determineUnderwaterRotationFromInput(){
@@ -796,7 +813,14 @@ public class TurtleMovementController : MonoBehaviour {
     if (!hit.collider.isTrigger){
       float reactionMagnitude = positionVector.magnitude * .75f;
       underwaterMovementVectorInWorldSpace = hit.normal * reactionMagnitude;
+      forceCollisionRotation(hit.normal, reactionMagnitude);
     }
+  }
+
+  private void forceCollisionRotation(Vector3 direction, float magnitude){
+    completingAForcedRotation = true;
+    forcedRotationDirection = direction;
+    forcedRotationMagnitude = magnitude;
   }
 
   public float CurrentAcceleration(){

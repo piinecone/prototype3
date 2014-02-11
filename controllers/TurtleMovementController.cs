@@ -792,6 +792,13 @@ public class TurtleMovementController : MonoBehaviour {
   //  //body.velocity = pushDir * pushPower;
   //}
 
+  void OnControllerColliderHit(ControllerColliderHit hit){
+    if (!hit.collider.isTrigger){
+      float reactionMagnitude = positionVector.magnitude * .75f;
+      underwaterMovementVectorInWorldSpace = hit.normal * reactionMagnitude;
+    }
+  }
+
   public float CurrentAcceleration(){
     return forwardAccelerationUnderwater; // FIXME this should be the actual acceleration
   }

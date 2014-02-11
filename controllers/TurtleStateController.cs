@@ -12,6 +12,8 @@ public class TurtleStateController : MonoBehaviour {
   [SerializeField]
   private UnderWater environment;
   [SerializeField]
+  private ThirdPersonCamera camera;
+  [SerializeField]
   private List<FishMovement> followingFish; // FIXME these should be FishControllers
   [SerializeField]
   private ParticleSystem splashEmitter;
@@ -438,6 +440,7 @@ public class TurtleStateController : MonoBehaviour {
     trailRenderer.startWidth = 1f;
     trailRenderer.endWidth = 0f;
     energyTrailTimeLeft = energyTrailDuration;
+    camera.UpdatePosition(up: 5f, away: 20f);
   }
 
   public void FishDidConvertIntoEnergy(){
@@ -454,6 +457,7 @@ public class TurtleStateController : MonoBehaviour {
       fish.gameObject.active = true;
       fish.Enable(true);
     }
+    camera.ResetPosition();
   }
 
   public bool EnergyTrailIsCurrentlyActive(){

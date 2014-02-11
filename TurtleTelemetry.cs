@@ -8,6 +8,8 @@ public class TurtleTelemetry : MonoBehaviour {
   private TurtleStateController stateController;
   [SerializeField]
   private TurtleMovementController movementController;
+  [SerializeField]
+  private ThirdPersonCamera camera;
 
   public bool Enabled = false;
 
@@ -15,8 +17,6 @@ public class TurtleTelemetry : MonoBehaviour {
   private float currentVelocity = 0f;
 
   private GUIStyle style = new GUIStyle();
-  private int width = 160;
-  private int height = 64;
   private string description = "";
 
   void Start(){
@@ -27,7 +27,7 @@ public class TurtleTelemetry : MonoBehaviour {
   void OnGUI(){
     if (!Enabled) return;
 
-    GUI.Box(new Rect(8, 8, 340, 140), "Telemetry (T to hide)");
+    GUI.Box(new Rect(8, 8, 340, 200), "Telemetry (T to hide)");
     GUI.Label(new Rect(16, 40, 400, 140), description, style);
   }
 
@@ -45,6 +45,9 @@ public class TurtleTelemetry : MonoBehaviour {
     description += string.Format("\nSpecial Move:      {0}", move());
     description += string.Format("\nStuck:                 {0}", stuck());
     description += string.Format("\nFollowing Fish:     {0}", followingFish());
+    description += string.Format("\nCamera");
+    description += string.Format("\nDistance Away:   {0}", cameraDistanceAway());
+    description += string.Format("\nDistance Up:       {0}", cameraDistanceUp());
   }
 
   private void computeVelocity(){
@@ -79,5 +82,13 @@ public class TurtleTelemetry : MonoBehaviour {
 
   private int followingFish(){
     return stateController.NumberOfFollowingFish();
+  }
+
+  private float cameraDistanceUp(){
+    return camera.DistanceUp();
+  }
+
+  private float cameraDistanceAway(){
+    return camera.DistanceAway();
   }
 }

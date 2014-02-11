@@ -112,11 +112,15 @@ public class FishMovement : MonoBehaviour {
   // particles
   private ParticleSystem particleEmitter;
 
+  // environment
+  private float waterSurfaceLevel;
+
   void Awake(){
     player = GameObject.FindWithTag("Player");
     turtleController = player.GetComponent<TurtleController>();
     playerStateController = player.GetComponent<TurtleStateController>();
     playerMovementController = player.GetComponent<TurtleMovementController>();
+    waterSurfaceLevel = playerStateController.WaterSurfaceLevel();
   }
 
   void Start () {
@@ -143,7 +147,7 @@ public class FishMovement : MonoBehaviour {
       patienceLeft = 200f;
       if (Time.time > 2f && Time.time < 4.5f && turtleController.followingFish.numberOfFollowingFish() < 10){
         turtleController.addFish(this);
-        transform.position = player.transform.position;
+        setPositionTo(player.transform.position);
         currentlyFollowingPlayer = true;
       }
     }
@@ -172,6 +176,16 @@ public class FishMovement : MonoBehaviour {
       if (needsNewWaypoint()) determineNextWaypoint();
       moveTowardNextWaypoint();
     }
+  }
+
+  private void setPositionTo(Vector3 position){
+    position.y = Mathf.Min(position.y, waterSurfaceLevel);
+    transform.position = position;
+  }
+
+  private void moveTo(Vector3 position){
+    position.y = (transform.position.y + position.y > waterSurfaceLevel) ? (waterSurfaceLevel - transform.position.y) : position.y;
+    transform.position += position;
   }
 
   private float currentDistanceFromPlayer(){
@@ -242,8 +256,8 @@ public class FishMovement : MonoBehaviour {
       Vector3 direction = directionAfterAvoidingObstacles(finishRushTargetPosition);
       Quaternion rotation = Quaternion.LookRotation(direction);
       transform.rotation = Quaternion.Slerp(transform.rotation, rotation, rushRotationSpeed * Time.deltaTime);
-      transform.position += transform.forward * rushingSpeed * Time.deltaTime;
-      //Debug.DrawRay(transform.position, finishRushTargetPosition, Color.blue);
+      //transform.position += transform.forward * rushingSpeed * Time.deltaTime;
+      moveTo(transform.forward * rushingSpeed * Time.deltaTime);
     } else {
       currentlyFinishingRush = false;
     }
@@ -275,7 +289,7 @@ public class FishMovement : MonoBehaviour {
     //  speedMultiplier = .5f;
     //}
     float speed = Mathf.Max(followingSpeed, playerMovementController.Velocity() - 1f) * speedMultiplier;
-    transform.position += transform.forward * speed * Time.deltaTime;
+    moveTo(transform.forward * speed * Time.deltaTime);
   }
 
   private void orbitAroundOrbitPoint(){
@@ -284,7 +298,8 @@ public class FishMovement : MonoBehaviour {
     Vector3 direction = directionAfterAvoidingObstacles(targetPosition);
     Quaternion rotation = Quaternion.LookRotation(direction);
     transform.rotation = Quaternion.Slerp(transform.rotation, rotation, obstacleAvoidanceRotationSpeed * Time.deltaTime);
-    transform.position += transform.forward * forwardSpeed * 2f * Time.deltaTime;
+    //transform.position += transform.forward * forwardSpeed * 2f * Time.deltaTime;
+    moveTo(transform.forward * forwardSpeed * 2f * Time.deltaTime);
   }
 
   private void shoalAroundShoalPoint(){
@@ -299,7 +314,8 @@ public class FishMovement : MonoBehaviour {
     Quaternion rotation = Quaternion.LookRotation(direction);
     transform.rotation = Quaternion.Slerp(transform.rotation, rotation, shoalingRotationSpeed * Time.deltaTime);
     float speed = distance >= 20f ? forwardSpeed : shoalingSpeed;
-    transform.position += transform.forward * speed * Time.deltaTime;
+    //transform.position += transform.forward * speed * Time.deltaTime;
+    moveTo(transform.forward * speed * Time.deltaTime);
     if (isAborting && distance < 20f){
       isAborting = false;
       turtleController.showPlayerInitialBarrier(schoolOfFish);
@@ -345,11 +361,13 @@ public class FishMovement : MonoBehaviour {
     Quaternion rotation = Quaternion.LookRotation(direction);
     if (burstToNextWaypoint(false)){
       smoothlyLookAtNextWaypoint();
-      transform.position += transform.forward * currentBurstSpeed * Time.deltaTime;
+      //transform.position += transform.forward * currentBurstSpeed * Time.deltaTime;
+      moveTo(transform.forward * currentBurstSpeed * Time.deltaTime);
     } else {
       transform.rotation = Quaternion.Slerp(transform.rotation, rotation, obstacleAvoidanceRotationSpeed * Time.deltaTime);
       //float speed = forwardSpeed * 5f; // FIXME parameterize
-      transform.position += transform.forward * forwardSpeed * Time.deltaTime;
+      //transform.position += transform.forward * forwardSpeed * Time.deltaTime;
+      moveTo(transform.forward * forwardSpeed * Time.deltaTime);
     }
   }
 
@@ -636,7 +654,8 @@ public class FishMovement : MonoBehaviour {
       Vector3 direction = (targetPosition - transform.position).normalized;
       Quaternion rotation = Quaternion.LookRotation(direction);
       transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 30f * Time.deltaTime);
-      transform.position += direction * 45f * Time.deltaTime;
+      //transform.position += direction * 45f * Time.deltaTime;
+      moveTo(direction * 45f * Time.deltaTime);
       corkscrewTimeLeft -= Time.deltaTime;
     } else {
       CancelInvoke("emitBubbleTrail");
@@ -651,7 +670,8 @@ public class FishMovement : MonoBehaviour {
       Vector3 direction = (targetPosition - transform.position).normalized;
       Quaternion rotation = Quaternion.LookRotation(direction);
       transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 15f * Time.deltaTime);
-      transform.position += direction * 40f * Time.deltaTime;
+      //transform.position += direction * 40f * Time.deltaTime;
+      moveTo(direction * 40f * Time.deltaTime);
     } else if (isConvertingIntoEnergy) {
       playerStateController.FishDidConvertIntoEnergy();
       isConvertingIntoEnergy = false;
@@ -667,7 +687,7 @@ public class FishMovement : MonoBehaviour {
   public void Enable(bool forcePosition = false){
     gameObject.active = true;
     GetComponent<MeshRenderer>().enabled = true;
-    if (forcePosition) transform.position = player.transform.position;
+    if (forcePosition) setPositionTo(player.transform.position);
   }
 
   public void SetAsSpecial(bool special){

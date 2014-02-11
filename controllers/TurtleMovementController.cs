@@ -805,11 +805,9 @@ public class TurtleMovementController : MonoBehaviour {
 
   public string CurrentSpecialMove(){
     if (performingBarrelRoll) return "Barrel Roll";
-    if (preparingForCorkscrewLaunch || performingCorkscrewLaunch || finishingACorkscrewLaunch)
-      return "Corkscrew Launch";
+    if (currentlyPerformingACorkscrew()) return "Corkscrew Launch";
     if (performingForwardBurst) return "Forward Burst";
-    else
-      return "N/A";
+    else return "N/A";
   }
 
   // FIXME this doesn't work correctly

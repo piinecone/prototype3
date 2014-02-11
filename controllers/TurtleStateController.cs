@@ -476,4 +476,8 @@ public class TurtleStateController : MonoBehaviour {
   private void flickerEnergyTrail(){
     trailRenderer.enabled = (Random.Range(0f, 1f) >= .5f);
   }
+
+  public float WaterSurfaceLevel(){
+    return waterSurfaceLevel;
+  }
 }

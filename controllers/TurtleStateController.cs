@@ -58,7 +58,7 @@ public class TurtleStateController : MonoBehaviour {
   private bool energyTrailIsCurrentlyActive = false;
   private float energyTrailTimeLeft = 0f;
   private float energyTrailDuration = 1f;
-  private float energyTrailDurationPerFish = .75f;
+  private float energyTrailDurationPerFish = .25f;
   private float energyTrailWidthPerFish = 1f;
 
   void Start() {

@@ -30,6 +30,8 @@ public class ThirdPersonCamera : MonoBehaviour {
   //private float camSmoothDampTime = 0.1f;
   private float camSmoothDampTime = 0.2f;
   private CamStates camState = CamStates.Behind;
+  private float defaultDistanceAway = 0f;
+  private float defaultDistanceUp = 0f;
   private List<GameObject> objectsThatShouldAlwaysBeVisible = new List<GameObject>();
 
   // cut scenes
@@ -57,6 +59,8 @@ public class ThirdPersonCamera : MonoBehaviour {
     lookDir = follow.forward;
     minDistanceAway = distanceAway;
     bankingCameraYDivisor = defaultBankingCameraYDivisor;
+    defaultDistanceUp = distanceUp;
+    defaultDistanceAway = distanceAway;
   }
 
   void LateUpdate() {
@@ -213,5 +217,23 @@ public class ThirdPersonCamera : MonoBehaviour {
       cutSceneTimeLeft = timeToWatch;
       cutSceneOffsetVector = offsetVector;
     }
+  }
+
+  public void ResetPosition(){
+    distanceUp = defaultDistanceUp;
+    distanceAway = defaultDistanceAway;
+  }
+
+  public void UpdatePosition(float up, float away){
+    distanceUp = up;
+    distanceAway = away;
+  }
+
+  public float DistanceAway(){
+    return distanceAway;
+  }
+
+  public float DistanceUp(){
+    return distanceUp;
   }
 }

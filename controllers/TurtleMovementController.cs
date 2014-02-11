@@ -793,10 +793,10 @@ public class TurtleMovementController : MonoBehaviour {
   //}
 
   void OnControllerColliderHit(ControllerColliderHit hit){
-    if (!hit.collider.isTrigger){
-      float reactionMagnitude = positionVector.magnitude * .75f;
-      underwaterMovementVectorInWorldSpace = hit.normal * reactionMagnitude;
-    }
+    if (currentlyPerformingACorkscrew() || hit.collider.isTrigger || hit.gameObject.tag == "Fish") return;
+
+    float reactionMagnitude = positionVector.magnitude * .75f;
+    underwaterMovementVectorInWorldSpace = hit.normal * reactionMagnitude;
   }
 
   public float CurrentAcceleration(){

@@ -32,7 +32,7 @@ public class CutSceneManager : MonoBehaviour {
 
   private bool musicPaused = false;
   private bool musicFading = false;
-  private float volumeOn = .35f;
+  private float volumeOn = .25f;
   private float volumeOff= 0f;
   private float targetVolume = 1f;
   private float errorMargin = .005f;
@@ -41,7 +41,6 @@ public class CutSceneManager : MonoBehaviour {
     // FIXME re-enable
     openingLoop.volume = volumeOn;
     openingLoop.Play();
-    underWaterMusic.Play();
   }
 
   void LateUpdate(){

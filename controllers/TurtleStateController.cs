@@ -456,6 +456,7 @@ public class TurtleStateController : MonoBehaviour {
     foreach (FishMovement fish in followingFish){
       fish.gameObject.active = true;
       fish.Enable(true);
+      fish.ReturnToFollowingPlayer();
     }
     camera.ResetPosition();
   }

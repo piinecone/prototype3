@@ -679,6 +679,12 @@ public class FishMovement : MonoBehaviour {
     }
   }
 
+  public void ReturnToFollowingPlayer(){
+    isConvertingIntoEnergy = false;
+    isPerformingCorkscrew = false;
+    currentlyFollowingPlayer = true;
+  }
+
   public void Disable(){
     gameObject.active = false;
     GetComponent<MeshRenderer>().enabled = false;
